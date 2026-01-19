@@ -1,0 +1,62 @@
+/* styles.css — minimal, rápido, accesible */
+:root{
+  --bg:#0b0c0e; --fg:#e5e7eb; --muted:#9ca3af; --card:#111317; --accent:#60a5fa;
+  --ok:#22c55e; --warn:#f59e0b; --border:#1f242b; --danger:#ef4444;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family: ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+  background:#0b0c0e; color:var(--fg);
+}
+.container{max-width:1100px; margin:0 auto; padding:16px}
+.header-row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:24px}
+h1{margin:0 0 4px 0; font-size:clamp(22px,3vw,30px)}
+h2{margin:0 0 12px 0; font-size:20px}
+p{margin:0 0 12px 0}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.card{
+  background:var(--card); border:1px solid var(--border); padding:16px; border-radius:12px; margin:12px 0;
+  box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 8px 30px rgba(0,0,0,.25);
+}
+.row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.spacer{flex:1}
+.btn{
+  border:1px solid var(--border); background:#171a1f; color:var(--fg); padding:10px 14px; border-radius:10px;
+  cursor:pointer; transition:.15s transform;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--accent); color:#0b0c0e; border-color:#3b82f6}
+.btn.ghost{background:transparent}
+.input, select{
+  background:#0f1216; color:var(--fg); border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+}
+/* Scan input */
+.scan-wrap{display:flex; flex-direction:column; gap:10px}
+.scan-input{
+  width:100%; background:#0f1216; color:#e5e7eb; border:2px solid var(--border); border-radius:12px;
+  padding:16px 14px; font-size:20px; letter-spacing:0.5px;
+}
+.scan-input.ok{border-color: var(--ok); box-shadow: 0 0 0 3px rgba(34,197,94,0.2);}
+.scan-input.err{border-color: var(--danger); box-shadow: 0 0 0 3px rgba(239,68,68,0.25);}
+.scan-meta{display:flex; align-items:center; gap:10px; justify-content:space-between}
+.badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:99px; font-size:12px; border:1px solid var(--border); color:var(--muted)}
+.last-scans{margin-top:10px; font-size:13px; color:var(--muted)}
+.last-scans .ok{color:#86efac}
+.last-scans .err{color:#fca5a5}
+.foot{opacity:.7; text-align:center; padding-bottom:24px}
+
+/* Pill de estado */
+.pill{
+  display:inline-flex; align-items:center; gap:8px; padding:8px 12px;
+  border:1px solid var(--border); border-radius:999px; background:#101318; color:var(--fg);
+}
+.pill .dot{
+  width:10px; height:10px; border-radius:50%; background: var(--muted);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.04) inset;
+}
+.pill.ok .dot{ background: var(--ok); }
+.pill.warn .dot{ background: var(--warn); }
+.pill.danger .dot{ background: var(--danger); }
+.hidden{display:none}

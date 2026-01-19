@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>RIO Tools Suite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --card: #1f2430;
+      --text: #e6e8ee;
+      --muted: #9aa3b2;
+      --accent: #4da3ff;
+      --border: #2a2f3a;
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    header span {
+      color: var(--muted);
+      font-size: 13px;
+      margin-left: 8px;
+    }
+
+    main {
+      padding: 32px 24px 48px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section h2 {
+      font-size: 16px;
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.4;
+      flex-grow: 1;
+    }
+
+    .card a {
+      align-self: flex-start;
+      text-decoration: none;
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div>
+      <h1>RIO Tools Suite</h1>
+      <span>Operaciones · Depósito · E-commerce</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- OPERACIONES -->
+    <section class="section">
+      <h2>Operaciones</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Picking Salida</h3>
+          <p>Preparación de pedidos por código de barras, validación y control de salida.</p>
+          <a href="./apps/picking-salida/">Abrir aplicación →</a>
+        </div>
+
+        <div class="card">
+          <h3>Entrada de Mercadería</h3>
+          <p>Ingreso de productos por escaneo, control contra equivalencias y CSV.</p>
+          <a href="./apps/entrada-mercaderia/">Abrir aplicación →</a>
+        </div>
+
+        <div class="card">
+          <h3>Generador de Etiquetas</h3>
+          <p>Generación de etiquetas a partir de equivalencias y datos de producto.</p>
+          <a href="./apps/etiquetas/">Abrir aplicación →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- E-COMMERCE -->
+    <section class="section">
+      <h2>E-commerce</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Categorizador</h3>
+          <p>Normalización y categorización de productos para Tiendanube.</p>
+          <a href="./apps/categorizador/">Abrir aplicación →</a>
+        </div>
+
+        <div class="card">
+          <h3>Pedidos Web</h3>
+          <p>Gestión y armado de pedidos desde listados web.</p>
+          <a href="./apps/pedidos-web/">Abrir aplicación →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEPÓSITO / PLANIFICACIÓN -->
+    <section class="section">
+      <h2>Depósito & Planificación</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Pedido Semanal</h3>
+          <p>Armado de pedidos por curva, históricos y promociones.</p>
+          <a href="./apps/pedido-semanal/">Abrir aplicación →</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    RIO Tools Suite · GitHub Pages · Uso interno
+  </footer>
+
+</body>
+</html>
