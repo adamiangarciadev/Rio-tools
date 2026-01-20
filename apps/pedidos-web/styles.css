@@ -109,3 +109,29 @@ td:first-child:contains("MAYORISTA") {
 td:first-child:contains("MINORISTA") {
   color: #1565c0;
 }
+.buscador-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin: 10px 0;
+}
+
+.buscador-label{
+  font-size: 13px;
+  color:#333;
+  min-width: 55px;
+}
+
+.buscador-input{
+  flex:1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.buscador-clear{
+  padding: 8px 10px;
+  border-radius: 6px;
+  background:#e9e9e9;
+}
