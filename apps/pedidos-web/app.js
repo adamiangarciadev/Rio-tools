@@ -41,10 +41,10 @@
   // Nota: "PARA ARMAR" viene por default y NO se ofrece botón para setearlo.
   // Nota: "PENDIENTE DE ENVIO" debe existir en ESTADOS_VALIDOS del backend si lo vas a usar como botón.
   const TRANSICIONES_BASE = {
-    "PARA ARMAR": ["ARMANDOSE"],
-    ARMANDOSE: ["PICKEADO/ARMADO", "ESPERANDO MERCADERIA"],
+    "PARA ARMAR": ["ARMANDO PEDIDO"],
+    ARMANDO_PEDIDO: ["PICKEADO/ARMADO", "ESPERANDO MERCADERIA"],
     "PICKEADO/ARMADO": ["CONTROLADO"],
-    "ESPERANDO MERCADERIA": ["ARMANDOSE", "PICKEADO/ARMADO"],
+    "ESPERANDO MERCADERIA": ["ARMANDO PEDIDO", "PICKEADO/ARMADO"],
     CONTROLADO: ["ESPERANDO PAGO"],
     "ESPERANDO PAGO": [], // no ofrecemos volver a PARA ARMAR desde la web
     "PENDIENTE DE ENVIO": [],
@@ -54,7 +54,7 @@
   };
 
   const ORDEN_BOTONES = [
-    "ARMANDOSE",
+    "ARMANDO PEDIDO",
     "PICKEADO/ARMADO",
     "ESPERANDO MERCADERIA",
     "CONTROLADO",
@@ -337,7 +337,7 @@
         const btnToggle = document.createElement("button");
         btnToggle.className = "dd-toggle";
         btnToggle.type = "button";
-        btnToggle.textContent = "Acciones ▾";
+        btnToggle.textContent = "Modificar Estado ▾";
 
         const menu = document.createElement("div");
         menu.className = "dd-menu";
