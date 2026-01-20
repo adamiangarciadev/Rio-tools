@@ -187,3 +187,37 @@ td:first-child:contains("MINORISTA") {
 .dd-item.cancelado:hover {
   filter: brightness(0.95);
 }
+/* Celda de acciones */
+td.acciones {
+  padding: 6px;
+}
+
+/* Contenedor dropdown ocupa todo */
+td.acciones .dd {
+  width: 100%;
+}
+
+/* Botón Acciones ocupa toda la celda */
+.dd-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+
+  padding: 8px 10px;
+  border-radius: 6px;
+
+  background: #e9e9e9;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Menú desplegable alineado al ancho del botón */
+.dd-menu {
+  width: 100%;
+  left: 0;
+}
+.dd-toggle:hover {
+  background: #dedede;
+}
