@@ -3,7 +3,7 @@
   "use strict";
 
   // ====== Config ======
-  const RESPONSABLES = ["DAVID","DIEGO","JOEL","MARTIN","MIGUEL","NAHUEL","RODRIGO","RAMON","ROBERTO","SERGIO","PATO","FRANCO"];
+  const RESPONSABLES = ["DAVID","DIEGO","JOEL","MARTIN","MIGUEL","DAMIAN","NAHUEL","RODRIGO","RAMON","JOAQUIN","ROBERTO","SERGIO","PATO","FRANCO"];
   const SUCURSALES  = ["AV2","NAZCA","LAMARCA","CORRIENTES","CO2","CASTELLI","QUILMES","MORENO","SARMIENTO","DEPOSITO","PUEYRREDON"];
   const CSV_FILES = ["../../data/equivalencia.csv", "../../data/equivalencia2.csv"];
   const LS_META = "rio.suite.pickingSalida.meta.v1";

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pedidos Web - RIO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Pedidos Web - RIO</h1>
+    <div class="top-bar">
+      <span id="estadoCarga"></span>
+    </div>
+  </header>
+
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th>Canal</th>
+          <th>ID Pedido</th>
+          <th>Cliente</th>
+          <th>DNI</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+          <th>Último usuario</th>
+          <th>Envío / Retiro</th>
+        </tr>
+
+
+
+      </thead>
+
+      <tbody id="tablaPedidos">
+        <!-- Se llena por JS -->
+      </tbody>
+    </table>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
