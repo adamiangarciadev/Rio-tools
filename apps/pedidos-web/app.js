@@ -90,6 +90,12 @@
       });
     }
 
+    // Cerrar dropdowns al clickear afuera o ESC
+    document.addEventListener("click", () => cerrarTodosLosDropdowns_());
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") cerrarTodosLosDropdowns_();
+    });
+
     cargarPedidos(true);
     setInterval(() => cargarPedidos(false), 30 * 1000);
   }
@@ -271,6 +277,16 @@
   }
 
   // =========================
+  // DROPDOWN HELPERS
+  // =========================
+
+  function cerrarTodosLosDropdowns_() {
+    document
+      .querySelectorAll(".dd-menu.open")
+      .forEach((m) => m.classList.remove("open"));
+  }
+
+  // =========================
   // RENDER
   // =========================
   // Orden final de columnas:
@@ -314,15 +330,33 @@
       if (!acciones.length) {
         accionesTd.textContent = "-";
       } else {
+        // Dropdown
+        const wrap = document.createElement("div");
+        wrap.className = "dd";
+
+        const btnToggle = document.createElement("button");
+        btnToggle.className = "dd-toggle";
+        btnToggle.type = "button";
+        btnToggle.textContent = "Acciones ▾";
+
+        const menu = document.createElement("div");
+        menu.className = "dd-menu";
+
         acciones.forEach((nuevoEstado) => {
-          const btn = document.createElement("button");
-          btn.textContent = nuevoEstado;
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = "dd-item";
 
-          const clsEstado = "st-" + slugEstado_(nuevoEstado);
-          btn.className = nuevoEstado === "CANCELADO" ? "cancelado" : "accion";
-          btn.classList.add(clsEstado);
+          // clase por estado para colorear desde CSS si querés
+          item.classList.add("st-" + slugEstado_(nuevoEstado));
+          if (nuevoEstado === "CANCELADO") item.classList.add("cancelado");
 
-          btn.addEventListener("click", async () => {
+          item.textContent = nuevoEstado;
+
+          item.addEventListener("click", async () => {
+            // cerrar menú al elegir
+            menu.classList.remove("open");
+
             const usuario = prompt("¿Quién realiza la acción? (nombre)");
             if (!usuario) return;
 
@@ -353,8 +387,18 @@
             }
           });
 
-          accionesTd.appendChild(btn);
+          menu.appendChild(item);
         });
+
+        btnToggle.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          cerrarTodosLosDropdowns_();
+          menu.classList.toggle("open");
+        });
+
+        wrap.appendChild(btnToggle);
+        wrap.appendChild(menu);
+        accionesTd.appendChild(wrap);
       }
 
       tablaPedidos.appendChild(tr);

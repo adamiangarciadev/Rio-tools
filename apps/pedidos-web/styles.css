@@ -135,3 +135,55 @@ td:first-child:contains("MINORISTA") {
   border-radius: 6px;
   background:#e9e9e9;
 }
+.dd {
+  position: relative;
+  display: inline-block;
+}
+
+.dd-toggle {
+  background: #e9e9e9;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.dd-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 210px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.10);
+  display: none;
+  z-index: 1000;
+}
+
+.dd-menu.open {
+  display: block;
+}
+
+.dd-item {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: transparent;
+  color: #111;
+}
+
+.dd-item:hover {
+  background: #f3f3f3;
+}
+
+/* Cancelado destacado */
+.dd-item.cancelado {
+  background: #c62828;
+  color: #fff;
+}
+
+.dd-item.cancelado:hover {
+  filter: brightness(0.95);
+}
