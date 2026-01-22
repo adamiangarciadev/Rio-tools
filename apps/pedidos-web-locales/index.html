@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pedidos Web - RIO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Pedidos Web - RIO</h1>
+    <div class="top-bar">
+      <label for="sucursalSelect">Sucursal:</label>
+      <select id="sucursalSelect">
+        <option value="">Elegí sucursal</option>
+        <option value="SARMIENTO">SARMIENTO</option>
+        <option value="QUILMES">QUILMES</option>
+        <option value="AVELLANEDA">AVELLANEDA</option>
+      </select>
+      <span id="estadoCarga"></span>
+    </div>
+  </header>
+
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th>ID Pedido</th>
+          <th>Cliente</th>
+          <th>DNI</th>
+          <th>Monto</th>
+          <th>Estado</th>
+          <th>Alerta</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaPedidos">
+        <!-- Se llena por JS -->
+      </tbody>
+    </table>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

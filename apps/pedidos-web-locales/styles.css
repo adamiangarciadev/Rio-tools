@@ -1,0 +1,65 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f5f5f5;
+}
+
+header {
+  background: #222;
+  color: #fff;
+  padding: 10px 15px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.top-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+main {
+  padding: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+th, td {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+tr.alerta {
+  background-color: #ffe0e0;
+}
+
+button {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button.recibido {
+  background: #007bff;
+  color: #fff;
+}
+
+button.retirado {
+  background: #28a745;
+  color: #fff;
+}
+
+#estadoCarga {
+  font-size: 13px;
+  color: #ccc;
+}

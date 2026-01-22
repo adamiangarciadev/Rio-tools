@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Generador de Etiquetas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --primary:#2a7de1; --light:#f6f7fb; --border:#e5e7eb; --text:#0f172a; --sub:#475569;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:var(--light);color:var(--text)}
+    .wrap{max-width:1200px;margin:32px auto;padding:0 16px}
+    h1{font-size:22px;margin:0 0 12px}
+    .topbar{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;display:grid;grid-template-columns:1fr 300px;gap:12px;align-items:center}
+    .muted{color:var(--sub)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px}
+    .card h2{font-size:18px;margin:0 0 12px}
+    label{display:block;font-weight:600;margin-top:10px}
+    select,input[type="text"],textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:15px;background:#fff}
+    textarea{min-height:160px;resize:vertical;font-family:ui-monospace,Consolas,Menlo,monospace;line-height:1.3}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}
+    button:hover{filter:brightness(.95)}
+    ul{list-style:none;padding:0;margin:12px 0 0}
+    li{background:#f1f5f9;padding:8px 12px;border-radius:8px;margin-bottom:6px;font-family:ui-monospace,Consolas,Menlo,monospace}
+    .hint{margin-top:6px;color:#64748b;font-size:13px}
+    @media (max-width: 900px){
+      .topbar{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Generador de Etiquetas</h1>
+
+    <!-- Barra superior: Sucursal -->
+    <div class="topbar">
+      <div class="muted">Seleccioná la sucursal. Se usará en el nombre de los archivos.</div>
+      <div>
+        <label for="sucursal">Sucursal</label>
+        <select id="sucursal">
+          <option value="AVELLANEDA 2">AVELLANEDA 2</option>
+          <option value="NAZCA">NAZCA</option>
+          <option value="LAMARCA">LAMARCA</option>
+          <option value="CASTELLI">CASTELLI</option>
+          <option value="CORRIENTES 2">CORRIENTES 2</option>
+          <option value="CORRIENTES 1">CORRIENTES 1</option>
+          <option value="MORENO">MORENO</option>
+          <option value="QUILMES">QUILMES</option>
+          <option value="WEB">WEB</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Columna Izquierda: ETIQUETAS -->
+      <section class="card">
+        <h2>Etiquetas</h2>
+
+        <label for="busquedaArticulo">Buscar artículo</label>
+        <input id="busquedaArticulo" type="text" placeholder="Ej: 401 o 29-4" />
+
+        <div class="row">
+          <div>
+            <label for="articulo">Artículo</label>
+            <select id="articulo"><option value="">Cargando...</option></select>
+          </div>
+          <div>
+            <label for="color">Color</label>
+            <select id="color" disabled><option value="">Seleccionar artículo</option></select>
+          </div>
+        </div>
+
+        <label for="talle">Talle</label>
+        <select id="talle" disabled><option value="">Seleccionar color</option></select>
+
+        <div class="row" style="margin-top:10px">
+          <button id="agregar">Agregar código a la lista</button>
+          <button id="descargar">Descargar TXT de ETIQUETAS</button>
+        </div>
+
+        <div class="hint" id="contadorEtiquetas">0 códigos en la lista</div>
+        <ul id="lista"></ul>
+      </section>
+
+      <!-- Columna Derecha: BAJAS -->
+      <section class="card">
+        <h2>Bajas</h2>
+
+        <label for="bajasInput">Pickea los códigos a dar de baja</label>
+        <textarea id="bajasInput" placeholder="PICKEA ACA TODOS LOS ARTICULOS PARA DAR DE BAJA"></textarea>
+        <div class="hint" id="bajasHint">0 códigos detectados</div>
+
+        <div class="row" style="margin-top:10px">
+          <button id="descargarBajas">Descargar TXT de BAJA</button>
+          <button id="limpiarBajas" style="background:#0f172a">Limpiar</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Estado ----------
+    let registros = [];
+    let lista = []; // etiquetas (permitimos repetidos a propósito)
+
+    const $ = (sel) => document.querySelector(sel);
+
+    // ---------- Carga de equivalencias.csv ----------
+    fetch('equivalencias_.csv')
+      .then(r => r.text())
+      .then(text => {
+        // Admite ; como separador. Ignora líneas vacías.
+        const lines = text.split(/\r?\n/).filter(Boolean);
+        registros = lines.slice(1).map(line => {
+          const cols = line.split(';').map(c => c.replace(/^"|"$|(\r)/g, '').trim());
+          return { codigo: cols[0], articulo: cols[1], color: cols[2], talle: cols[3] };
+        }).filter(r => r.codigo && r.articulo && r.color && r.talle);
+
+        // Poblar artículos únicos
+        const articulos = [...new Set(registros.map(r => r.articulo))].sort();
+        const artSelect = $('#articulo');
+        artSelect.innerHTML = '<option value="">Seleccionar...</option>';
+        articulos.forEach(art => {
+          const opt = document.createElement('option');
+          opt.value = opt.textContent = art;
+          artSelect.appendChild(opt);
+        });
+      })
+      .catch(() => {
+        $('#articulo').innerHTML = '<option value="">Error al cargar equivalencias_.csv</option>';
+      });
+
+    // ---------- Buscador de artículo ----------
+    $('#busquedaArticulo').addEventListener('input', function () {
+      const filtro = this.value.trim().toLowerCase();
+      const artSelect = $('#articulo');
+      const articulosUnicos = [...new Set(registros.map(r => r.articulo))];
+
+      artSelect.innerHTML = '<option value="">Seleccionar...</option>';
+      articulosUnicos
+        .filter(art => art.toLowerCase().includes(filtro))
+        .sort()
+        .forEach(art => {
+          const opt = document.createElement('option');
+          opt.value = opt.textContent = art;
+          artSelect.appendChild(opt);
+        });
+
+      $('#color').innerHTML = '<option value="">Seleccionar artículo</option>';
+      $('#color').disabled = true;
+      $('#talle').innerHTML = '<option value="">Seleccionar color</option>';
+      $('#talle').disabled = true;
+    });
+
+    // ---------- Cambio de artículo ----------
+    $('#articulo').addEventListener('change', function () {
+      const art = this.value;
+      const colores = [...new Set(registros.filter(r => r.articulo === art).map(r => r.color))].sort();
+      const colorSelect = $('#color');
+      colorSelect.innerHTML = '<option value="">Seleccionar...</option>';
+      colores.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = opt.textContent = c;
+        colorSelect.appendChild(opt);
+      });
+      colorSelect.disabled = false;
+
+      const talleSelect = $('#talle');
+      talleSelect.innerHTML = '<option value="">Seleccionar color</option>';
+      talleSelect.disabled = true;
+    });
+
+    // ---------- Cambio de color ----------
+    $('#color').addEventListener('change', function () {
+      const art = $('#articulo').value;
+      const color = this.value;
+      const talles = [...new Set(registros
+        .filter(r => r.articulo === art && r.color === color)
+        .map(r => r.talle)
+      )].sort((a,b)=> (''+a).localeCompare(b, undefined, {numeric:true}));
+      const talleSelect = $('#talle');
+      talleSelect.innerHTML = '<option value="">Seleccionar...</option>';
+      talles.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = opt.textContent = t;
+        talleSelect.appendChild(opt);
+      });
+      talleSelect.disabled = false;
+    });
+
+    // ---------- Agregar a la lista de ETIQUETAS ----------
+    $('#agregar').addEventListener('click', function () {
+      const art = $('#articulo').value;
+      const color = $('#color').value;
+      const talle = $('#talle').value;
+
+      if (!art || !color || !talle) {
+        alert('Completá Artículo, Color y Talle.');
+        return;
+      }
+      const resultado = registros.find(r => r.articulo === art && r.color === color && r.talle === talle);
+      if (resultado) {
+        lista.push(resultado.codigo); // permitimos repetidos
+        const li = document.createElement('li');
+        li.textContent = resultado.codigo;
+        $('#lista').appendChild(li);
+        actualizarContadorEtiquetas();
+      } else {
+        alert('No se encontró el código para esa combinación.');
+      }
+    });
+
+    function actualizarContadorEtiquetas(){
+      $('#contadorEtiquetas').textContent = `${lista.length} código${lista.length!==1?'s':''} en la lista`;
+    }
+
+    // ---------- Descargar TXT (ETIQUETAS) ----------
+    $('#descargar').addEventListener('click', function () {
+      if (lista.length === 0) return alert('No hay códigos agregados.');
+      const contenido = lista.join('\n');
+      descargarComoTXT(contenido, 'ETIQUETAS');
+    });
+
+    // ---------- BAJAS ----------
+    const bajasInput = $('#bajasInput');
+    const bajasHint  = $('#bajasHint');
+
+    function parsearBajas(raw) {
+      // separadores: salto de línea, coma, punto y coma, tab, espacios múltiples
+      const tokens = raw.split(/[\n,;\t ]+/).map(t => t.trim()).filter(Boolean);
+      // dedupe conservando orden
+      const set = new Set(), out = [];
+      for (const t of tokens){ if(!set.has(t)){ set.add(t); out.push(t); } }
+      return out;
+    }
+
+    bajasInput.addEventListener('input', () => {
+      const items = parsearBajas(bajasInput.value);
+      bajasHint.textContent = `${items.length} código${items.length!==1?'s':''} detectado${items.length!==1?'s':''}`;
+    });
+
+    $('#limpiarBajas').addEventListener('click', () => {
+      bajasInput.value = '';
+      bajasHint.textContent = '0 códigos detectados';
+    });
+
+    $('#descargarBajas').addEventListener('click', function () {
+      const items = parsearBajas(bajasInput.value);
+      if (items.length === 0) return alert('No hay códigos en BAJAS.');
+      const contenido = items.join('\n');
+      descargarComoTXT(contenido, 'BAJAS');
+    });
+
+    // ---------- Utilidad común de descarga ----------
+    function descargarComoTXT(contenido, prefijo) {
+      const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const sucursal = ($('#sucursal').value || 'SIN_NOMBRE').replace(/\s+/g, '_');
+      const fecha = new Date().toISOString().split('T')[0];
+      a.download = `${prefijo}_PARA_${sucursal}_${fecha}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }
+  </script>
+</body>
+</html>

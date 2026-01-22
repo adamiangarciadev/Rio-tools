@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Categorizador RIO E-commerce</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header>
+  <h1>Categorizador RIO E-commerce</h1>
+  <div class="right toolbar">
+    <button id="btnCyber" class="btn cyber">Modo CYBER: OFF</button>
+  </div>
+</header>
+
+
+  <div class="container">
+    <div class="grid">
+      <section class="card" style="grid-column: span 6">
+        <h2>1) Cargar archivo de <b>Categorías</b></h2>
+        <div class="drop">
+          <div>
+            <div class="small">Formato esperado de columnas (pueden venir con tildes y distinto orden):</div>
+            <div class="tags" style="margin-top:8px">
+              <span class="pill">Código</span>
+              <span class="pill">Categoría</span>
+              <span class="pill">Es subcategoría de</span>
+              <span class="pill">Rama</span>
+              <span class="pill">codcat1</span>
+              <span class="pill">codcat2</span>
+              <span class="pill">codcat3</span>
+              <span class="pill">codcat4</span>
+            </div>
+            <div class="footer">Soporta <code class="k">.xlsx</code>, <code class="k">.xls</code> y <code class="k">.csv</code>.</div>
+          </div>
+          <div>
+            <input id="fileCategorias" type="file" accept=".xlsx,.xls,.csv" />
+            <label for="fileCategorias">SUBIR ARCHIVO</label>
+          </div>
+        </div>
+        <div id="summaryCategorias" class="small" style="margin-top:10px"></div>
+        <div id="previewCategorias" style="margin-top:10px;max-height:260px;overflow:auto"></div>
+      </section>
+
+      <section class="card" style="grid-column: span 6">
+        <h2>2) Cargar archivo de <b>Artículos</b></h2>
+        <div class="drop">
+          <div class="small">Subí tu segundo archivo (artículos para asignar ramas).</div>
+          <div>
+            <input id="fileSecundario" type="file" accept=".xlsx,.xls,.csv" />
+            <label for="fileSecundario">SUBIR ARCHIVO</label>
+          </div>
+        </div>
+        <div id="summarySecundario" class="small" style="margin-top:10px"></div>
+        <div id="previewSecundario" style="margin-top:10px;max-height:260px;overflow:auto"></div>
+      </section>
+
+      <section class="card" style="grid-column: span 12">
+        <h2>Asignar <em>Rama</em> a Artículos</h2>
+        <div class="toolbar" style="margin-bottom:8px">
+          <input id="buscarArt" class="search" type="text" placeholder="Buscar en artículos (código o descripción)…" />
+          <button id="btnExportArt" class="btn accent" disabled>Exportar mapeo (,)</button>
+          <button id="btnExportArtSemi" class="btn" disabled>DESCARGA COMPLETA (;)</button>
+        </div>
+        <div id="tablaArticulos" style="max-height:420px;overflow:auto"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
