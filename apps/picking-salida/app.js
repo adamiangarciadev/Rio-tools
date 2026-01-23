@@ -23,6 +23,9 @@
   // PUEYRREDON
   const SCRIPT_URL_PUEYRREDON = "https://script.google.com/macros/s/AKfycbxKRHA79kv30UEjOU_eeehr8evuVPhqDFfSaanJgeJPgUSEZao5eLqsTyO73CdLvgZE/exec";
 
+  // DEPOSITO
+  const SCRIPT_URL_DEPOSITO = "https://script.google.com/macros/s/AKfycbxidW-8kYw_w6Wsym4UU6euKDBLbZV-n2NapYarZvtx3tifPWPv22Ck4-y4F27xRqjx/exec";
+
   // ====== Estado ======
   let rows = [];
   let byCode = new Map();   // key(code) -> row
@@ -349,6 +352,7 @@
     if (o === "SARMIENTO") return SCRIPT_URL_SARMIENTO;
     if (o === "AV2")       return SCRIPT_URL_AV2;
     if (o === "PUEYRREDON") return SCRIPT_URL_PUEYRREDON;
+    if (o === "DEPOSITO") return SCRIPT_URL_DEPOSITO;
     // Si aún no hay script asignado para otros locales:
     return "";
   }
