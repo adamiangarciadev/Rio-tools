@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ENTRADA de MERCADERÍA - RIO</title>
+  <meta name="description" content="App para recepción de mercadería con escáner (Zebra/HID) y descarga de TXT." />
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="container header-row">
+    <div>
+      <h1>ENTRADA DE MERCADERÍA - RIO</h1>
+    </div>
+    <div id="readyPill" class="pill hidden" aria-live="polite" title="Estado">
+      <span class="dot"></span><span id="pillText">Cargando…</span>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ================================================
+         CONFIGURACIÓN
+    ===================================================== -->
+    <section class="card">
+      <h2>Datos de la Recepción</h2>
+
+      <div class="row">
+
+        <!-- RESPONSABLE ORIGEN -->
+        <label>Responsable de Origen
+          <select id="respOrigenSelect" class="input"></select>
+        </label>
+
+        <!-- REMITO ORIGEN -->
+        <label>N° de Remito (Origen)
+          <input id="remitoOrigenInput" type="text" inputmode="numeric" pattern="\d*" placeholder="Solo números" class="input" />
+        </label>
+
+        <!-- RESPONSABLE ENTRADA -->
+        <label>Responsable de Entrada
+          <select id="respEntradaSelect" class="input"></select>
+        </label>
+
+        <!-- SUCURSAL ENTRADA -->
+        <label>Sucursal de Entrada
+          <select id="sucursalEntradaSelect" class="input"></select>
+        </label>
+
+        <!-- BULTOS (opcional, decime si lo sacamos o lo dejamos) -->
+        <label>Bultos
+          <input id="bultosInput" type="text" inputmode="numeric" pattern="\d*" placeholder="Cantidad" class="input" />
+        </label>
+
+        <label class="spacer"></label>
+        <span class="badge">Se guarda en tu navegador</span>
+      </div>
+    </section>
+
+    <!-- ================================================
+         PICKEO / ESCANEO
+    ===================================================== -->
+    <section class="card">
+      <h2>Escaneo</h2>
+      <p class="muted small">
+        La app carga automáticamente <code>equivalencia.csv</code> y <code>equivalencias2.csv</code> si existen en la carpeta.
+      </p>
+
+      <div class="scan-wrap">
+        <input id="scanInput" class="scan-input" type="text" placeholder="Escaneá el código…" autocomplete="off" autofocus />
+        <div class="scan-meta">
+          <span id="scanCount" class="badge">0 escaneados</span>
+          <span id="noti" class="muted"></span>
+        </div>
+      </div>
+
+      <div id="lastScans" class="last-scans"></div>
+    </section>
+
+    <!-- ================================================
+         DESCARGA DEL TXT
+    ===================================================== -->
+    <section class="card">
+      <h2>Guardar TXT</h2>
+      <div class="row">
+        <button id="saveBtn" class="btn primary">Guardar TXT</button>
+        <button id="resetBtn" class="btn">Reiniciar escaneo</button>
+      </div>
+      <p class="muted small">
+        Se genera un TXT con un código por línea en el orden escaneado y se guarda en Google Drive.
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="container foot muted">
+    Hecho con ❤️ por Damy
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pickeo SALIDA - RIO</title>
+  <meta name="description" content="App 100% front-end para pickeo con escáner (Zebra/HID) y descarga de TXT." />
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="container header-row">
+    <div>
+      <h1>SALIDA DE MERCADERIA</h1>
+    
+    </div>
+    <div id="readyPill" class="pill hidden" aria-live="polite" title="Estado">
+      <span class="dot"></span><span id="pillText">Cargando…</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Configurar pickeo</h2>
+      <div class="row">
+        <label>Responsable
+          <select id="respSelect" class="input"></select>
+        </label>
+        <label>Origen
+          <select id="origenSelect" class="input"></select>
+        </label>
+        <label>Destino
+          <select id="destinoSelect" class="input"></select>
+        </label>
+        <label>Bultos
+          <input id="bultosInput" type="text" inputmode="numeric" pattern="\d*" placeholder="Cantidad" class="input" />
+        </label>
+        <label>Número de remito
+          <input id="remitoInput" type="text" inputmode="numeric" pattern="\d*" placeholder="Solo números" class="input" />
+        </label>
+        <label class="spacer"></label>
+        <span class="badge">Se guarda en tu navegador</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Pickeo</h2>
+      <p class="muted small">La app carga automáticamente <code>equivalencia.csv</code> y <code>equivalencias2.csv</code> si existen en la carpeta.</p>
+      <div class="scan-wrap">
+        <input id="scanInput" class="scan-input" type="text" placeholder="Escaneá el código…" autocomplete="off" autofocus />
+        <div class="scan-meta">
+          <span id="scanCount" class="badge">0 escaneados</span>
+          <span id="noti" class="muted"></span>
+        </div>
+      </div>
+      <div id="lastScans" class="last-scans"></div>
+    </section>
+
+    <section class="card">
+      <h2>GUARDAR TXT</h2>
+      <div class="row">
+        <label class="spacer"></label>
+        <button id="downloadBtn" class="btn primary">GUARDAR</button>
+      </div>
+      <p class="muted small">Se genera un TXT con <em>un código por línea</em> en el orden escaneado. También descarga “FALTA EQUIVALENCIA” si hay faltantes.</p>
+    </section>
+  </main>
+
+  <footer class="container foot muted">
+    Hecho con ❤️ por Damy
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
