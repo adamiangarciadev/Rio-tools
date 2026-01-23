@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Pedido Semanal · RIO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Libs -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <strong>PEDIDO SEMANAL PARA DEPOSITO</strong>
+      <span class="muted">· Gestión de promos</span>
+    </div>
+    <div class="meta">
+      <label>
+        Sucursal
+        <select id="sucursalSelect"></select>
+      </label>
+      <div class="kpi">
+        <span class="tag">Ítems:</span>
+        <strong id="count">0</strong>
+      </div>
+      <button id="btnPDF" class="btn primary">Exportar PDF</button>
+    </div>
+  </header>
+
+  <main class="container two-cols">
+    <!-- Columna IZQUIERDA -->
+    <section class="col-left">
+      <div id="alerta" class="alert" style="display:none;"></div>
+
+      <!-- Buscador -->
+      <section class="card">
+        <h2>1) Elegí una promoción</h2>
+        <label>
+          Buscar promo
+          <input id="promoSearch" list="promosList" type="text" placeholder="ID o 'Marca - Nombre'…" />
+          <datalist id="promosList"></datalist>
+        </label>
+      </section>
+
+      <!-- Grid de tarjetas de promociones -->
+      <section id="promosGrid" class="promos-grid card">
+        <div class="empty">Cargando promociones…</div>
+      </section>
+    </section>
+
+    <!-- Columna DERECHA: pedido sticky -->
+    <aside class="col-right">
+      <section class="card sticky">
+        <div class="row space-between center">
+          <h2>Pedido</h2>
+          <div class="row gap">
+            <button id="copiar" class="btn ghost">Copiar</button>
+            <button id="vaciar" class="btn danger ghost">Vaciar</button>
+          </div>
+        </div>
+        <div id="pedidoWrap" class="table-wrap">
+          <div class="empty">Sin ítems en el pedido.</div>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- Drawer lateral de Talles (aparece al expandir tarjeta) -->
+  <aside id="tallesDrawer" class="talles-drawer" aria-hidden="true">
+    <!-- Se rellena por JS -->
+    <div class="drawer-content">
+      <div class="drawer-head">
+        <h3>Talles</h3>
+        <button class="btn ghost drawer-close" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div class="empty">Elegí una promo para ver talles</div>
+      </div>
+    </div>
+  </aside>
+
+  <footer class="footer">
+    <small class="muted">Hecho con ❤️ por Damy</small>
+  </footer>
+
+  <script defer src="app.js"></script>
+</body>
+</html>
