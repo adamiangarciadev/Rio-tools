@@ -334,7 +334,7 @@
     const yy = String(now.getFullYear()).slice(-2);
     const mm = String(now.getMonth()+1).padStart(2,"0");
     const dd = String(now.getDate()).padStart(2,"0");
-    const FECHA = `${yy}${mm}${dd}`;
+    const FECHA = `${dd}${mm}${yy}`;
 
     const DESTINO = safeName((el.destinoSelect?.value || "").toUpperCase());
     const RESPONSABLE = safeName((el.respSelect?.value || "").toUpperCase());
