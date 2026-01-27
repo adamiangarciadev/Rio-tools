@@ -1,8 +1,6 @@
 /* app.js — 2 CSV, match normalizado, nombre con BULTOS, y UN SOLO TXT con TODOS los códigos
-   - Sin descarga local (solo Drive)
+   - Sin descarga local
    - Señal visual/sonora al enviar a Drive (optimista: con mode:"no-cors" no se puede confirmar 100%)
-   - Botón opcional para limpiar escaneo (#resetBtn)
-   - Auto-limpieza luego de "guardado"
 */
 ;(() => {
   "use strict";
@@ -11,16 +9,22 @@
   const RESPONSABLES = ["DAVID","DIEGO","JOEL","MARTIN","MIGUEL","NAHUEL","RODRIGO","RAMON","ROBERTO","SERGIO","PATO","FRANCO"];
   const SUCURSALES  = ["AV2","NAZCA","LAMARCA","CORRIENTES","CO2","CASTELLI","QUILMES","MORENO","SARMIENTO","DEPOSITO","PUEYRREDON"];
   const CSV_FILES   = ["equivalencia.csv", "equivalencia2.csv"]; // ambos si existen
-
   const LS_META  = "pickeo_meta_v1";
   const AUTOCOMMIT_IDLE_MS = 80;
   const MIN_LEN_FOR_COMMIT = 3;
 
   // ====== URLs de Apps Script por ORIGEN ======
-  const SCRIPT_URL_SARMIENTO  = "https://script.google.com/macros/s/AKfycbzpGGyA_acQYDzZldHnameD5Xwo8hGW6-eaFjAlDZfljsuU5tqkeCb8Nizk_e2CitDU/exec";
-  const SCRIPT_URL_AV2        = "https://script.google.com/macros/s/AKfycbwPNl9zyKtgun43MijeiFL3BtGTyM79_a4pocTYlYOr9Q5KllWra6s2HjbGIr11XFGy9w/exec";
+  // SARMIENTO
+  const SCRIPT_URL_SARMIENTO = "https://script.google.com/macros/s/AKfycbzpGGyA_acQYDzZldHnameD5Xwo8hGW6-eaFjAlDZfljsuU5tqkeCb8Nizk_e2CitDU/exec";
+
+  // AV2
+  const SCRIPT_URL_AV2 = "https://script.google.com/macros/s/AKfycbwPNl9zyKtgun43MijeiFL3BtGTyM79_a4pocTYlYOr9Q5KllWra6s2HjbGIr11XFGy9w/exec";
+
+  // PUEYRREDON
   const SCRIPT_URL_PUEYRREDON = "https://script.google.com/macros/s/AKfycbxKRHA79kv30UEjOU_eeehr8evuVPhqDFfSaanJgeJPgUSEZao5eLqsTyO73CdLvgZE/exec";
-  const SCRIPT_URL_DEPOSITO   = "https://script.google.com/macros/s/AKfycbxidW-8kYw_w6Wsym4UU6euKDBLbZV-n2NapYarZvtx3tifPWPv22Ck4-y4F27xRqjx/exec";
+
+  // DEPOSITO
+  const SCRIPT_URL_DEPOSITO = "https://script.google.com/macros/s/AKfycbxidW-8kYw_w6Wsym4UU6euKDBLbZV-n2NapYarZvtx3tifPWPv22Ck4-y4F27xRqjx/exec";
 
   // ====== Estado ======
   let rows = [];
@@ -34,20 +38,16 @@
   const el = {
     readyPill: $("#readyPill"),
     pillText:  $("#pillText"),
-
-    respSelect:    $("#respSelect"),
-    origenSelect:  $("#origenSelect"),
-    destinoSelect: $("#destinoSelect"),
-    bultosInput:   $("#bultosInput"),
-    remitoInput:   $("#remitoInput"),
-
-    scanInput:  $("#scanInput"),
-    scanCount:  $("#scanCount"),
+    respSelect:   $("#respSelect"),
+    origenSelect: $("#origenSelect"),
+    destinoSelect:$("#destinoSelect"),
+    bultosInput:  $("#bultosInput"),
+    remitoInput:  $("#remitoInput"),
+    scanInput: $("#scanInput"),
+    scanCount: $("#scanCount"),
     noti:       $("#noti"),
     lastScans:  $("#lastScans"),
-
-    downloadBtn: $("#downloadBtn"), // botón Guardar / Descargar (solo Drive)
-    resetBtn:    $("#resetBtn"),    // opcional en HTML
+    downloadBtn: $("#downloadBtn"),
   };
 
   // ====== Init ======
@@ -73,18 +73,9 @@
         }
         scheduleAutoCommit();
       });
-
-      el.scanInput.addEventListener("input", () => {
-        ensureAudio();
-        scheduleAutoCommit();
-      });
+      el.scanInput.addEventListener("input", () => { ensureAudio(); scheduleAutoCommit(); });
     }
-
-    // Guardar (solo Drive)
     if (el.downloadBtn) el.downloadBtn.addEventListener("click", downloadTxt);
-
-    // Limpiar escaneo (manual) — si existe el botón en HTML
-    if (el.resetBtn) el.resetBtn.addEventListener("click", resetScans);
   }
 
   // ====== Selectors / LocalStorage ======
@@ -101,7 +92,6 @@
     if (typeof remito === "string") el.remitoInput.value = remito;
 
     [el.respSelect, el.origenSelect, el.destinoSelect].forEach(s => s?.addEventListener("change", saveMeta));
-
     const digitsOnly = (e) => {
       const v = (e.target.value || "").replace(/\D+/g, "");
       if (v !== e.target.value) e.target.value = v;
@@ -127,11 +117,7 @@
   function fillOptions(select, list){
     if(!select) return;
     select.innerHTML = "";
-    list.forEach(v => {
-      const o=document.createElement("option");
-      o.value=v; o.textContent=v;
-      select.appendChild(o);
-    });
+    list.forEach(v => { const o=document.createElement("option"); o.value=v; o.textContent=v; select.appendChild(o); });
   }
 
   // ====== Audio ======
@@ -159,7 +145,8 @@
     if (!audioCtx) return;
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
-    o.type="sine"; o.frequency.value=880;
+    o.type="sine";
+    o.frequency.value=880;
     g.gain.value=0.0001;
     o.connect(g).connect(audioCtx.destination);
     o.start();
@@ -173,9 +160,6 @@
     note("Archivo guardado en Google Drive");
     showPill("ok", "TXT guardado en Drive");
     beepOk();
-
-    // ✅ Auto-limpieza para volver a pickear
-    setTimeout(() => resetScans({ silent: true }), 650);
   }
 
   function signalError(){
@@ -276,7 +260,6 @@
   function processScan(code){
     const clean = String(code || "").trim();
     if (!clean){ flash("err"); return; }
-
     const k = key(clean);
     const hit = byCode.has(k);
 
@@ -311,22 +294,7 @@
     el.lastScans.innerHTML = recent || "";
   }
 
-  // ✅ Reset (limpiar escaneo)
-  function resetScans({ silent=false } = {}){
-    scans = [];
-    if (el.scanCount) el.scanCount.textContent = "0 escaneados";
-    if (el.lastScans) el.lastScans.innerHTML = "";
-    if (el.scanInput){
-      el.scanInput.value = "";
-      el.scanInput.focus();
-    }
-    if (!silent){
-      note("Escaneo limpio. Listo para pickear.");
-      showPill("ok", "Listo para pickear");
-    }
-  }
-
-  // Mantener foco SOLO donde corresponde
+  // Mantener foco SOLO donde corresponde (sin robarlo a los selects/inputs)
   function keepFocus(){
     if (!el.scanInput) return;
     el.scanInput.focus();
@@ -336,21 +304,13 @@
     });
   }
 
-  // ====== Guardar TXT (Drive) ======
+  // ====== TXT (UN SOLO ARCHIVO con TODOS los códigos) ======
   function downloadTxt(){
-    ensureAudio();
-
-    if (!scans.length){
-      showPill("warn", "No hay escaneos");
-      note("No hay escaneos para guardar.");
-      flash("err");
-      return;
-    }
-
     // Señal de "enviando"
     showPill("warn", "Guardando en Drive…");
     note("Guardando en Google Drive…");
 
+    // Todos los escaneos, convirtiendo a código interno si existe
     const lines = scans.map(s => {
       const row = byCode.get(key(s.code));
       return getOutputCode(row, s.code);
@@ -358,9 +318,14 @@
 
     const content = lines.join("\n");
     const fnameBase = resolveFilename();
-    const folderName = (el.destinoSelect?.value || "INVENTARIO").toString().toUpperCase();
 
-    enviarArchivoAGoogleDrive({ content, fileName: fnameBase, folderName });
+    // ✅ SOLO Drive (sin descarga local)
+    const folderName = (el.destinoSelect?.value || "INVENTARIO").toString().toUpperCase();
+    enviarArchivoAGoogleDrive({
+      content: content,
+      fileName: fnameBase,
+      folderName: folderName
+    });
   }
 
   // Formato: YYMMDD DESTINO RESPONSABLE NB REM<REMITO>.txt
@@ -369,7 +334,7 @@
     const yy = String(now.getFullYear()).slice(-2);
     const mm = String(now.getMonth()+1).padStart(2,"0");
     const dd = String(now.getDate()).padStart(2,"0");
-    const FECHA = `${yy}${mm}${dd}`;
+    const FECHA = `${dd}${mm}${yy}`;
 
     const DESTINO = safeName((el.destinoSelect?.value || "").toUpperCase());
     const RESPONSABLE = safeName((el.respSelect?.value || "").toUpperCase());
@@ -384,10 +349,11 @@
   // ====== Envío a Apps Script (Google Drive) ======
   function getScriptUrlForOrigen(origen){
     const o = String(origen || "").toUpperCase().trim();
-    if (o === "SARMIENTO")  return SCRIPT_URL_SARMIENTO;
-    if (o === "AV2")        return SCRIPT_URL_AV2;
+    if (o === "SARMIENTO") return SCRIPT_URL_SARMIENTO;
+    if (o === "AV2")       return SCRIPT_URL_AV2;
     if (o === "PUEYRREDON") return SCRIPT_URL_PUEYRREDON;
-    if (o === "DEPOSITO")   return SCRIPT_URL_DEPOSITO;
+    if (o === "DEPOSITO") return SCRIPT_URL_DEPOSITO;
+    // Si aún no hay script asignado para otros locales:
     return "";
   }
 
@@ -402,17 +368,19 @@
     }
 
     const payload = {
-      content,
-      fileName,
-      folderName,
+      content: content,
+      fileName: fileName,
+      folderName: folderName,
       mimeType: "text/plain"
     };
 
     try {
       fetch(scriptUrl, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        mode: "no-cors", // no podemos leer la respuesta, pero el archivo se crea igual (señal optimista)
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
         body: JSON.stringify(payload)
       })
       .then(() => {
@@ -431,23 +399,23 @@
 
   // ====== Helpers ======
   function ensureTxt(name){ return name.toLowerCase().endsWith(".txt") ? name : `${name}.txt`; }
-  function sanitize(s){ return s.replace(/[\\/:*?"<>|]+/g, "_"); }
-  function safeName(s){ return String(s || "").normalize("NFC"); }
+  function sanitize(s){ return s.replace(/[\\/:*?"<>|]+/g, "_"); } // mantiene espacios/acentos
+  function safeName(s){ return s.normalize("NFC"); }
 
   // ====== CSV robusto (autodetecta ; , | \t y comillas) ======
   function parseCSV(text){
     const lines = text.split(/\r?\n/).filter(l => l.length>0);
     if (!lines.length) return [];
-    const sep = detectDelimiter(lines[0], lines[1]);
+    const sep = detectDelimiter(lines[0], lines[1]); // ; , | \t
     const rawHeaders = splitCSVLine(lines[0], sep);
 
+    // deduplicar encabezados
     const seen = {};
     const headers = rawHeaders.map(h => {
       let k = String(h || "").trim();
       if (!k) k = "COL";
       if (seen[k]) { let n = 2; while (seen[`${k}_${n}`]) n++; k = `${k}_${n}`; }
-      seen[k] = true;
-      return k;
+      seen[k] = true; return k;
     });
 
     const out = [];
@@ -466,12 +434,8 @@
       let q=false, n=0;
       for(let i=0;i<line.length;i++){
         const c=line[i], nxt=line[i+1];
-        if (c === '"'){
-          if(q && nxt === '"'){ i++; }
-          else { q=!q; }
-        } else if (!q && c === ch){
-          n++;
-        }
+        if (c === '"'){ if(q && nxt === '"'){ i++; } else { q=!q; } }
+        else if (!q && c === ch){ n++; }
       }
       return n;
     };
@@ -482,15 +446,12 @@
   }
 
   function splitCSVLine(line, sep){
-    const out = [];
-    let cur = "";
-    let q = false;
+    const out = []; let cur=""; let q=false;
     for(let i=0;i<line.length;i++){
       const c=line[i], n=line[i+1];
-      if (c === '"'){
-        if (q && n === '"'){ cur+='"'; i++; }
-        else { q=!q; }
-      } else if (c === sep && !q){
+      if(c === '"'){
+        if(q && n === '"'){ cur+='"'; i++; } else { q=!q; }
+      } else if(c === sep && !q){
         out.push(cur); cur="";
       } else {
         cur += c;
@@ -500,17 +461,24 @@
     return out;
   }
 
-  // ====== Visual ======
+  // ====== Otros helpers visuales ======
+  function slug(s){
+    return (s||"").toString()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu,"")
+      .replace(/[^\w\-]+/g,"_")
+      .replace(/_+/g,"_")
+      .replace(/^_|_$/g,"");
+  }
+
   function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, (m) =>
-      ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])
-    );
+    return String(s).replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
   }
 
   function showPill(state, text){
     if(!el.readyPill) return;
     el.readyPill.classList.remove("hidden","ok","warn","danger");
     el.readyPill.classList.add(state || "ok");
-    if (el.pillText) el.pillText.textContent = text || (state === "ok" ? "Listo para pickear" : "Estado");
+    if(el.pillText) el.pillText.textContent = text || (state === "ok" ? "Listo para pickear" : "Estado");
   }
 })();
