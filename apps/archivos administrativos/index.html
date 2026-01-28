@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>RIO Tools Suite · Archivos Administrativos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSS PRINCIPAL DE LA SUITE -->
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+
+  <!-- HEADER / TOPBAR (igual al resto de la suite) -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-title">RIO Tools Suite</div>
+        <div class="brand-sub">Archivos administrativos</div>
+      </div>
+
+      <div class="topbar-actions">
+        <a class="btn" href="./index.html">Volver</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO -->
+  <main class="container">
+
+    <!-- =========================
+         ADMINISTRACION / ARCHIVOS
+         ========================= -->
+    <section class="adm-wrap">
+
+      <!-- 1) PLANILLAS DIARIAS -->
+      <article class="adm-panel" id="panel-planillas">
+        <header class="adm-head">
+          <h2 class="adm-title">Planillas diarias</h2>
+          <p class="adm-sub">Seleccioná la sucursal y descargá la planilla.</p>
+        </header>
+
+        <div class="adm-body">
+          <label class="adm-label" for="pdSucursal">Sucursal</label>
+
+          <!-- selector con scroll -->
+          <select id="pdSucursal" class="adm-select" size="8"></select>
+
+          <button
+            id="pdDescargar"
+            class="adm-btn adm-btn-primary"
+            type="button"
+            disabled
+          >
+            Descargar
+          </button>
+
+          <div id="pdHint" class="adm-hint">
+            Elegí una sucursal para habilitar la descarga.
+          </div>
+        </div>
+      </article>
+
+      <!-- 2) CUENTAS PARA DEPÓSITO -->
+      <article class="adm-panel" id="panel-cuentas">
+        <header class="adm-head">
+          <h2 class="adm-title">Cuentas para Depósito</h2>
+          <p class="adm-sub">
+            Accesos rápidos a archivos internos del depósito.
+          </p>
+        </header>
+
+        <div class="adm-body">
+          <div class="adm-links">
+            <!-- Ejemplos
+            <a class="adm-link" href="LINK" target="_blank" rel="noopener">
+              Cuenta MPQR Depósito
+            </a>
+            <a class="adm-link" href="LINK" target="_blank" rel="noopener">
+              CBU Proveedor
+            </a>
+            -->
+            <div class="adm-empty">
+              Pegame los links y lo dejo armado.
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 3) MANUALES DRAGONFISH -->
+      <article class="adm-panel" id="panel-manuales">
+        <header class="adm-head">
+          <h2 class="adm-title">Manuales Dragonfish</h2>
+          <p class="adm-sub">
+            Guías operativas (caja, stock, facturación, etc.).
+          </p>
+        </header>
+
+        <div class="adm-body">
+          <div class="adm-links">
+            <!-- Ejemplos
+            <a class="adm-link" href="PDF" target="_blank" rel="noopener">
+              Manual Caja
+            </a>
+            <a class="adm-link" href="PDF" target="_blank" rel="noopener">
+              Manual Stock
+            </a>
+            -->
+            <div class="adm-empty">
+              Pegame la carpeta o los PDFs y lo ordeno.
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+  </main>
+
+  <!-- JS ÚNICO DE LA SUITE -->
+  <script src="./app.js"></script>
+
+</body>
+</html>
