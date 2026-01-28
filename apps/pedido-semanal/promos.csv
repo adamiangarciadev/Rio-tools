@@ -1,5 +1,7 @@
 id,marca,nombre,codigo,desc,familia,talles,precio_uno,precio_tres,precio_cantidad
 
+promo-pack-brigitte-lupe,Brigitte-Lupe,PROMO PACK Brigitte Lupe,03-1201,PROMO PACK Brigitte Lupe,Packs,UNICO,7000,7000,10000
+promo-pack-brigitte-lupe,Brigitte-Lupe,PROMO PACK Brigitte Lupe,34-722,PROMO PACK Brigitte Lupe,Packs,UNICO,7000,7000,10000
 
 promo-pack-rio-1,Rio,PROMO PACK RIO 1,1-30211,PROMO PACK RIO 1,Packs,UNICO,2660,3000,
 promo-pack-rio-1,Rio,PROMO PACK RIO 1,1-30212,PROMO PACK RIO 1,Packs,UNICO,2660,3000,
