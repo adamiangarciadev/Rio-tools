@@ -31,33 +31,37 @@
       </div>
 
       <div class="grid">
+        <!-- Sucursal -->
         <div class="field">
           <label for="sucursalSelect">Sucursal</label>
           <div class="row">
             <select id="sucursalSelect" class="input"></select>
-            <button id="btnCambiarSucursal" class="btn" type="button" title="Guardar sucursal en esta PC">Guardar</button>
           </div>
           <div class="help" id="sucursalHelp">La sucursal queda guardada en esta PC.</div>
         </div>
 
+        <!-- Vendedor -->
         <div class="field">
           <label for="vendedorId">N° vendedor</label>
           <input id="vendedorId" class="input" inputmode="numeric" autocomplete="off" placeholder="Ej: 1023" />
           <div class="help">Enter para buscar. Después Enter para guardar.</div>
         </div>
 
+        <!-- Nombre -->
         <div class="field">
           <label>Nombre</label>
           <div class="readonly" id="vendedorNombre">—</div>
           <div class="help" id="padronHint">Se valida contra padrón.</div>
         </div>
 
+        <!-- Hora -->
         <div class="field">
           <label for="horaSelect">Hora declarada</label>
           <select id="horaSelect" class="input"></select>
           <div class="help">Intervalos de 5 minutos.</div>
         </div>
 
+        <!-- Tipo -->
         <div class="field">
           <label for="tipoEvento">Tipo</label>
           <select id="tipoEvento" class="input">
@@ -70,13 +74,29 @@
           <div class="help">Podés dejar solo ENTRADA si querés simplificar.</div>
         </div>
 
+        <!-- Observación -->
         <div class="field">
           <label for="observacion">Observación (opcional)</label>
           <input id="observacion" class="input" autocomplete="off" placeholder="Ej: llegó tarde por lluvia" />
           <div class="help">Se guarda junto al registro.</div>
         </div>
+
+        <!-- NUEVO: Comprobante -->
+        <div class="field">
+          <label for="comprobanteFile">Comprobante / Certificado</label>
+          <input
+            id="comprobanteFile"
+            class="input"
+            type="file"
+            accept="application/pdf,image/*"
+          />
+          <div class="help" id="comprobanteInfo">
+            Opcional. PDF o imagen (preferentemente liviano).
+          </div>
+        </div>
       </div>
 
+      <!-- Acciones -->
       <div class="actions">
         <button id="btnBuscar" class="btn" type="button">Buscar vendedor</button>
         <button id="btnGuardar" class="btn primary" type="button">Guardar</button>
@@ -85,6 +105,7 @@
 
       <div class="divider"></div>
 
+      <!-- Último guardado -->
       <div class="last">
         <div class="last-title">Último guardado</div>
         <div class="last-box" id="lastSaved">—</div>

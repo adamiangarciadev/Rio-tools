@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SUPERVISORES · ASISTENCIA HOY</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<header class="container header-row">
+  <div class="head-left">
+    <h1>SUPERVISORES · ASISTENCIA HOY</h1>
+    <div class="muted small">Se actualiza por día automáticamente. Muestra EVENTOS de hoy.</div>
+  </div>
+
+  <div class="head-right">
+    <div class="search">
+      <input id="q" class="input" type="text" placeholder="Buscar vendedor…" autocomplete="off" />
+    </div>
+
+    <button id="btnRefresh" class="btn primary" type="button">Actualizar</button>
+
+    <label class="chk-inline">
+      <input id="autoRefresh" type="checkbox" checked />
+      <span>Auto</span>
+    </label>
+
+    <div id="readyPill" class="pill hidden">
+      <span class="dot"></span><span id="pillText">Cargando…</span>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card top-card">
+    <div class="row space-between center">
+      <div class="kpis">
+        <span class="tag">Fecha:</span> <strong id="kpiFecha">—</strong>
+        <span class="tag">Locales:</span> <strong id="kpiLocales">0</strong>
+        <span class="tag">Eventos:</span> <strong id="kpiEventos">0</strong>
+        <span class="tag">Mostrando:</span> <strong id="kpiMostrando">0</strong>
+      </div>
+    </div>
+  </section>
+
+  <section id="grid" class="locals-grid"></section>
+</main>
+
+<footer class="container foot muted">RIO Tools Suite · Supervisores</footer>
+
+<script src="./app.js"></script>
+</body>
+</html>

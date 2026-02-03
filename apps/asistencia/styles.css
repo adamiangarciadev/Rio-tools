@@ -159,3 +159,22 @@ h1{ margin: 0; font-size: 16px; font-weight: 750; }
   .grid{ grid-template-columns: 1fr; }
   .actions{ flex-direction: column; }
 }
+/* Forzar esquema nativo oscuro para selects (Chrome/Edge) */
+:root{ color-scheme: dark; }
+
+@media (prefers-color-scheme: light){
+  :root{ color-scheme: light; }
+}
+
+/* Fallback: asegurar contraste en opciones (cuando el browser respeta option) */
+select, option{
+  background: var(--surface);
+  color: var(--text);
+}
+#sucursalSelect{
+  height: auto;          /* anula height 40px */
+  padding: 6px 10px;
+}
+#sucursalSelect option{
+  padding: 6px 8px;
+}
