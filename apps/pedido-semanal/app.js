@@ -3,6 +3,11 @@
    - PapaParse (CDN)
    - jsPDF + autoTable (CDN)
    - promos.csv: id, marca, nombre, codigo, desc, familia, talles, precio_uno, precio_tres, precio_cantidad
+
+   ✅ ARREGLO: al apretar “PDF”:
+   1) descarga el PDF como siempre
+   2) además SUBE ESE PDF a Google Drive vía Apps Script
+   3) y lo LOGUEA en Google Sheets (lo hace el Apps Script)
 */
 
 let PROMOS = [];
@@ -22,6 +27,13 @@ const SUCURSALES = [
 const $  = (sel, root=document) => root.querySelector(sel);
 const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
+/* =========================
+   CONFIG: Apps Script WebApp
+   ========================= */
+const SCRIPT_URL_PEDIDOS =
+  "https://script.google.com/macros/s/AKfycbyD-x7geshhGxx2xXeX0k07QoFTRm7fm1BfmLl-H7afQ2c_9YdUBQiyvk23oeywepQ/exec";
+ 
+
 function parseNumber(n){ if(n==null) return 0; const s=String(n).trim(); if(!s) return 0; const x=s.replace(/\./g,"").replace(",","."); const v=Number(x); return Number.isFinite(v)?v:0; }
 function toLocalDateStr(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return `${y}-${m}-${day}`;}
 function setText(id, t){ const el=document.getElementById(id); if(el) el.textContent=t; }
@@ -30,7 +42,14 @@ function unionUnique(a,b){ return Array.from(new Set([...(a||[]),...(b||[])])); 
 
 function alerta(msg){
   if(msg) console.log("INFO:", msg);
-  const target=$("#alerta"); if(target){ target.textContent=msg; target.style.display="block"; setTimeout(()=>{target.style.display="none";},2300);} else alert(msg);
+  const target=$("#alerta");
+  if(target){
+    target.textContent=msg;
+    target.style.display="block";
+    setTimeout(()=>{target.style.display="none";},2300);
+  } else {
+    alert(msg);
+  }
 }
 
 /* ===== Agrupado del pedido por ART+TALLE ===== */
@@ -57,7 +76,6 @@ function agruparPedido(lineas){
     return String(a.talle).localeCompare(String(b.talle),"es",{numeric:true});
   });
 }
-
 const getPedidoAgrupado=()=>agruparPedido(pedido);
 
 /* ===== Sucursal (select) ===== */
@@ -120,12 +138,11 @@ function enlazarBusquedaPromo(){
 }
 function seleccionarPorTexto(txt,{onlyExact=false}={}){
   const v=String(txt||"").trim().toLowerCase(); if(!v) return;
-  // 1) Buscar por ID + Marca + Nombre (exacto), por ID, o por Marca+Nombre (parcial)
+
   let p = PROMOS.find(p => (`${p.id} - ${p.marca} - ${p.nombre}`).toLowerCase() === v)
         || PROMOS.find(p => p.id.toLowerCase() === v)
         || (!onlyExact && PROMOS.find(p => (`${p.marca} ${p.nombre}`).toLowerCase().includes(v)));
 
-  // 2) Si no hay coincidencia, buscar por ARTÍCULO (código exacto o parcial) o por descripción
   if(!p){
     const matchByArt = PROMOS.find(p => (p.items||[]).some(it =>
       String(it.codigo||"").toLowerCase() === v
@@ -188,10 +205,8 @@ function renderPromosGrid(){
         </div>
       </div>
 
-      <!-- EXPANSIÓN: Artículos + Talles + Cantidad -->
       <div class="promo-expand">
         <div class="row gap">
-          <!-- Artículos -->
           <div class="card inner" style="flex:1; min-width:260px">
             <div class="row space-between center">
               <h3 style="margin:0">Artículos</h3>
@@ -204,7 +219,6 @@ function renderPromosGrid(){
             <div class="kpis"><span class="tag">Seleccionados:</span> <strong class="cm">0</strong></div>
           </div>
 
-          <!-- Talles -->
           <div class="card inner" style="flex:1; min-width:220px">
             <div class="row space-between center">
               <h3 style="margin:0">Talles</h3>
@@ -244,7 +258,6 @@ function renderPromosGrid(){
   host.appendChild(grid);
 }
 
-/* Expandir una tarjeta */
 function expandirPromoCard(promoId){
   const host=$("#promosGrid");
   const allCards = $$(".promo-card", host);
@@ -359,7 +372,6 @@ function agregarDesdeCard(card, p, {modo}){
   if(!codigos.length) return alerta("Seleccioná al menos un artículo.");
   if(total<=0) return alerta("Ingresá una cantidad válida.");
 
-  // Talles elegidos o todos
   let talles = getTallesSeleccionados(card);
   if(!talles.length) talles = (p.talles||[]).slice();
   if(!talles.length) talles.push("ÚNICO");
@@ -416,35 +428,17 @@ function renderPedido(){
   guardarLS();
 }
 
-/* ===== Copiar & PDF ===== */
+/* ===== Copiar ===== */
 async function copiarPedido(){
   const agrupado=getPedidoAgrupado(); if(!agrupado.length) return alerta("No hay nada para copiar.");
   const txt=agrupado.map(p=>[p.codigo,p.desc||"",p.talle,p.cantidad].join("\t")).join("\n");
   await navigator.clipboard.writeText(txt); alerta("Pedido copiado.");
 }
-function exportarPDF(){
-  const agrupado=getPedidoAgrupado(); if(!agrupado.length) return alerta("No hay nada para exportar.");
-  const { jsPDF }=window.jspdf; const doc=new jsPDF({unit:"pt",format:"a4"});
-  const pageW = doc.internal.pageSize.getWidth();
 
-  doc.setFontSize(14);
-  doc.text(`LOCAL: ${$("#sucursalSelect")?.value||"sin-sucursal"}`,40,40);
-  doc.text(`PEDIDO – ${toLocalDateStr()}`,40,60);
+/* =========================
+   PDF + SUBIDA A DRIVE
+   ========================= */
 
-  // Leyenda de extras (derecha, a la altura de la sucursal)
-  const extrasTxt = buildExtrasLegend();
-  if(extrasTxt){
-    doc.setFontSize(11);
-    doc.text(extrasTxt, pageW-40, 40, { align: 'right' });
-  }
-
-  doc.autoTable({ head:[["ART","DESCRIPCIÓN","TALLE","CANT."]],
-    body: agrupado.map(p=>[p.codigo,p.desc||"",String(p.talle),String(p.cantidad)]), startY:80 });
-  const suc = $("#sucursalSelect")?.value||"sin-sucursal";
-  doc.save(`Pedido_${suc}_${toLocalDateStr()}.pdf`);
-}
-
-/* === Extras: leyenda y estado UI === */
 function buildExtrasLegend(){
   const parts = [];
   if(addCinta) parts.push("Se agregan cintas");
@@ -452,6 +446,73 @@ function buildExtrasLegend(){
   if(selBolsas.length) parts.push(`Se agregan bolsas: ${selBolsas.join(", ")}`);
   return parts.join(" · ");
 }
+
+function generarPDFDoc(){
+  const agrupado=getPedidoAgrupado();
+  if(!agrupado.length){ alerta("No hay nada para exportar."); return null; }
+
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF({unit:"pt",format:"a4"});
+  const pageW = doc.internal.pageSize.getWidth();
+
+  doc.setFontSize(14);
+  doc.text(`LOCAL: ${$("#sucursalSelect")?.value||"sin-sucursal"}`,40,40);
+  doc.text(`PEDIDO – ${toLocalDateStr()}`,40,60);
+
+  const extrasTxt = buildExtrasLegend();
+  if(extrasTxt){
+    doc.setFontSize(11);
+    doc.text(extrasTxt, pageW-40, 40, { align: 'right' });
+  }
+
+  doc.autoTable({
+    head:[["ART","DESCRIPCIÓN","TALLE","CANT."]],
+    body: agrupado.map(p=>[p.codigo,p.desc||"",String(p.talle),String(p.cantidad)]),
+    startY:80
+  });
+
+  return doc;
+}
+
+async function subirPDFAGoogleDrive(doc){
+  if(!SCRIPT_URL_PEDIDOS){
+    alerta("Falta SCRIPT_URL_PEDIDOS en app.js");
+    return;
+  }
+
+  const local = ($("#sucursalSelect")?.value || "").trim().toUpperCase();
+  if(!local){
+    alerta("Seleccioná la sucursal antes de generar.");
+    return;
+  }
+
+  // data:application/pdf;base64,AAAA...
+  const dataUri = doc.output("datauristring");
+  const base64 = dataUri.split(",")[1] || "";
+  if(!base64){
+    alerta("No se pudo generar base64 del PDF.");
+    return;
+  }
+
+  const fileName = `Pedido_${local}_${toLocalDateStr()}.pdf`;
+  const payload = {
+    local,
+    fileName,
+    mimeType: "application/pdf",
+    base64
+  };
+
+  // En GitHub Pages lo más compatible es no-cors.
+  // La confirmación real es ver el archivo en Drive + fila en Sheets.
+  await fetch(SCRIPT_URL_PEDIDOS, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  });
+}
+
+/* === Extras UI === */
 function updateExtrasUI(){
   const cintaChip = $("#cintaChip");
   if(cintaChip){
@@ -481,12 +542,28 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   $("#copiar").onclick=copiarPedido;
   $("#vaciar").onclick=()=>{ pedido=[]; renderPedido(); };
-  $("#btnPDF").onclick=exportarPDF;
+
+  // ✅ Botón PDF: descarga local + sube PDF a Drive + log en Sheets
+  $("#btnPDF").onclick = async () => {
+    const doc = generarPDFDoc();
+    if(!doc) return;
+
+    const suc = $("#sucursalSelect")?.value || "sin-sucursal";
+    doc.save(`Pedido_${suc}_${toLocalDateStr()}.pdf`);
+
+    try{
+      await subirPDFAGoogleDrive(doc);
+      alerta("PDF enviado a Drive (revisar Drive / LOG).");
+    }catch(err){
+      console.error(err);
+      alerta("Error subiendo PDF a Drive (ver consola).");
+    }
+  };
 
   // Extras
   const picker = $("#bolsasPicker");
   $("#btnCinta").onclick = ()=>{ addCinta = !addCinta; updateExtrasUI(); };
-  $("#btnBolsas").onclick = ()=>{ picker.classList.toggle("show"); };
+  $("#btnBolsas").onclick = ()=>{ picker?.classList.toggle("show"); };
   picker?.addEventListener('change', (ev)=>{
     if(ev.target && ev.target.name === 'bolsaOpt'){
       bolsas[ev.target.value] = ev.target.checked;
