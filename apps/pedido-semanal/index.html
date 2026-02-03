@@ -11,6 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
   <style>
     .extras { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
     .chip { display:inline-block; padding:.2rem .5rem; border-radius:999px; font-size:.85rem; background:#f2f2f2; }
@@ -18,8 +19,30 @@
     .chip.muted { opacity:.7; }
     .bolsas-picker { display:none; align-items:center; gap:.6rem; }
     .bolsas-picker.show { display:flex; }
+
+    /* Observaciones en la topbar */
+    .obs-wrap { min-width: 360px; }
+    .obs-wrap textarea{
+      width: 100%;
+      height: 40px;               /* mismo alto visual que inputs */
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      resize: vertical;
+      min-height: 40px;
+      max-height: 140px;
+    }
+    .obs-wrap textarea:focus{
+      border-color: var(--ring);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring), transparent 70%);
+    }
+    .obs-hint{ font-size:.85rem; margin-top:4px; color: var(--muted); }
   </style>
 </head>
+
 <body>
 
   <header class="topbar">
@@ -27,23 +50,39 @@
       <strong>PEDIDO SEMANAL PARA DEPOSITO</strong>
       <span class="muted">· Gestión de promos</span>
     </div>
+
     <div class="meta">
       <label>
         Sucursal
         <select id="sucursalSelect"></select>
       </label>
+
       <div class="kpi">
         <span class="tag">Ítems:</span>
         <strong id="count">0</strong>
       </div>
 
-      <!-- NUEVO: controles de extras cerca del botón de PDF -->
+      <!-- ✅ NUEVO: Observaciones (antes de extras) -->
+      <div class="obs-wrap">
+        <label style="display:block">
+          Observaciones
+          <textarea
+            id="obsInput"
+            rows="2"
+            placeholder="Artículos que no encontrás en la herramienta…"
+          ></textarea>
+        </label>
+        <div class="obs-hint">Se imprimen al pie del PDF.</div>
+      </div>
+
+      <!-- Extras -->
       <div class="extras">
         <button id="btnCinta" class="btn">Agregar Cinta</button>
         <button id="btnBolsas" class="btn">Agregar Bolsas</button>
         <span id="cintaChip" class="chip muted">Cinta: no</span>
         <span id="bolsasChip" class="chip muted">Bolsas: —</span>
       </div>
+
       <div id="bolsasPicker" class="bolsas-picker">
         <label class="chk"><input type="checkbox" name="bolsaOpt" value="Chicas"> Chicas</label>
         <label class="chk"><input type="checkbox" name="bolsaOpt" value="Medianas"> Medianas</label>
@@ -92,7 +131,7 @@
     </aside>
   </main>
 
-  <!-- Drawer lateral de Talles (aparece al expandir tarjeta) -->
+  <!-- Drawer lateral de Talles -->
   <aside id="tallesDrawer" class="talles-drawer" aria-hidden="true">
     <div class="drawer-content">
       <div class="drawer-head">
