@@ -12,7 +12,7 @@
 
   // ================== CONFIG ==================
   const API_BASE =
-    "https://script.google.com/macros/s/AKfycbxVFxV8M-nMBUD_HKIREvTYL1Ip_lv6QkqPItzIyU80wek_oOJxqt-qnF3yxyfyaiGH/exec";
+    "https://script.google.com/macros/s/AKfycbwqAzCaD5HXVSWRoag2LbzBrDA1FJJD1VcOkw7-HkY9Do3NXKpKPuEjEZwcdT-6cla74Q/exec";
 
   // Orden que pediste
   const LOCALES = [
