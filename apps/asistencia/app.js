@@ -8,6 +8,10 @@
   const LS_SUCURSAL = "asistencia_sucursal_v1";
   const LS_DEVICE   = "asistencia_device_id_v1";
 
+  // ✅ Cache padrón (precarga)
+  const LS_PADRON_CACHE = "asistencia_padron_cache_v1";
+  const PADRON_TTL_MS   = 24 * 60 * 60 * 1000; // 24h
+
   // Comprobante (archivo)
   const MAX_FILE_MB = 12;
   const ALLOWED_MIME = new Set([
@@ -96,7 +100,7 @@
   // Sanitiza para nombre de archivo (sin tildes raras / caracteres prohibidos)
   function safeNamePart(s) {
     return String(s || "")
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita acentos
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[\\/:*?"<>|]+/g, "_")
       .replace(/\s+/g, " ")
       .trim();
@@ -106,7 +110,6 @@
     const n = String(file?.name || "");
     const idx = n.lastIndexOf(".");
     if (idx >= 0) return n.slice(idx).toLowerCase();
-    // fallback por mime
     const mt = String(file?.type || "").toLowerCase();
     if (mt === "application/pdf") return ".pdf";
     if (mt === "image/jpeg") return ".jpg";
@@ -180,6 +183,103 @@
     return `${cod}-${nom}-${fec}${ext}`;
   }
 
+  // ===================== PADRON CACHE =====================
+  let padronMap = new Map();      // id -> { nombre, activo? }
+  let padronMeta = { version: "", ts: 0 };
+
+  function _parseJSONSafe(s) {
+    try { return JSON.parse(s); } catch { return null; }
+  }
+
+  function _setPadronUIStatus(text) {
+    const el = $("padronCacheHint");
+    if (el) el.textContent = text;
+  }
+
+  function _applyPadronRows(rows, version = "") {
+    padronMap = new Map();
+    for (const r of (rows || [])) {
+      const id = String(r?.id ?? r?.vendedor_id ?? "").trim();
+      const nombre = String(r?.nombre ?? r?.vendedor_nombre ?? r?.apellido_nombre ?? "").trim();
+      if (!id) continue;
+      padronMap.set(id, {
+        nombre,
+        activo: (r && typeof r.activo === "boolean") ? r.activo : undefined,
+        rol: r?.rol
+      });
+    }
+    padronMeta = { version: String(version || ""), ts: Date.now() };
+  }
+
+  function _savePadronCache() {
+    const payload = {
+      ts: padronMeta.ts,
+      version: padronMeta.version || "",
+      rows: Array.from(padronMap.entries()).map(([id, v]) => ({
+        id,
+        nombre: v?.nombre || "",
+        activo: v?.activo
+      }))
+    };
+    localStorage.setItem(LS_PADRON_CACHE, JSON.stringify(payload));
+  }
+
+  function _loadPadronCacheFromLS() {
+    const raw = localStorage.getItem(LS_PADRON_CACHE);
+    if (!raw) return false;
+    const data = _parseJSONSafe(raw);
+    if (!data || !Array.isArray(data.rows)) return false;
+
+    const age = Date.now() - Number(data.ts || 0);
+    if (!Number.isFinite(age) || age > PADRON_TTL_MS) return false;
+
+    _applyPadronRows(data.rows, data.version || "");
+    return padronMap.size > 0;
+  }
+
+  async function refreshPadronFromBackend() {
+    try {
+      const res = await apiGet({ accion: "padron_all" });
+      if (!res || !res.ok) throw new Error(res?.message || "padron_all no disponible");
+
+      const rows = res.data?.rows || res.data?.padron || res.data?.vendedores || [];
+      const version = res.data?.version || "";
+      if (!Array.isArray(rows) || rows.length === 0) throw new Error("padron_all sin rows");
+
+      _applyPadronRows(rows, version);
+      _savePadronCache();
+      _setPadronUIStatus(`Padrón cargado (cache) · ${padronMap.size} vendedores`);
+      return true;
+    } catch (e) {
+      console.warn("No se pudo refrescar padrón:", e);
+      return false;
+    }
+  }
+
+  async function loadPadronCache() {
+    const okLocal = _loadPadronCacheFromLS();
+    if (okLocal) {
+      _setPadronUIStatus(`Padrón en cache · ${padronMap.size} vendedores`);
+      refreshPadronFromBackend(); // best-effort
+      return true;
+    }
+
+    _setPadronUIStatus("Cargando padrón…");
+    const ok = await refreshPadronFromBackend();
+    if (!ok) _setPadronUIStatus("Padrón: sin cache (usa validación online por ID)");
+    return ok;
+  }
+
+  function lookupPadronLocal(id) {
+    const key = String(id || "").trim();
+    if (!key) return null;
+    const hit = padronMap.get(key);
+    if (!hit) return null;
+
+    if (hit.activo === false) return { ok: false, nombre: hit.nombre || "", message: "Vendedor inactivo" };
+    return { ok: true, nombre: hit.nombre || "" };
+  }
+
   // ===================== UI LOGIC =====================
   let lastLookupOk = false;
 
@@ -197,7 +297,6 @@
       sel.appendChild(opt);
     }
 
-    // default: hora actual redondeada a 5
     const d = new Date();
     const m = Math.round(d.getMinutes() / 5) * 5;
     const hh = String(d.getHours()).padStart(2, "0");
@@ -263,28 +362,55 @@
     if (vendedorId) vendedorId.focus();
   }
 
+  function _setVendedorUI_OK(nombre, originText = "OK en padrón") {
+    $("vendedorNombre").textContent = nombre || "—";
+    $("padronHint").textContent = originText;
+    setPill("ok", "Vendedor OK");
+    lastLookupOk = true;
+  }
+
+  function _setVendedorUI_ERR(msg = "No encontrado") {
+    $("vendedorNombre").textContent = "—";
+    $("padronHint").textContent = msg;
+    setPill("error", "No válido");
+    lastLookupOk = false;
+  }
+
   async function buscarVendedor() {
     const id = ($("vendedorId")?.value || "").trim();
     if (!id) return (toast("Ingresá N° vendedor."), null);
+
+    const local = lookupPadronLocal(id);
+    if (local && local.ok) {
+      _setVendedorUI_OK(local.nombre, "OK (cache)");
+      return { nombre: local.nombre };
+    }
+    if (local && local.ok === false) {
+      _setVendedorUI_ERR(local.message || "No válido");
+      toast(local.message || "Vendedor no válido.");
+      return null;
+    }
 
     setPill("loading", "Validando padrón…");
     try {
       const res = await apiGet({ accion: "padron", id });
       if (!res.ok) throw new Error(res.message || "No encontrado");
 
-      $("vendedorNombre").textContent = res.data.nombre || "—";
-      $("padronHint").textContent = "OK en padrón";
-      setPill("ok", "Vendedor OK");
-      lastLookupOk = true;
+      const nombre = res.data?.nombre || "";
+      if (!nombre) throw new Error("Sin nombre");
 
-      return { nombre: res.data.nombre || "" };
+      _setVendedorUI_OK(nombre, "OK (online)");
+
+      padronMap.set(String(id), { nombre: String(nombre), activo: true });
+      padronMeta.ts = Date.now();
+      _savePadronCache();
+      _setPadronUIStatus(`Padrón en cache · ${padronMap.size} vendedores`);
+
+      return { nombre };
     } catch (err) {
       console.error(err);
-      $("vendedorNombre").textContent = "—";
-      $("padronHint").textContent = "No encontrado";
-      setPill("error", "No válido");
+      _setVendedorUI_ERR("No encontrado");
       toast("Vendedor no válido en padrón.");
-      lastLookupOk = false;
       return null;
     }
   }
@@ -301,14 +427,16 @@
     if (!id)  return toast("Ingresá N° vendedor.");
     if (!hora) return toast("Seleccioná hora.");
 
-    // validar padrón antes de grabar
-    const pad = lastLookupOk
-      ? { nombre: ($("vendedorNombre")?.textContent || "").trim() }
-      : await buscarVendedor();
+    const currentNombre = ($("vendedorNombre")?.textContent || "").trim();
+    let pad = null;
 
+    if (lastLookupOk && currentNombre && currentNombre !== "—") {
+      pad = { nombre: currentNombre };
+    } else {
+      pad = await buscarVendedor();
+    }
     if (!pad || !pad.nombre || pad.nombre === "—") return;
 
-    // archivo opcional
     const file = getSelectedFile();
     const v = validateFile(file);
     if (!v.ok) return toast(v.message);
@@ -326,15 +454,11 @@
         hora_declarada: hora,
         device_id: ensureDeviceId(),
         observacion: obs,
-
-        // IMPORTANTE: el backend nuevo usa "attachment"
         attachment: null,
       };
 
       if (file) {
         const base64 = await fileToBase64NoPrefix(file);
-
-        // ✅ nombre que pide el backend: COD-NOMBRE-FECHA.ext
         const renamed = buildRenamedFilename({
           vendedorId: id,
           vendedorNombre: pad.nombre,
@@ -343,7 +467,7 @@
         });
 
         payload.attachment = {
-          name: renamed, // <- ACA va el nombre renombrado
+          name: renamed,
           mimeType: file.type || "application/octet-stream",
           base64
         };
@@ -356,7 +480,6 @@
       toast("Guardado OK");
 
       const link = res.data?.comprobante_url || "";
-
       $("lastSaved").textContent =
         `${res.data.fecha_operativa} | ${res.data.sucursal} | ${res.data.vendedor_id} - ${res.data.vendedor_nombre} | ${res.data.tipo_evento} ${res.data.hora_declarada} | cargado: ${res.data.timestamp_carga}` +
         (link ? ` | comprobante: ${link}` : "");
@@ -379,12 +502,21 @@
     $("btnGuardar")?.addEventListener("click", guardar);
     $("btnLimpiar")?.addEventListener("click", () => clearForm(true));
 
-    // Enter: 1° Enter busca, 2° Enter guarda
+    // ✅ Enter SOLO busca (eliminado el segundo Enter para guardar)
     $("vendedorId")?.addEventListener("keydown", async (e) => {
       if (e.key !== "Enter") return;
       e.preventDefault();
-      if (!lastLookupOk) await buscarVendedor();
-      else await guardar();
+      await buscarVendedor();
+    });
+
+    // Autocompleta al salir si está en cache
+    $("vendedorId")?.addEventListener("blur", () => {
+      const id = ($("vendedorId")?.value || "").trim();
+      if (!id) return;
+
+      const local = lookupPadronLocal(id);
+      if (local && local.ok) _setVendedorUI_OK(local.nombre, "OK (cache)");
+      else if (local && local.ok === false) _setVendedorUI_ERR(local.message || "No válido");
     });
 
     // Archivo
@@ -397,7 +529,6 @@
         return;
       }
 
-      // mostramos cómo se va a guardar (si ya hay vendedor validado, mejor)
       const id = ($("vendedorId")?.value || "").trim();
       const nombre = ($("vendedorNombre")?.textContent || "").trim();
       const fecha = todayISO();
@@ -412,12 +543,27 @@
       clearSelectedFile();
       toast("Comprobante eliminado.");
     });
+
+    $("btnRefreshPadron")?.addEventListener("click", async () => {
+      setPill("loading", "Actualizando padrón…");
+      const ok = await refreshPadronFromBackend();
+      if (ok) {
+        setPill("ok", "Padrón actualizado");
+        toast("Padrón actualizado.");
+      } else {
+        setPill("error", "Sin refresco");
+        toast("No se pudo actualizar padrón (padron_all).");
+      }
+    });
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     fillHoras();
     wireEvents();
-    loadSucursalesAndRestore();
+
+    await loadPadronCache();
+    await loadSucursalesAndRestore();
+
     setComprobanteUI(getSelectedFile());
     $("vendedorId")?.focus();
   });
