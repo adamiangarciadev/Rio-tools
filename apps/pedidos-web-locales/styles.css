@@ -63,3 +63,10 @@ button.retirado {
   font-size: 13px;
   color: #ccc;
 }
+footer {
+      text-align: center;
+      padding: 18px 24px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }

@@ -325,3 +325,10 @@ input:focus, select:focus{ border-color: var(--ring); box-shadow: 0 0 0 3px colo
   top: 12px;
   align-self: start;
 }
+footer {
+      text-align: center;
+      padding: 18px 24px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }

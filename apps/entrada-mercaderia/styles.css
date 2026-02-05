@@ -60,3 +60,12 @@ p{margin:0 0 12px 0}
 .pill.warn .dot{ background: var(--warn); }
 .pill.danger .dot{ background: var(--danger); }
 .hidden{display:none}
+    
+
+  footer {
+      text-align: center;
+      padding: 18px 24px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
