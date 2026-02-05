@@ -5,6 +5,8 @@
        vendedor_id, vendedor_nombre, tipo_evento, hora_declarada
      y también compatibilidad con:
        vendedor, tipo, hora
+   - ✅ Comprobantes: si el payload trae comprobante_url o comprobante_drive_id/fileId,
+     muestra un ícono 📎 en la tarjeta del evento y abre un visor (modal) embebido.
 */
 
 ;(() => {
@@ -74,6 +76,14 @@
       else stopAuto();
     });
 
+    // ✅ Click delegado: abrir comprobante
+    el.grid.addEventListener("click", (ev) => {
+      const btn = ev.target && ev.target.closest ? ev.target.closest(".file-btn") : null;
+      if (!btn) return;
+      const url = btn.getAttribute("data-file") || "";
+      if (url) openComprobante(url);
+    });
+
     if (!API_BASE) {
       showPill("warn", "Falta API_BASE");
       renderConfigMissing();
@@ -115,6 +125,90 @@
       .toLowerCase()
       .normalize("NFD").replace(/\p{Diacritic}/gu, "")
       .trim();
+  }
+
+  // ================== MODAL (visor comprobantes) ==================
+  let modalMounted = false;
+
+  function ensureModal() {
+    if (modalMounted) return;
+    modalMounted = true;
+
+    const wrap = document.createElement("div");
+    wrap.id = "fileModal";
+    wrap.className = "modal hidden";
+    wrap.innerHTML = `
+      <div class="modal-backdrop" data-close="1"></div>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-label="Comprobante">
+        <div class="modal-head">
+          <div class="modal-title">Comprobante</div>
+          <div class="modal-actions">
+            <button type="button" class="modal-btn" id="modalOpenNew">Abrir en pestaña</button>
+            <button type="button" class="modal-x" data-close="1" aria-label="Cerrar">✕</button>
+          </div>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    `;
+    document.body.appendChild(wrap);
+
+    // cerrar por click en backdrop o X
+    wrap.addEventListener("click", (ev) => {
+      if (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-close") === "1") {
+        closeModal();
+      }
+    });
+
+    // cerrar con ESC
+    document.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") closeModal();
+    });
+  }
+
+  function openComprobante(url) {
+    if (!url) return;
+    ensureModal();
+
+    const modal = document.getElementById("fileModal");
+    const body = document.getElementById("modalBody");
+    const btnNew = document.getElementById("modalOpenNew");
+
+    btnNew.onclick = () => window.open(url, "_blank", "noopener,noreferrer");
+
+    const u = String(url);
+    const isImage = /\.(png|jpg|jpeg|webp|gif)(\?.*)?$/i.test(u);
+    const isPdf = /\.pdf(\?.*)?$/i.test(u) || u.includes("/preview");
+
+    body.innerHTML = "";
+
+    if (isImage) {
+      const img = document.createElement("img");
+      img.className = "modal-img";
+      img.alt = "Comprobante";
+      img.src = u;
+      body.appendChild(img);
+    } else if (isPdf) {
+      const iframe = document.createElement("iframe");
+      iframe.className = "modal-frame";
+      iframe.src = u;
+      iframe.allow = "autoplay";
+      body.appendChild(iframe);
+    } else {
+      const iframe = document.createElement("iframe");
+      iframe.className = "modal-frame";
+      iframe.src = u;
+      body.appendChild(iframe);
+    }
+
+    modal.classList.remove("hidden");
+  }
+
+  function closeModal() {
+    const modal = document.getElementById("fileModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    const body = document.getElementById("modalBody");
+    if (body) body.innerHTML = "";
   }
 
   // ================== DATA FETCH ==================
@@ -168,6 +262,19 @@
     return "";
   }
 
+  function resolveComprobanteUrl(urlRaw, driveId) {
+    const u = String(urlRaw || "").trim();
+    const id = String(driveId || "").trim();
+
+    // Si ya viene URL usable, la usamos
+    if (u) return u;
+
+    // Si viene ID de Drive, armamos preview (embebible)
+    if (id) return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
+
+    return "";
+  }
+
   // Normaliza cualquier variante de payload
   function normalizeEvent(e) {
     const vendedor_id =
@@ -182,11 +289,39 @@
     const hora_declarada =
       String(e.hora_declarada ?? e.hora_declar ?? e.hora_decl ?? e.hora ?? "").trim();
 
+    // ✅ Comprobante (compat: url / drive_id / fileId)
+    const comprobante_url_raw =
+      String(
+        e.comprobante_url ??
+        e.comprobanteUrl ??
+        e.comprobante ??
+        e.archivo_url ??
+        e.file_url ??
+        e.url_archivo ??
+        e.url ??
+        ""
+      ).trim();
+
+    const comprobante_drive_id =
+      String(
+        e.comprobante_drive_id ??
+        e.comprobanteDriveId ??
+        e.drive_id ??
+        e.file_id ??
+        e.fileId ??
+        ""
+      ).trim();
+
+    const comprobante_url = resolveComprobanteUrl(comprobante_url_raw, comprobante_drive_id);
+
     return {
       vendedor_id,
       vendedor_nombre,
       tipo_evento,
       hora_declarada,
+
+      // ✅ nuevo
+      comprobante_url,
 
       // compat
       vendedor: vendedor_nombre,
@@ -228,7 +363,9 @@
       mostrando += events.length;
 
       // ordenar por hora (string "13:35" o "8.15" etc)
-      events = events.slice().sort((a, b) => String(a.hora_declarada || a.hora).localeCompare(String(b.hora_declarada || b.hora)));
+      events = events.slice().sort((a, b) =>
+        String(a.hora_declarada || a.hora).localeCompare(String(b.hora_declarada || b.hora))
+      );
 
       const card = document.createElement("article");
       card.className = "local-card";
@@ -267,13 +404,23 @@
     const tipo = ev.tipo_evento || ev.tipo || "EVENTO";
     const hora = ev.hora_declarada || ev.hora || "—";
 
+    // ✅ icono comprobante (si hay URL)
+    const hasFile = !!(ev.comprobante_url && String(ev.comprobante_url).trim());
+    const fileBtn = hasFile
+      ? `<button class="file-btn" type="button" data-file="${escapeHtml(ev.comprobante_url)}" title="Ver comprobante" aria-label="Ver comprobante">📎</button>`
+      : `<span class="file-spacer"></span>`;
+
     return `
       <div class="event">
         <div class="left">
           <div class="vendedor">${escapeHtml(idPart + nombre)}</div>
           <div class="tipo">${escapeHtml(tipo)}</div>
         </div>
-        <div class="hora">${escapeHtml(hora)}</div>
+
+        <div class="right">
+          ${fileBtn}
+          <div class="hora">${escapeHtml(hora)}</div>
+        </div>
       </div>
     `;
   }

@@ -178,3 +178,10 @@ select, option{
 #sucursalSelect option{
   padding: 6px 8px;
 }
+footer {
+      text-align: center;
+      padding: 18px 24px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
