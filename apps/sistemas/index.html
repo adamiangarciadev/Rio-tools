@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SISTEMAS | RIO Tools</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<header class="container header-row">
+  <div>
+    <h1>SISTEMAS</h1>
+    <p class="muted">Mesa de ayuda interna (Tickets RIO)</p>
+  </div>
+
+  <div class="top-actions">
+    <input id="tokenInput" class="input" type="password" placeholder="TOKEN" />
+    <button id="saveTokenBtn" class="btn">Guardar</button>
+    <button id="refreshBtn" class="btn primary">Actualizar</button>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card">
+    <h2>Crear ticket</h2>
+
+    <div class="row">
+      <label>Sucursal
+        <select id="sucursalSel" class="input"></select>
+      </label>
+
+      <label>Tipo
+        <select id="tipoSel" class="input">
+          <option>Sistema/Dragon</option>
+          <option>Impresora/Labels</option>
+          <option>Red/Internet</option>
+          <option>PC/Windows</option>
+          <option>Otro</option>
+        </select>
+      </label>
+
+      <label>Prioridad
+        <select id="prioSel" class="input">
+          <option>Alta</option>
+          <option>Media</option>
+          <option>Baja</option>
+        </select>
+      </label>
+
+      <label>WhatsApp (opcional)
+        <input id="telInput" class="input" type="text" inputmode="numeric" placeholder="1122334455" />
+      </label>
+
+      <label>Email (opcional)
+        <input id="mailInput" class="input" type="email" placeholder="local@email.com" />
+      </label>
+    </div>
+
+    <label style="margin-top:10px;">Descripción
+      <textarea id="descInput" class="textarea" placeholder="Ej: NO ME PRENDE LA PANTALLA..."></textarea>
+    </label>
+
+    <div class="row" style="margin-top:10px;">
+      <button id="createBtn" class="btn primary">Crear ticket</button>
+      <span id="createMsg" class="muted"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="row space-between center">
+      <h2>Tickets</h2>
+      <div class="row">
+        <label class="mini">Estado
+          <select id="fEstado" class="input">
+            <option value="">Todos</option>
+            <option>Pendiente</option>
+            <option>En Curso</option>
+            <option>Seguimiento</option>
+            <option>Resuelto</option>
+          </select>
+        </label>
+
+        <label class="mini">Sucursal
+          <select id="fSucursal" class="input">
+            <option value="">Todas</option>
+          </select>
+        </label>
+
+        <label class="mini">Buscar
+          <input id="qInput" class="input" type="text" placeholder="ID / descripción / tipo" />
+        </label>
+      </div>
+    </div>
+
+    <div id="tableWrap" class="table-wrap"></div>
+    <p class="muted small" id="footInfo"></p>
+  </section>
+</main>
+
+<footer class="container foot muted">RIO Tools Suite</footer>
+
+<script src="./app.js"></script>
+</body>
+</html>
