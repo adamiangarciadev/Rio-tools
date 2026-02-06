@@ -60,3 +60,62 @@ p{margin:0 0 12px 0}
 .pill.warn .dot{ background: var(--warn); }
 .pill.danger .dot{ background: var(--danger); }
 .hidden{display:none}
+/* ===== Lista completa de pickeo ===== */
+.pick-list-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-top:10px;
+  margin-bottom:8px;
+}
+
+.pick-list{
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#0f1216;
+  max-height: 420px;           /* scroll */
+  overflow:auto;
+}
+
+.pick-row{
+  display:grid;
+  grid-template-columns: 34px 1fr 110px;
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+
+.pick-row:last-child{ border-bottom:0; }
+
+.pick-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:26px;
+  height:26px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  font-weight:700;
+}
+
+.pick-badge.ok{ color:#86efac; }
+.pick-badge.err{ color:#fca5a5; }
+
+.pick-code{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.pick-del{
+  justify-self:end;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  cursor:pointer;
+}
+.pick-del:hover{ filter: brightness(1.1); }

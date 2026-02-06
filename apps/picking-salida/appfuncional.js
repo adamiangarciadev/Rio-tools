@@ -3,7 +3,6 @@
    - Señal visual/sonora al enviar a Drive (optimista: con mode:"no-cors" no se puede confirmar 100%)
    - Botón opcional para limpiar escaneo (#resetBtn)
    - Auto-limpieza luego de "guardado"
-   - ✅ Lista completa de pickeo + botón eliminar por ítem
 */
 ;(() => {
   "use strict";
@@ -47,62 +46,67 @@
     scanCount:  $("#scanCount"),
     noti:       $("#noti"),
     lastScans:  $("#lastScans"),
-    pickList:   $("#pickList"),
+    pickList: $("#pickList"),
+
 
     downloadBtn: $("#downloadBtn"), // botón Guardar / Descargar (solo Drive)
     resetBtn:    $("#resetBtn"),    // opcional en HTML
   };
 
-  // ====== Init ======
-  document.addEventListener("DOMContentLoaded", () => {
-    setupSelectors();
-    bindUI();
-    loadAllCSVs(CSV_FILES);
-    keepFocus();
-    renderPickList(); // inicializa lista vacía
-  });
+// ====== Init ======
+document.addEventListener("DOMContentLoaded", () => {
+  setupSelectors();
+  bindUI();
+  loadAllCSVs(CSV_FILES);
+  keepFocus();
+  renderPickList(); // ✅ inicializa la lista (vacía)
+});
 
-  function bindUI(){
-    if (el.scanInput){
-      el.scanInput.addEventListener("keydown", (e) => {
-        ensureAudio();
-        if (e.key === "Enter"){
-          e.preventDefault();
-          const code = (el.scanInput.value || "").trim();
-          processScan(code);
-          el.scanInput.value = "";
-          el.scanInput.focus();
-          clearTimeout(scanTimer); scanTimer = null;
-          return;
-        }
-        scheduleAutoCommit();
-      });
+function bindUI(){
+  if (el.scanInput){
+    el.scanInput.addEventListener("keydown", (e) => {
+      ensureAudio();
 
-      el.scanInput.addEventListener("input", () => {
-        ensureAudio();
-        scheduleAutoCommit();
-      });
-    }
+      if (e.key === "Enter"){
+        e.preventDefault();
+        const code = (el.scanInput.value || "").trim();
+        processScan(code);
+        el.scanInput.value = "";
+        el.scanInput.focus();
+        clearTimeout(scanTimer); 
+        scanTimer = null;
+        return;
+      }
 
-    // Guardar (solo Drive)
-    if (el.downloadBtn) el.downloadBtn.addEventListener("click", downloadTxt);
+      scheduleAutoCommit();
+    });
 
-    // Limpiar escaneo (manual)
-    if (el.resetBtn) el.resetBtn.addEventListener("click", resetScans);
-
-    // ✅ Eliminar 1 escaneo puntual desde la lista (delegación)
-    if (el.pickList){
-      el.pickList.addEventListener("click", (e) => {
-        const btn = e.target.closest("[data-del-id]");
-        if (!btn) return;
-
-        const id = Number(btn.getAttribute("data-del-id"));
-        if (!Number.isFinite(id)) return;
-
-        deleteScanById(id);
-      });
-    }
+    el.scanInput.addEventListener("input", () => {
+      ensureAudio();
+      scheduleAutoCommit();
+    });
   }
+
+  // Guardar (solo Drive)
+  if (el.downloadBtn) el.downloadBtn.addEventListener("click", downloadTxt);
+
+  // Limpiar escaneo (manual) — si existe el botón en HTML
+  if (el.resetBtn) el.resetBtn.addEventListener("click", resetScans);
+
+  // ✅ Eliminar 1 escaneo puntual desde la lista (delegación)
+  if (el.pickList){
+    el.pickList.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-del-id]");
+      if (!btn) return;
+
+      const id = Number(btn.getAttribute("data-del-id"));
+      if (!Number.isFinite(id)) return;
+
+      deleteScanById(id);
+    });
+  }
+}
+
 
   // ====== Selectors / LocalStorage ======
   function setupSelectors(){
@@ -191,7 +195,7 @@
     showPill("ok", "TXT guardado en Drive");
     beepOk();
 
-    // Auto-limpieza
+    // ✅ Auto-limpieza para volver a pickear
     setTimeout(() => resetScans({ silent: true }), 650);
   }
 
@@ -298,6 +302,7 @@
     const hit = byCode.has(k);
 
     scans.unshift({ id: ++scanSeq, code: clean, ok: hit, time: new Date().toISOString() });
+
     scans = scans.slice(0, 5000);
 
     if (!hit){
@@ -305,45 +310,48 @@
     } else {
       flash("ok"); note(`OK: ${clean}`);
     }
-
     renderLast();
-    renderPickList();
+    function deleteScanById(id){
+  const before = scans.length;
+  scans = scans.filter(s => s.id !== id);
+
+  // refrescar UI
+  renderLast();
+  renderPickList();
+
+  // feedback
+  if (scans.length !== before){
+    note("Ítem eliminado.");
+    showPill("ok", "Ítem eliminado");
+  }
+}
+
+function renderPickList(){
+  if (!el.pickList) return;
+
+  if (!scans.length){
+    el.pickList.innerHTML = `<div style="padding:12px" class="muted">Sin escaneos.</div>`;
+    return;
   }
 
-  // ✅ borrar 1 ocurrencia
-  function deleteScanById(id){
-    const before = scans.length;
-    scans = scans.filter(s => s.id !== id);
-    renderLast();
+  // Render completo (scrolleable por CSS)
+  el.pickList.innerHTML = scans.map(s => `
+    <div class="pick-row">
+      <span class="pick-badge ${s.ok ? "ok" : "err"}" title="${s.ok ? "OK" : "NO"}">
+        ${s.ok ? "✓" : "✗"}
+      </span>
+
+      <span class="pick-code">${escapeHtml(s.code)}</span>
+
+      <button class="pick-del" type="button" data-del-id="${s.id}">
+        Eliminar
+      </button>
+    </div>
+  `).join("");
+}
+
     renderPickList();
 
-    if (scans.length !== before){
-      note("Ítem eliminado.");
-      showPill("ok", "Ítem eliminado");
-    }
-  }
-
-  function renderPickList(){
-    if (!el.pickList) return;
-
-    if (!scans.length){
-      el.pickList.innerHTML = `<div style="padding:12px" class="muted">Sin escaneos.</div>`;
-      return;
-    }
-
-    el.pickList.innerHTML = scans.map(s => `
-      <div class="pick-row">
-        <span class="pick-badge ${s.ok ? "ok" : "err"}" title="${s.ok ? "OK" : "NO"}">
-          ${s.ok ? "✓" : "✗"}
-        </span>
-
-        <span class="pick-code">${escapeHtml(s.code)}</span>
-
-        <button class="pick-del" type="button" data-del-id="${s.id}">
-          Eliminar
-        </button>
-      </div>
-    `).join("");
   }
 
   function flash(kind){
@@ -375,9 +383,6 @@
       el.scanInput.value = "";
       el.scanInput.focus();
     }
-
-    renderPickList(); // ✅ también limpia la lista completa
-
     if (!silent){
       note("Escaneo limpio. Listo para pickear.");
       showPill("ok", "Listo para pickear");
@@ -405,6 +410,7 @@
       return;
     }
 
+    // Señal de "enviando"
     showPill("warn", "Guardando en Drive…");
     note("Guardando en Google Drive…");
 
