@@ -4,6 +4,7 @@
    - Botón opcional para limpiar escaneo (#resetBtn)
    - Auto-limpieza luego de "guardado"
    - ✅ Lista completa de pickeo + botón eliminar por ítem
+   - ✅ Contador por ARTÍCULO con desplegable (muestra ARTICULO + COLOR + TALLE)
 */
 ;(() => {
   "use strict";
@@ -27,7 +28,7 @@
   let rows = [];
   let byCode = new Map();   // key(code) -> row
   let scans = [];
-  let scanSeq = 0; // id incremental para borrar una ocurrencia puntual
+  let scanSeq = 0;
   let audioCtx = null;
   let scanTimer = null;
 
@@ -47,10 +48,12 @@
     scanCount:  $("#scanCount"),
     noti:       $("#noti"),
     lastScans:  $("#lastScans"),
-    pickList:   $("#pickList"),
 
-    downloadBtn: $("#downloadBtn"), // botón Guardar / Descargar (solo Drive)
-    resetBtn:    $("#resetBtn"),    // opcional en HTML
+    pickList:   $("#pickList"),
+    artCounter: $("#artCounter"), // ✅ contenedor "Conteo por artículo"
+
+    downloadBtn: $("#downloadBtn"), // botón Guardar
+    resetBtn:    $("#resetBtn"),    // botón Borrar (opcional)
   };
 
   // ====== Init ======
@@ -59,7 +62,9 @@
     bindUI();
     loadAllCSVs(CSV_FILES);
     keepFocus();
-    renderPickList(); // inicializa lista vacía
+
+    renderPickList();
+    renderArticleCounter();
   });
 
   function bindUI(){
@@ -87,10 +92,10 @@
     // Guardar (solo Drive)
     if (el.downloadBtn) el.downloadBtn.addEventListener("click", downloadTxt);
 
-    // Limpiar escaneo (manual)
+    // Borrar todo (manual)
     if (el.resetBtn) el.resetBtn.addEventListener("click", resetScans);
 
-    // ✅ Eliminar 1 escaneo puntual desde la lista (delegación)
+    // Eliminar 1 escaneo puntual desde la lista
     if (el.pickList){
       el.pickList.addEventListener("click", (e) => {
         const btn = e.target.closest("[data-del-id]");
@@ -185,13 +190,10 @@
     o.stop(audioCtx.currentTime + 0.18);
   }
 
-  // Señal "guardado" (optimista)
   function signalSaved(){
     note("Archivo guardado en Google Drive");
     showPill("ok", "TXT guardado en Drive");
     beepOk();
-
-    // Auto-limpieza
     setTimeout(() => resetScans({ silent: true }), 650);
   }
 
@@ -201,9 +203,10 @@
     beepError();
   }
 
-  // ====== CSV Load & Index (multi-archivo) ======
+  // ====== CSV Load & Index ======
   async function loadAllCSVs(list){
     byCode.clear(); rows = [];
+
     const jobs = list.map(async (name) => {
       try{
         const res = await fetch("./" + name, { cache: "no-store" });
@@ -232,15 +235,44 @@
       showPill("warn",`Listo con ${okCount}/${list.length} CSV`);
       note(`Faltó: ${misses}. Verificá que estén en la misma carpeta y con ese nombre exacto.`);
     }
+
+    renderArticleCounter();
   }
 
-  // Normalización de clave para el match
+  // Normalización
   const key = (s) => String(s ?? "").trim().toUpperCase();
+
+  // matcher tolerante a acentos/encodings rotos
+  function normKey(s){
+    return String(s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu,"")
+      .replace(/[^\p{L}\p{N}]+/gu,"")
+      .trim();
+  }
+
+  function pickKey(keys, candidates){
+    const set = new Set(keys);
+    // match exacto primero
+    for (const c of candidates){
+      if (set.has(c)) return c;
+    }
+    // match normalizado (tolerante a "C�digo", etc.)
+    const wanted = candidates.map(normKey);
+    for (const k of keys){
+      const nk = normKey(k);
+      if (wanted.some(w => nk.includes(w))) return k;
+    }
+    return null;
+  }
 
   function addToIndex(data, noOverride){
     if (!data.length) return;
+
     const keys = Object.keys(data[0] || {});
     const codeKey = guessCodeColumn(keys);
+
     data.forEach(r => {
       const raw = r[codeKey];
       const k = key(raw);
@@ -250,28 +282,53 @@
     });
   }
 
+  // ✅ FIX: forzar columna Código para el index (evita que tome Artículo por error)
   function guessCodeColumn(keys){
-    const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu,"");
-    const patterns = [
-      "codigo_barras","codigo barras","barra","barcode","ean","lectura","scan",
-      "codigo","código","equivalencia","equiv","sku","cod"
-    ];
-    return keys.find(k => patterns.some(p => norm(k).includes(p))) || keys[0];
+    const forced = pickKey(keys, [
+      "codigo_barras",
+      "código","codigo","c�digo","cÃ³digo",
+      "barcode","ean",
+      "lectura","scan"
+    ]);
+    return forced || keys[0];
   }
 
-  // Preferir ARTÍCULO (código interno), sino código/sku/cod
+  function getArticuloFromRow(row){
+    if (!row) return "";
+    const keys = Object.keys(row);
+    const artKey = pickKey(keys, ["articulo","artículo","art�culo","artÃ­culo"]);
+    return artKey ? String(row[artKey] ?? "").trim() : "";
+  }
+
+  // Para el TXT: por defecto devolver ARTÍCULO (código interno) si existe
   function getOutputCode(row, fallback){
     if (!row) return String(fallback ?? "");
+    const art = getArticuloFromRow(row);
+    if (art) return art;
+
     const keys = Object.keys(row);
-    const prefArt = findKey(keys, ["articulo","artículo"]);
-    if (prefArt) return String(row[prefArt] ?? "");
-    const pref = findKey(keys, ["codigo","código","sku","cod"]);
+    const pref = pickKey(keys, ["codigo","código","sku","cod"]);
     return String((pref ? row[pref] : fallback) ?? "");
   }
 
-  function findKey(keys, pats){
-    const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu,"");
-    return keys.find(k => pats.some(p => norm(k).includes(p)));
+  function getColorTalleFromRow(row){
+    if (!row) return { color:"", talle:"" };
+
+    const keys = Object.keys(row);
+
+    // tu CSV tiene "Descripción" dos veces -> parseCSV lo deja como:
+    // "Descripción" y "Descripción_2" (o similar)
+    const desc1 = pickKey(keys, ["descripcion","descripción","descripci�n","descripciÃ³n"]);
+    const desc2 = pickKey(keys, ["descripcion_2","descripción_2","descripci�n_2","descripciÃ³n_2"]);
+
+    const color = desc1 ? String(row[desc1] ?? "").trim() : "";
+    const talle = desc2 ? String(row[desc2] ?? "").trim() : "";
+
+    // fallback si algun CSV trae columnas explícitas
+    const color2 = color || (pickKey(keys, ["color","col"]) ? String(row[pickKey(keys, ["color","col"])] ?? "").trim() : "");
+    const talle2 = talle || (pickKey(keys, ["talle","tamaño","tamano","size"]) ? String(row[pickKey(keys, ["talle","tamaño","tamano","size"])] ?? "").trim() : "");
+
+    return { color: color2, talle: talle2 };
   }
 
   // ====== Scan Handling ======
@@ -308,14 +365,16 @@
 
     renderLast();
     renderPickList();
+    renderArticleCounter();
   }
 
-  // ✅ borrar 1 ocurrencia
   function deleteScanById(id){
     const before = scans.length;
     scans = scans.filter(s => s.id !== id);
+
     renderLast();
     renderPickList();
+    renderArticleCounter();
 
     if (scans.length !== before){
       note("Ítem eliminado.");
@@ -346,6 +405,76 @@
     `).join("");
   }
 
+  // ====== Contador por ARTÍCULO ======
+  function renderArticleCounter(){
+    if (!el.artCounter) return;
+
+    if (!scans.length){
+      el.artCounter.innerHTML = `<div class="muted">Sin escaneos.</div>`;
+      return;
+    }
+
+    // Map: "ARTICULO COLOR TALLE" -> { total, variants(Map) }
+    // y para sin equivalencia: agrupa por el mismo código escaneado
+    const map = new Map();
+
+    for (const s of scans){
+      const row = byCode.get(key(s.code));
+
+      if (!row){
+        const label = String(s.code).trim();
+        if (!map.has(label)) map.set(label, { total: 0, variants: new Map([["SIN EQUIVALENCIA", 0]]) });
+        const it = map.get(label);
+        it.total += 1;
+        it.variants.set("SIN EQUIVALENCIA", (it.variants.get("SIN EQUIVALENCIA") || 0) + 1);
+        continue;
+      }
+
+      const articulo = getArticuloFromRow(row) || s.code;
+      const { color, talle } = getColorTalleFromRow(row);
+
+      // ✅ lo que querías ver: "50-5000 BLANCO 85"
+      const artLabel = [articulo, color, talle].filter(Boolean).join(" ").trim() || articulo;
+
+      // variantes internas (por si en el futuro querés agrupar dentro del mismo artículo)
+      const variantLabel = [color, talle].filter(Boolean).join(" · ") || "SIN VARIANTE";
+
+      if (!map.has(artLabel)){
+        map.set(artLabel, { total: 0, variants: new Map() });
+      }
+      const it = map.get(artLabel);
+      it.total += 1;
+      it.variants.set(variantLabel, (it.variants.get(variantLabel) || 0) + 1);
+    }
+
+    const sorted = Array.from(map.entries())
+      .sort((a,b) => (b[1].total - a[1].total) || String(a[0]).localeCompare(String(b[0])));
+
+    el.artCounter.innerHTML = sorted.map(([artLabel, info]) => {
+      const variantsHtml = Array.from(info.variants.entries())
+        .sort((a,b) => (b[1]-a[1]) || String(a[0]).localeCompare(String(b[0])))
+        .map(([label, cnt]) => `
+          <div class="art-variant">
+            <div>${escapeHtml(label)}</div>
+            <div><small>x</small> ${cnt}</div>
+          </div>
+        `).join("");
+
+      return `
+        <details class="art-item">
+          <summary>
+            <div class="art-sum-left">
+              <span class="art-arrow">›</span>
+              <span class="art-code">${escapeHtml(artLabel)}</span>
+            </div>
+            <span class="art-total">${info.total}</span>
+          </summary>
+          <div class="art-variants">${variantsHtml}</div>
+        </details>
+      `;
+    }).join("");
+  }
+
   function flash(kind){
     if (!el.scanInput) return;
     el.scanInput.classList.remove("ok","err");
@@ -366,7 +495,6 @@
     el.lastScans.innerHTML = recent || "";
   }
 
-  // ✅ Reset (limpiar escaneo)
   function resetScans({ silent=false } = {}){
     scans = [];
     if (el.scanCount) el.scanCount.textContent = "0 escaneados";
@@ -376,7 +504,8 @@
       el.scanInput.focus();
     }
 
-    renderPickList(); // ✅ también limpia la lista completa
+    renderPickList();
+    renderArticleCounter();
 
     if (!silent){
       note("Escaneo limpio. Listo para pickear.");
@@ -384,7 +513,6 @@
     }
   }
 
-  // Mantener foco SOLO donde corresponde
   function keepFocus(){
     if (!el.scanInput) return;
     el.scanInput.focus();
@@ -420,7 +548,6 @@
     enviarArchivoAGoogleDrive({ content, fileName: fnameBase, folderName });
   }
 
-  // Formato: YYMMDD DESTINO RESPONSABLE NB REM<REMITO>.txt
   function resolveFilename(){
     const now = new Date();
     const yy = String(now.getFullYear()).slice(-2);
@@ -438,7 +565,6 @@
     return ensureTxt(sanitize(base));
   }
 
-  // ====== Envío a Apps Script (Google Drive) ======
   function getScriptUrlForOrigen(origen){
     const o = String(origen || "").toUpperCase().trim();
     if (o === "SARMIENTO")  return SCRIPT_URL_SARMIENTO;
@@ -458,12 +584,7 @@
       return;
     }
 
-    const payload = {
-      content,
-      fileName,
-      folderName,
-      mimeType: "text/plain"
-    };
+    const payload = { content, fileName, folderName, mimeType: "text/plain" };
 
     try {
       fetch(scriptUrl, {
@@ -487,14 +608,15 @@
   }
 
   // ====== Helpers ======
-  function ensureTxt(name){ return name.toLowerCase().endsWith(".txt") ? name : `${name}.txt`; }
-  function sanitize(s){ return s.replace(/[\\/:*?"<>|]+/g, "_"); }
+  function ensureTxt(name){ return String(name).toLowerCase().endsWith(".txt") ? name : `${name}.txt`; }
+  function sanitize(s){ return String(s).replace(/[\\/:*?"<>|]+/g, "_"); }
   function safeName(s){ return String(s || "").normalize("NFC"); }
 
-  // ====== CSV robusto (autodetecta ; , | \t y comillas) ======
+  // ====== CSV robusto ======
   function parseCSV(text){
-    const lines = text.split(/\r?\n/).filter(l => l.length>0);
+    const lines = String(text).split(/\r?\n/).filter(l => l.length>0);
     if (!lines.length) return [];
+
     const sep = detectDelimiter(lines[0], lines[1]);
     const rawHeaders = splitCSVLine(lines[0], sep);
 

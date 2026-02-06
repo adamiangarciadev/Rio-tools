@@ -43,12 +43,22 @@
         <label>Bultos
           <input id="bultosInput" type="text" inputmode="numeric" pattern="\d*" placeholder="Cantidad" class="input" />
         </label>
-        <label>Número de remito
-          <input id="remitoInput" type="text" inputmode="numeric" pattern="\d*" placeholder="Solo números" class="input" />
-        </label>
-        <label class="spacer"></label>
-        <span class="badge">Se guarda en tu navegador</span>
-      </div>
+        <div class="field field-inline">
+  <div class="field-grow">
+    <label for="remitoInput">Número de remito</label>
+    <input id="remitoInput" type="text" placeholder="Solo números" />
+  </div>
+
+  <!-- BOTÓN GUARDAR (el mismo de antes) -->
+  <button
+    id="downloadBtn"
+    class="btn-primary btn-guardar-inline"
+    type="button"
+  >
+    GUARDAR
+  </button>
+</div>
+
     </section>
 
     <section class="card">
@@ -70,16 +80,13 @@
 
     </section>
 
-    <section class="card">
-      <h2>GUARDAR TXT</h2>
-      <div class="row">
-        <label class="spacer"></label>
-        <button id="downloadBtn" class="btn primary">GUARDAR</button>
-        <button id="resetBtn" class="btn">BORRAR</button>
-      </div>
-      <p class="muted small">Se genera un TXT con <em>un código por línea</em> en el orden escaneado. También descarga “FALTA EQUIVALENCIA” si hay faltantes.</p>
-    </section>
+<section class="panel" id="panel-counter">
+  <h3 class="panel-title">Conteo por artículo</h3>
+  <div id="artCounter" class="art-counter muted">Sin escaneos.</div>
+</section>
+ 
   </main>
+
 
   <footer class="container foot muted">
         RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® - 

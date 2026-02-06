@@ -119,3 +119,144 @@ p{margin:0 0 12px 0}
   cursor:pointer;
 }
 .pick-del:hover{ filter: brightness(1.1); }
+/* Campo remito + botón guardar en línea */
+.field-inline{
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.field-grow{
+  flex: 1;
+}
+
+.btn-guardar-inline{
+  height: 38px; /* igual al input */
+  margin-top: 22px; /* alinea con el input */
+  white-space: nowrap;
+}
+/* ===== Remito + Guardar (mismo look dark que el resto) ===== */
+.field-inline{
+  display:flex;
+  gap:12px;
+  align-items:flex-end;
+}
+
+.field-grow{ flex:1; }
+
+/* Input remito con tema dark */
+.field-inline input{
+  appearance:none;
+  -webkit-appearance:none;
+
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  height: 40px;
+  padding: 0 12px;
+  outline: none;
+}
+
+.field-inline input::placeholder{ color: var(--muted); }
+
+/* Botón guardar igual a tus botones */
+.btn-guardar-inline{
+  appearance:none;
+  -webkit-appearance:none;
+
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-guardar-inline:hover{ filter: brightness(1.06); }
+.btn-guardar-inline:active{ transform: translateY(1px); }
+/* ===== Conteo por artículo ===== */
+#panel-counter .panel-title{ margin:0 0 10px; }
+
+.art-counter{
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 10px;
+}
+
+.art-item{
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+}
+.art-item:last-child{ border-bottom: 0; }
+
+.art-item summary{
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  list-style: none;
+}
+.art-item summary::-webkit-details-marker{ display:none; }
+
+.art-sum-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width: 0;
+}
+.art-code{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: var(--fg);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width: 560px; /* ajustá si querés */
+}
+
+.art-total{
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  color: var(--fg);
+  background: rgba(255,255,255,.03);
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.art-arrow{
+  width: 22px;
+  height: 22px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+.art-item[open] .art-arrow{ transform: rotate(90deg); }
+
+.art-variants{
+  margin: 10px 0 2px 34px;
+  display: grid;
+  gap: 6px;
+}
+
+.art-variant{
+  display:flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px;
+  border:1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,.02);
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.art-variant small{ color: var(--muted); }
