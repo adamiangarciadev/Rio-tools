@@ -3,7 +3,7 @@
 
   // === CONFIG ===
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDTljuh7QRY7xkMDp_Lq_t-R6LYYeQOOq8-QMW4Fer8ReOXk8Zi76V1SeHS2PDVgX8GQ/exec";
-  const LS_TOKEN = "rio_asistencia_token_v1"; 
+  const LS_TOKEN = "rio_asistencia_token_v1"; https
 
 
   const $ = (s, r=document) => r.querySelector(s);

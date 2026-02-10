@@ -332,3 +332,65 @@ footer {
       font-size: 12px;
       border-top: 1px solid var(--border);
     }
+    /* ===========================
+   FIX: fila inferior de la expansión (input + botones)
+   - evita que "Agregar surtido" se pierda por overflow
+   =========================== */
+
+/* La fila donde están: label + Agregar + Agregar surtido */
+.promo-expand .row.gap[style*="margin-top:10px"]{
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+/* El label con el input toma el espacio disponible */
+.promo-expand .row.gap[style*="margin-top:10px"] > label{
+  flex: 1 1 240px;
+  min-width: 240px;
+}
+
+/* Los botones mantienen tamaño y no se “cortan” */
+.promo-expand .row.gap[style*="margin-top:10px"] > button{
+  flex: 0 0 auto;
+  min-width: 160px;
+  height: 40px;      /* consistente con .btn */
+  min-height: 40px;  /* pisa tu min-height:32px para esta zona */
+}
+
+/* En pantallas angostas: apilar botones a ancho completo */
+@media (max-width: 720px){
+  .promo-expand .row.gap[style*="margin-top:10px"] > button{
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* ===========================
+   OBSERVACIONES: estilo del textarea que crea app.js
+   =========================== */
+#obsInput{
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  resize: vertical;
+}
+#obsInput:focus{
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring), transparent 70%);
+}
+
+/* opcional: que el wrapper no “rompa” el layout de la topbar */
+.obs-wrap{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 320px;
+}
+@media (max-width: 900px){
+  .obs-wrap{ min-width: 240px; }
+}

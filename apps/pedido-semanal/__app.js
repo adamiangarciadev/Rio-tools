@@ -12,9 +12,6 @@
    ✅ NUEVO:
    - Campo “OBSERVACIONES” (para artículos que no encuentran)
    - Las observaciones salen al PIE del PDF
-
-   ✅ FIX:
-   - Vuelve “Agregar surtido” (reparte cantidad total entre talles)
 */
 
 (() => {
@@ -154,6 +151,7 @@
         if(!prev.desc && desc) prev.desc = desc;
       }
     }
+    // Orden por descripción luego talle
     return Array.from(map.values()).sort((a,b)=>{
       const ad=(a.desc||"").toLowerCase();
       const bd=(b.desc||"").toLowerCase();
@@ -314,6 +312,7 @@
           || (!onlyExact && PROMOS.find(p => (`${p.marca} ${p.nombre}`).toLowerCase().includes(v)));
 
     if(!p){
+      // buscar por artículo
       const matchByArt = PROMOS.find(p => (p.items||[]).some(it =>
         String(it.codigo||"").toLowerCase() === v
         || (!onlyExact && String(it.codigo||"").toLowerCase().includes(v))
@@ -322,6 +321,7 @@
       if(matchByArt){
         p = matchByArt;
         expandirPromoCard(p.id);
+        // marcar el artículo dentro
         try{
           const card = document.querySelector(`.promo-card[data-pid="${CSS.escape(p.id)}"]`);
           const cont = card?.querySelector(".artList");
@@ -414,7 +414,6 @@
               <input type="number" class="cantidad" inputmode="numeric" min="1" placeholder="Ej: 12" />
             </label>
             <button class="btn success btn-add">Agregar</button>
-            <button class="btn btn-surtido">Agregar surtido</button>
           </div>
         </div>
       `;
@@ -448,7 +447,7 @@
         talleHost.appendChild(lab);
       });
 
-      // Eventos
+      // Eventos botones internos
       $(".btn-expand", card).addEventListener("click", ()=> expandirPromoCard(p.id));
 
       $(".btn-todos", card).addEventListener("click", ()=>{
@@ -469,8 +468,7 @@
         $(".sm", card).textContent = "0";
       });
 
-      $(".btn-add", card).addEventListener("click", ()=> agregarDesdeCard(p, card, {modo:"normal"}));
-      $(".btn-surtido", card).addEventListener("click", ()=> agregarDesdeCard(p, card, {modo:"surtido"}));
+      $(".btn-add", card).addEventListener("click", ()=> agregarDesdeCard(p, card));
 
       grid.appendChild(card);
     }
@@ -483,6 +481,7 @@
     const card = document.querySelector(`.promo-card[data-pid="${CSS.escape(id)}"]`);
     if(!card) return;
 
+    // cerrar anterior
     if(promoActual && promoActual !== id){
       const prev = document.querySelector(`.promo-card[data-pid="${CSS.escape(promoActual)}"]`);
       prev?.classList.remove("expanded");
@@ -491,6 +490,7 @@
     const isOpen = card.classList.toggle("expanded");
     promoActual = isOpen ? id : null;
 
+    // scroll a la tarjeta si se abre
     if(isOpen){
       card.scrollIntoView({behavior:"smooth", block:"start"});
     }
@@ -511,10 +511,7 @@
     return sel.filter(x=>String(x.codigo||"").trim());
   }
 
-  // =========================
-  // Agregar al pedido (normal / surtido)
-  // =========================
-  function agregarDesdeCard(promo, card, {modo}){
+  function agregarDesdeCard(promo, card){
     const qtyEl = $(".cantidad", card);
     const total = Number(qtyEl?.value || 0);
 
@@ -524,6 +521,7 @@
 
     let arts = getArticulosSeleccionados(card);
     if(!arts.length){
+      // si no eligió, toma todos
       arts = (promo.items||[]).map(it=>({codigo:it.codigo, desc:it.desc||""}));
     }
 
@@ -533,50 +531,21 @@
     }
     if(!talles.length) talles = ["ÚNICO"];
 
-    if(modo === "normal"){
-      // MISMA cantidad para cada talle
-      for(const a of arts){
-        for(const t of talles){
-          pedido.push({
-            codigo: String(a.codigo||"").trim(),
-            desc: String(a.desc||"").trim(),
-            talle: String(t||"").trim(),
-            cantidad: total
-          });
-        }
-      }
-      qtyEl.value = "";
-      renderPedido();
-      return alerta("Agregado al pedido.");
-    }
-
-    // surtido: reparte "total" entre talles (lo más parejo posible)
-    const n = talles.length;
-    const base = Math.floor(total / n);
-    let resto = total % n;
-
-    const reparto = talles
-      .map(t => ({ talle: t, cantidad: base + (resto-- > 0 ? 1 : 0) }))
-      .filter(r => r.cantidad > 0);
-
-    if(!reparto.length){
-      return alerta("Cantidad insuficiente para repartir en talles.");
-    }
-
+    // Regla: “Cantidad total / por talle” => agrega la MISMA cantidad a cada talle
     for(const a of arts){
-      for(const r of reparto){
+      for(const t of talles){
         pedido.push({
           codigo: String(a.codigo||"").trim(),
           desc: String(a.desc||"").trim(),
-          talle: String(r.talle||"").trim(),
-          cantidad: r.cantidad
+          talle: String(t||"").trim(),
+          cantidad: total
         });
       }
     }
 
     qtyEl.value = "";
     renderPedido();
-    alerta("Agregado surtido.");
+    alerta("Agregado al pedido.");
   }
 
   // =========================
@@ -598,6 +567,7 @@
       bolsasChip.classList.toggle("muted", sel.length===0);
     }
 
+    // sincroniza checks del picker (por si cargó de LS)
     const picker = $("#bolsasPicker");
     if(picker){
       $$("input[name='bolsaOpt']", picker).forEach(cb=>{
@@ -638,9 +608,11 @@
 
     const lines = doc.splitTextToSize(obs, maxW);
 
-    const lineH = 12;
+    // Calcula alto aproximado
+    const lineH = 12; // pts aprox para font 10
     const blockH = (1 + lines.length) * lineH;
 
+    // siempre al pie: si no entra en la página actual, nueva página
     const yStart = pageH - marginBottom - blockH;
     if(yStart < 80){
       doc.addPage();
@@ -672,6 +644,7 @@
     doc.text(`LOCAL: ${$("#sucursalSelect")?.value||"sin-sucursal"}`,40,40);
     doc.text(`PEDIDO – ${toLocalDateStr()}`,40,60);
 
+    // extras arriba a la derecha
     const extrasTxt = buildExtrasLegend();
     if(extrasTxt){
       doc.setFontSize(11);
@@ -685,6 +658,7 @@
       styles: { fontSize: 10 }
     });
 
+    // Observaciones al pie (en la última página del doc)
     renderObservacionesFooter(doc);
 
     return doc;
@@ -716,6 +690,7 @@
       fileName,
       mimeType: "application/pdf",
       base64,
+      // opcional: si querés que el Apps Script lo guarde también en una celda/log
       observaciones: getObservaciones() || "",
       extras: {
         cinta: !!addCinta,
@@ -723,6 +698,7 @@
       }
     };
 
+    // En GitHub Pages: no-cors (no podemos leer respuesta)
     await fetch(SCRIPT_URL_PEDIDOS, {
       method: "POST",
       mode: "no-cors",
@@ -741,10 +717,11 @@
     cargarExtrasLS();
     renderPedido();
 
-    // Observaciones: si el HTML todavía no tiene el textarea, lo crea
+    // Observaciones: si el HTML todavía no tiene el textarea,
+    // lo creamos “antes de Extras” automáticamente.
     const meta = document.querySelector(".topbar .meta");
     if(meta && !$("#obsInput")){
-      const extrasBox = meta.querySelector(".extras");
+      const extrasBox = meta.querySelector(".extras"); // donde están cintas/bolsas
       const wrap = document.createElement("div");
       wrap.className = "obs-wrap";
       wrap.innerHTML = `
@@ -758,6 +735,8 @@
     }
 
     cargarObsLS();
+
+    // Guardar obs en caliente
     $("#obsInput")?.addEventListener("input", ()=> guardarObsLS());
 
     cargarPromos();
@@ -769,6 +748,7 @@
       renderPedido();
     });
 
+    // PDF: descarga + subida
     $("#btnPDF")?.addEventListener("click", async ()=>{
       const doc = generarPDFDoc();
       if(!doc) return;
