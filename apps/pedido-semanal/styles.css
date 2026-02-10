@@ -394,3 +394,29 @@ footer {
 @media (max-width: 900px){
   .obs-wrap{ min-width: 240px; }
 }
+/* ===========================
+   FIX real: al expandir, la tarjeta debe ocupar el ancho completo
+   (evita que la fila Artículos/Talles desborde hacia la columna Pedido)
+   =========================== */
+
+/* 1) La promo expandida ocupa las 2 columnas del grid de promos */
+.promos-grid .grid .promo-card.expanded{
+  grid-column: 1 / -1;
+}
+
+/* 2) La fila Artículos + Talles adentro de la expansión debe poder wrappear */
+.promo-card.expanded .promo-expand > .row.gap{
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* 3) Los dos “inner cards” se adaptan al ancho disponible */
+.promo-card.expanded .promo-expand > .row.gap > .card.inner{
+  flex: 1 1 320px;
+  min-width: 280px;
+}
+
+/* 4) Por las dudas, evitamos overflow horizontal dentro de la expansión */
+.promo-card.expanded .promo-expand{
+  overflow-x: hidden;
+}
