@@ -1,12 +1,9 @@
 /* app.js — SUPERVISORES · ASISTENCIA HOY (EVENTOS del día)
-   - Lee: API_BASE?accion=eventos_hoy  => { ok:true, fecha:"YYYY-MM-DD", data:{ AV2:[...], NAZCA:[...], ... } }
+   - Compatible con:
+     A) Formato VIEJO: { ok:true, fecha:"YYYY-MM-DD", data:{ AV2:[...], NAZCA:[...], ... } }
+     B) Formato NUEVO: { ok:true, fecha:"YYYY-MM-DD", items:[...], data:[...] }  (lista)
    - Render: tablero por locales (grid sin slider) y lista de eventos por local
-   - Soporta campos del sheet/API:
-       vendedor_id, vendedor_nombre, tipo_evento, hora_declarada
-     y también compatibilidad con:
-       vendedor, tipo, hora
-   - ✅ Comprobantes: si el payload trae comprobante_url o comprobante_drive_id/fileId,
-     muestra un ícono 📎 en la tarjeta del evento y abre un visor (modal) embebido.
+   - ✅ Comprobantes: muestra 📎 y visor modal embebido.
 */
 
 ;(() => {
@@ -16,13 +13,11 @@
   const API_BASE =
     "https://script.google.com/macros/s/AKfycbwqAzCaD5HXVSWRoag2LbzBrDA1FJJD1VcOkw7-HkY9Do3NXKpKPuEjEZwcdT-6cla74Q/exec";
 
-  // Orden que pediste
   const LOCALES = [
     "AVELLANEDA", "WEB", "NAZCA", "LAMARCA", "SARMIENTO",
     "DEPOSITO", "CORRIENTES", "CASTELLI", "PUEYRREDON", "MORENO", "QUILMES"
   ];
 
-  // Mapeo a lo que guarda reflejado en EVENTOS.columna "sucursal"
   const API_ALIAS = {
     "AVELLANEDA": "AV2",
     "WEB": "WEB",
@@ -37,7 +32,6 @@
     "QUILMES": "QUILMES",
   };
 
-  // Auto refresh
   const AUTO_REFRESH_MS = 15000;
 
   // ================== DOM ==================
@@ -152,14 +146,12 @@
     `;
     document.body.appendChild(wrap);
 
-    // cerrar por click en backdrop o X
     wrap.addEventListener("click", (ev) => {
       if (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-close") === "1") {
         closeModal();
       }
     });
 
-    // cerrar con ESC
     document.addEventListener("keydown", (ev) => {
       if (ev.key === "Escape") closeModal();
     });
@@ -187,16 +179,11 @@
       img.alt = "Comprobante";
       img.src = u;
       body.appendChild(img);
-    } else if (isPdf) {
-      const iframe = document.createElement("iframe");
-      iframe.className = "modal-frame";
-      iframe.src = u;
-      iframe.allow = "autoplay";
-      body.appendChild(iframe);
     } else {
       const iframe = document.createElement("iframe");
       iframe.className = "modal-frame";
       iframe.src = u;
+      iframe.allow = "autoplay";
       body.appendChild(iframe);
     }
 
@@ -233,16 +220,17 @@
       return;
     }
 
-    const obj = j.data || {}; // { AV2:[...], NAZCA:[...], ... }
+    // ✅ Soportar:
+    // - viejo: j.data = { AV2:[...], ... }
+    // - nuevo: j.items = [...] (o j.data = [...])
+    const grouped = toGroupedBySucursal(j);
 
-    // KPIs fecha
     const todayISOClient = new Date().toISOString().slice(0, 10);
-    el.kpiFecha.textContent = (firstFecha(obj) || j.fecha || todayISOClient);
+    el.kpiFecha.textContent = (firstFecha(grouped) || j.fecha || todayISOClient);
 
-    // Armar mapa por local en el orden de tablero
     for (const label of LOCALES) {
       const apiLocal = API_ALIAS[label] || label;
-      const arr = Array.isArray(obj[apiLocal]) ? obj[apiLocal] : [];
+      const arr = Array.isArray(grouped[apiLocal]) ? grouped[apiLocal] : [];
       const events = arr.map(normalizeEvent);
       dataByLocal.set(label, events);
     }
@@ -251,11 +239,40 @@
     render();
   }
 
-  function firstFecha(obj) {
-    for (const k of Object.keys(obj || {})) {
-      const arr = obj[k];
+  // Convierte cualquier payload a { SUCURSAL:[rows], ... }
+  function toGroupedBySucursal(j) {
+    // Caso viejo: data ya es objeto por sucursal
+    if (j && j.data && !Array.isArray(j.data) && typeof j.data === "object") {
+      return j.data;
+    }
+
+    // Caso nuevo: items[] o data[] (lista)
+    const list =
+      (Array.isArray(j?.items) ? j.items :
+      (Array.isArray(j?.data) ? j.data : [])) || [];
+
+    const out = {};
+    for (const row of list) {
+      const suc = String(
+        row?.sucursal ??
+        row?.local ??
+        row?.suc ??
+        row?.branch ??
+        ""
+      ).trim().toUpperCase();
+
+      if (!suc) continue;
+      if (!out[suc]) out[suc] = [];
+      out[suc].push(row);
+    }
+    return out;
+  }
+
+  function firstFecha(groupedObj) {
+    for (const k of Object.keys(groupedObj || {})) {
+      const arr = groupedObj[k];
       if (Array.isArray(arr) && arr.length) {
-        const f = arr[0].fecha_operativa || arr[0].fecha || arr[0].fecha_operativa;
+        const f = arr[0].fecha_operativa || arr[0].fecha;
         if (f) return String(f);
       }
     }
@@ -265,23 +282,17 @@
   function resolveComprobanteUrl(urlRaw, driveId) {
     const u = String(urlRaw || "").trim();
     const id = String(driveId || "").trim();
-
-    // Si ya viene URL usable, la usamos
     if (u) return u;
-
-    // Si viene ID de Drive, armamos preview (embebible)
     if (id) return `https://drive.google.com/file/d/${encodeURIComponent(id)}/preview`;
-
     return "";
   }
 
-  // Normaliza cualquier variante de payload
   function normalizeEvent(e) {
     const vendedor_id =
       String(e.vendedor_id ?? e.vendedorid ?? e.id ?? "").trim();
 
     const vendedor_nombre =
-      String(e.vendedor_nombre ?? e.vendedorNom ?? e.vendedor_nom ?? e.vendedor ?? "").trim();
+      String(e.vendedor_nombre ?? e.vendedorNom ?? e.vendedor_nom ?? e.vendedor ?? e.nombre ?? "").trim();
 
     const tipo_evento =
       String(e.tipo_evento ?? e.tipo_event ?? e.tipo ?? "").trim().toUpperCase();
@@ -289,7 +300,6 @@
     const hora_declarada =
       String(e.hora_declarada ?? e.hora_declar ?? e.hora_decl ?? e.hora ?? "").trim();
 
-    // ✅ Comprobante (compat: url / drive_id / fileId)
     const comprobante_url_raw =
       String(
         e.comprobante_url ??
@@ -304,11 +314,13 @@
 
     const comprobante_drive_id =
       String(
+        e.comprobante_file_id ??
         e.comprobante_drive_id ??
         e.comprobanteDriveId ??
         e.drive_id ??
         e.file_id ??
         e.fileId ??
+        e.comprobante_drive_id ??
         ""
       ).trim();
 
@@ -319,14 +331,12 @@
       vendedor_nombre,
       tipo_evento,
       hora_declarada,
-
-      // ✅ nuevo
       comprobante_url,
 
-      // compat
       vendedor: vendedor_nombre,
       tipo: tipo_evento,
-      hora: hora_declarada
+      hora: hora_declarada,
+      obs: String(e.observacion ?? e.obs ?? "").trim()
     };
   }
 
@@ -354,15 +364,12 @@
       if (q) {
         const qn = norm(q);
         events = events.filter(ev => {
-          const hay = norm(
-            `${ev.vendedor_id} ${ev.vendedor_nombre} ${ev.vendedor}`
-          );
+          const hay = norm(`${ev.vendedor_id} ${ev.vendedor_nombre} ${ev.vendedor}`);
           return hay.includes(qn);
         });
       }
       mostrando += events.length;
 
-      // ordenar por hora (string "13:35" o "8.15" etc)
       events = events.slice().sort((a, b) =>
         String(a.hora_declarada || a.hora).localeCompare(String(b.hora_declarada || b.hora))
       );
@@ -404,7 +411,6 @@
     const tipo = ev.tipo_evento || ev.tipo || "EVENTO";
     const hora = ev.hora_declarada || ev.hora || "—";
 
-    // ✅ icono comprobante (si hay URL)
     const hasFile = !!(ev.comprobante_url && String(ev.comprobante_url).trim());
     const fileBtn = hasFile
       ? `<button class="file-btn" type="button" data-file="${escapeHtml(ev.comprobante_url)}" title="Ver comprobante" aria-label="Ver comprobante">📎</button>`
