@@ -1,16 +1,13 @@
+/* app.js — Tickets (SIN TOKEN) + JSONP (sin CORS) */
 ;(() => {
   "use strict";
 
   // === CONFIG ===
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDTljuh7QRY7xkMDp_Lq_t-R6LYYeQOOq8-QMW4Fer8ReOXk8Zi76V1SeHS2PDVgX8GQ/exec";
-  const LS_TOKEN = "rio_asistencia_token_v1"; https
-
 
   const $ = (s, r=document) => r.querySelector(s);
 
   const el = {
-    tokenInput: $("#tokenInput"),
-    saveTokenBtn: $("#saveTokenBtn"),
     refreshBtn: $("#refreshBtn"),
 
     sucursalSel: $("#sucursalSel"),
@@ -30,12 +27,12 @@
     footInfo: $("#footInfo"),
   };
 
-  function getToken(){
-    return (localStorage.getItem(LS_TOKEN) || "RIO_TOOLS_2026_CAMBIAME").trim();
-  }
+  let lastTickets = [];
 
-  function setToken(t){
-    localStorage.setItem(LS_TOKEN, String(t||"").trim());
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
   }
 
   function withParams(url, params){
@@ -46,22 +43,33 @@
     return u.toString();
   }
 
-  async function apiGet(params){
-    const token = getToken();
-    const url = withParams(SCRIPT_URL, { token, ...params });
-    const r = await fetch(url, { cache:"no-store" });
-    return await r.json();
+  // ✅ JSONP helper (evita CORS)
+  function jsonp(url){
+    return new Promise((resolve, reject) => {
+      const cb = "cb_" + Math.random().toString(36).slice(2);
+      const s = document.createElement("script");
+
+      window[cb] = (data) => {
+        try { delete window[cb]; } catch {}
+        s.remove();
+        resolve(data);
+      };
+
+      s.onerror = () => {
+        try { delete window[cb]; } catch {}
+        s.remove();
+        reject(new Error("JSONP error"));
+      };
+
+      s.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
+      document.body.appendChild(s);
+    });
   }
 
-  async function apiPost(payload){
-    const token = getToken();
-    const url = withParams(SCRIPT_URL, { token });
-    const r = await fetch(url, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
-    });
-    return await r.json();
+  async function apiGet(params){
+    const url = withParams(SCRIPT_URL, params);
+    // siempre JSONP para evitar CORS
+    return await jsonp(url);
   }
 
   function estadoBadge(estado){
@@ -73,19 +81,7 @@
     return `<span class="badge">${escapeHtml(e)}</span>`;
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, m => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[m]));
-  }
-
   function renderTickets(list){
-    if(!list.length){
-      el.tableWrap.innerHTML = `<div class="muted">Sin tickets para mostrar.</div>`;
-      el.footInfo.textContent = "";
-      return;
-    }
-
     const q = (el.qInput.value || "").trim().toLowerCase();
 
     const filtered = list.filter(t => {
@@ -93,6 +89,12 @@
       const blob = `${t.ticket} ${t.sucursal} ${t.tipo} ${t.prioridad} ${t.descripcion}`.toLowerCase();
       return blob.includes(q);
     });
+
+    if(!filtered.length){
+      el.tableWrap.innerHTML = `<div class="muted">Sin tickets para mostrar.</div>`;
+      el.footInfo.textContent = list.length ? `0 / ${list.length} tickets` : "";
+      return;
+    }
 
     const rows = filtered.map(t => `
       <tr>
@@ -125,6 +127,7 @@
     `;
 
     el.footInfo.textContent = `${filtered.length} / ${list.length} tickets`;
+
     el.tableWrap.querySelectorAll("[data-copy]").forEach(a => {
       a.addEventListener("click", async (ev) => {
         ev.preventDefault();
@@ -139,23 +142,25 @@
     if(!res.ok) throw new Error(res.message || "Error sucursales");
     const list = res.data || [];
 
-    // Crear
     el.sucursalSel.innerHTML = list.map(x => `<option>${escapeHtml(x.sucursal)}</option>`).join("");
-    // Filtro
     el.fSucursal.innerHTML = `<option value="">Todas</option>` + list.map(x => `<option>${escapeHtml(x.sucursal)}</option>`).join("");
   }
 
   async function cargarTickets(){
     const estado = el.fEstado.value || "";
     const sucursal = el.fSucursal.value || "";
+
     const res = await apiGet({ accion:"tickets", estado, sucursal, limit:"120" });
     if(!res.ok) throw new Error(res.message || "Error tickets");
-    renderTickets(res.data || []);
+
+    lastTickets = res.data || [];
+    renderTickets(lastTickets);
   }
 
   async function crearTicket(){
     el.createMsg.textContent = "Creando…";
-    const payload = {
+
+    const params = {
       accion:"crear_ticket",
       sucursal: el.sucursalSel.value,
       tipo: el.tipoSel.value,
@@ -164,29 +169,26 @@
       tel: el.telInput.value,
       email: el.mailInput.value
     };
-    const res = await apiPost(payload);
+
+    const res = await apiGet(params);
     if(!res.ok) throw new Error(res.message || "No se pudo crear");
 
     const data = res.data || {};
     el.createMsg.textContent = `OK: ${data.ticketId || ""}`;
     el.descInput.value = "";
+
     await cargarTickets();
   }
 
   function bind(){
-    // token
-    el.tokenInput.value = getToken();
-    el.saveTokenBtn.addEventListener("click", () => {
-      setToken(el.tokenInput.value);
-    });
+    el.refreshBtn.addEventListener("click", () => cargarTickets());
 
-    // filtros
-    el.refreshBtn.addEventListener("click", cargarTickets);
-    el.fEstado.addEventListener("change", cargarTickets);
-    el.fSucursal.addEventListener("change", cargarTickets);
-    el.qInput.addEventListener("input", () => cargarTickets());
+    el.fEstado.addEventListener("change", () => cargarTickets());
+    el.fSucursal.addEventListener("change", () => cargarTickets());
 
-    // crear
+    // buscar local (no pega al server)
+    el.qInput.addEventListener("input", () => renderTickets(lastTickets));
+
     el.createBtn.addEventListener("click", async () => {
       try{ await crearTicket(); }
       catch(e){ el.createMsg.textContent = `Error: ${e.message || e}`; }
@@ -196,6 +198,10 @@
   async function init(){
     bind();
     try{
+      // sanity
+      const ping = await apiGet({ accion:"ping" });
+      if(!ping.ok) throw new Error(ping.message || "Ping falló");
+
       await cargarSucursales();
       await cargarTickets();
     }catch(e){
@@ -203,5 +209,5 @@
     }
   }
 
-  document.addEventListener("DOMContentLoaded", init);
+  init();
 })();
