@@ -119,6 +119,31 @@
         <div class="last-title">Último guardado</div>
         <div class="last-box" id="lastSaved">—</div>
       </div>
+      <div class="divider"></div>
+
+      <!-- Registros del día -->
+      <div class="last">
+        <div class="last-title">Registros de hoy</div>
+        <div class="help" id="hoyHint">Cargando…</div>
+
+        <div class="table-wrap" style="margin-top:10px">
+          <table class="table" id="hoyTable" style="width:100%; border-collapse:collapse">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:8px">Hora</th>
+                <th style="text-align:left; padding:8px">Vendedor</th>
+                <th style="text-align:left; padding:8px">Nombre</th>
+                <th style="text-align:left; padding:8px">Tipo</th>
+                <th style="text-align:left; padding:8px">Obs</th>
+              </tr>
+            </thead>
+            <tbody id="hoyTbody">
+              <tr><td colspan="5" style="padding:10px; opacity:.8">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </section>
   </main>
 

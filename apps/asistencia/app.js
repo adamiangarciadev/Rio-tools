@@ -76,7 +76,7 @@
 
   async function apiGet(params) {
     const url = SCRIPT_URL + "?" + new URLSearchParams(params).toString();
-    const r = await fetch(url, { method: "GET" });
+    const r = await fetch(url, { method: "GET", cache: "no-store" });
     return r.json();
   }
 
@@ -280,6 +280,135 @@
     return { ok: true, nombre: hit.nombre || "" };
   }
 
+  // ===================== EVENTOS HOY + ANTI DUPLICADO =====================
+  let eventosHoy = []; // cache en memoria (para bloquear duplicados)
+
+  function norm(s){ return String(s ?? "").trim().toUpperCase(); }
+
+  function _getHoyEls(){
+    // Estos IDs los agregás en el HTML:
+    // - <tbody id="hoyTbody"></tbody>
+    // - <div id="hoyHint"></div>
+    return {
+      tbody: $("hoyTbody"),
+      hint: $("hoyHint"),
+      table: $("hoyTable"),
+    };
+  }
+
+  function keyDupe(ev){
+    const id   = norm(ev?.vendedor_id ?? ev?.id ?? ev?.legajo ?? ev?.vendedorId ?? "");
+    const tipo = norm(ev?.tipo_evento ?? ev?.tipo ?? ev?.evento ?? "");
+    return `${id}__${tipo}`;
+  }
+
+  function esDuplicadoActual(){
+    const id = norm($("vendedorId")?.value || "");
+    const tipo = norm($("tipoEvento")?.value || "");
+    if(!id || !tipo) return false;
+    const k = `${id}__${tipo}`;
+    return eventosHoy.some(ev => keyDupe(ev) === k);
+  }
+
+  function refreshBloqueoDuplicado(){
+    const btn = $("btnGuardar");
+    if (!btn) return;
+    const { hint } = _getHoyEls();
+
+    const dup = esDuplicadoActual();
+    btn.disabled = dup;
+
+    if (hint){
+      if (dup) hint.textContent = "⚠️ Ya existe un registro HOY para ese vendedor y ese tipo. No se puede duplicar.";
+      else hint.textContent = `Registros cargados: ${eventosHoy.length}`;
+    }
+  }
+
+  function renderHoyTabla(){
+    const { tbody, hint } = _getHoyEls();
+    if (!tbody) { refreshBloqueoDuplicado(); return; }
+
+    if (!eventosHoy.length){
+      tbody.innerHTML = `<tr><td colspan="5" style="padding:10px; opacity:.8">Sin registros cargados hoy.</td></tr>`;
+      if (hint) hint.textContent = "Sin registros hoy.";
+      refreshBloqueoDuplicado();
+      return;
+    }
+
+    // Orden por hora desc (si viene HH:MM)
+    const ordenados = eventosHoy.slice().sort((a,b) => {
+      const ha = String(a?.hora_declarada ?? a?.hora ?? "").trim();
+      const hb = String(b?.hora_declarada ?? b?.hora ?? "").trim();
+      return hb.localeCompare(ha);
+    });
+
+    // marca duplicados internos (si ya existen en sheet)
+    const seen = new Set();
+    const dupKeys = new Set();
+    for (const ev of ordenados){
+      const k = keyDupe(ev);
+      if (seen.has(k)) dupKeys.add(k);
+      else seen.add(k);
+    }
+
+    tbody.innerHTML = ordenados.map(ev => {
+      const hora = String(ev?.hora_declarada ?? ev?.hora ?? "—");
+      const id   = String(ev?.vendedor_id ?? ev?.id ?? "—");
+      const nom  = String(ev?.vendedor_nombre ?? ev?.nombre ?? "—");
+      const tipo = String(ev?.tipo_evento ?? ev?.tipo ?? "—");
+      const obs  = String(ev?.observacion ?? ev?.obs ?? "—");
+
+      const k = keyDupe(ev);
+      const warn = dupKeys.has(k);
+      const rowStyle = warn ? `style="background: rgba(248,113,113,.10)"` : "";
+
+      return `
+        <tr ${rowStyle}>
+          <td style="padding:8px; border-top:1px solid rgba(255,255,255,.06)">${hora}</td>
+          <td style="padding:8px; border-top:1px solid rgba(255,255,255,.06)"><b>${id}</b></td>
+          <td style="padding:8px; border-top:1px solid rgba(255,255,255,.06)">${nom}</td>
+          <td style="padding:8px; border-top:1px solid rgba(255,255,255,.06)">${tipo}${warn ? " ⚠️" : ""}</td>
+          <td style="padding:8px; border-top:1px solid rgba(255,255,255,.06)">${obs}</td>
+        </tr>
+      `;
+    }).join("");
+
+    refreshBloqueoDuplicado();
+  }
+
+  async function cargarEventosHoy(){
+    const { hint, tbody } = _getHoyEls();
+    try{
+      const suc = (localStorage.getItem(LS_SUCURSAL) || $("sucursalSelect")?.value || "").trim().toUpperCase();
+      if (!suc){
+        eventosHoy = [];
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="padding:10px; opacity:.8">Elegí una sucursal.</td></tr>`;
+        if (hint) hint.textContent = "Elegí una sucursal para ver registros.";
+        refreshBloqueoDuplicado();
+        return;
+      }
+
+      if (hint) hint.textContent = "Cargando registros de hoy…";
+      const res = await apiGet({ accion: "eventos_hoy", local: suc });
+
+      if (!res || !res.ok){
+        eventosHoy = [];
+        if (hint) hint.textContent = res?.message ? `Error: ${res.message}` : "Error al cargar registros.";
+        renderHoyTabla();
+        return;
+      }
+
+      const items = res.items || res.data?.items || res.data?.rows || res.data?.eventos || [];
+      eventosHoy = Array.isArray(items) ? items : [];
+      renderHoyTabla();
+    }catch(err){
+      console.error(err);
+      eventosHoy = [];
+      if (hint) hint.textContent = "Error de red al cargar registros.";
+      renderHoyTabla();
+    }
+  }
+
   // ===================== UI LOGIC =====================
   let lastLookupOk = false;
 
@@ -335,6 +464,9 @@
 
       saveSucursalAuto();
       setPill("ok", "Listo");
+
+      // ✅ al terminar de cargar sucursales, carga registros de hoy
+      await cargarEventosHoy();
     } catch (err) {
       console.error(err);
       setPill("error", "Error sucursales");
@@ -360,6 +492,8 @@
     lastLookupOk = false;
     if (!keepHora) fillHoras();
     if (vendedorId) vendedorId.focus();
+
+    refreshBloqueoDuplicado();
   }
 
   function _setVendedorUI_OK(nombre, originText = "OK en padrón") {
@@ -367,6 +501,7 @@
     $("padronHint").textContent = originText;
     setPill("ok", "Vendedor OK");
     lastLookupOk = true;
+    refreshBloqueoDuplicado();
   }
 
   function _setVendedorUI_ERR(msg = "No encontrado") {
@@ -374,6 +509,7 @@
     $("padronHint").textContent = msg;
     setPill("error", "No válido");
     lastLookupOk = false;
+    refreshBloqueoDuplicado();
   }
 
   async function buscarVendedor() {
@@ -426,6 +562,13 @@
     if (!suc) return toast("Seleccioná sucursal.");
     if (!id)  return toast("Ingresá N° vendedor.");
     if (!hora) return toast("Seleccioná hora.");
+
+    // ✅ bloqueo duplicado (por si el HTML no tiene la tabla o no cargó aún)
+    if (esDuplicadoActual()){
+      toast("Ya existe un registro HOY para ese vendedor y ese tipo.");
+      refreshBloqueoDuplicado();
+      return;
+    }
 
     const currentNombre = ($("vendedorNombre")?.textContent || "").trim();
     let pad = null;
@@ -484,6 +627,9 @@
         `${res.data.fecha_operativa} | ${res.data.sucursal} | ${res.data.vendedor_id} - ${res.data.vendedor_nombre} | ${res.data.tipo_evento} ${res.data.hora_declarada} | cargado: ${res.data.timestamp_carga}` +
         (link ? ` | comprobante: ${link}` : "");
 
+      // ✅ refresca lista del día y bloqueos
+      await cargarEventosHoy();
+
       clearForm(true);
     } catch (err) {
       console.error(err);
@@ -493,9 +639,10 @@
   }
 
   function wireEvents() {
-    $("sucursalSelect")?.addEventListener("change", () => {
+    $("sucursalSelect")?.addEventListener("change", async () => {
       saveSucursalAuto();
       toast("Sucursal guardada en esta PC: " + ($("sucursalSelect")?.value || ""));
+      await cargarEventosHoy();
     });
 
     $("btnBuscar")?.addEventListener("click", buscarVendedor);
@@ -508,6 +655,10 @@
       e.preventDefault();
       await buscarVendedor();
     });
+
+    // Anti-dup en vivo
+    $("vendedorId")?.addEventListener("input", refreshBloqueoDuplicado);
+    $("tipoEvento")?.addEventListener("change", refreshBloqueoDuplicado);
 
     // Autocompleta al salir si está en cache
     $("vendedorId")?.addEventListener("blur", () => {
@@ -566,5 +717,8 @@
 
     setComprobanteUI(getSelectedFile());
     $("vendedorId")?.focus();
+
+    // ✅ por si loadSucursales falla o tarda, intentá igual
+    await cargarEventosHoy();
   });
 })();
