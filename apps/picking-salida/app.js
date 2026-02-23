@@ -536,10 +536,10 @@
     showPill("warn", "Guardando en Drive…");
     note("Guardando en Google Drive…");
 
-    const lines = scans.map(s => {
-      const row = byCode.get(key(s.code));
-      return getOutputCode(row, s.code);
-    });
+    // ✅ Guardar EXACTAMENTE lo que se escanea (código leído)
+    // ✅ En el orden real de escaneo (porque scans usa unshift)
+    const ordered = scans.slice().reverse();          // primero → último
+    const lines   = ordered.map(s => String(s.code)); // tal cual leído
 
     const content = lines.join("\n");
     const fnameBase = resolveFilename();
