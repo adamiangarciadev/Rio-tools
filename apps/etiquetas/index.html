@@ -136,7 +136,7 @@
     const $ = (sel) => document.querySelector(sel);
 
     // ---------- Carga de equivalencias.csv ----------
-    fetch('equivalencias_.csv')
+    fetch('equivalencia.csv')
       .then(r => r.text())
       .then(text => {
         // Admite ; como separador. Ignora líneas vacías.
