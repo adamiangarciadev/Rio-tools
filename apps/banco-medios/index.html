@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Banco de Medios</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="topbar">
+      <div>
+        <h1>Banco de Medios</h1>
+        <p>Videos de pantallas reproducibles desde la web</p>
+      </div>
+      <div id="totalCount" class="total">0 videos</div>
+    </header>
+
+    <section class="filters">
+      <input id="searchInput" type="text" placeholder="Buscar por nombre, local o marca" />
+      <select id="localFilter"></select>
+      <select id="marcaFilter"></select>
+    </section>
+
+    <section id="videoGrid" class="grid"></section>
+  </main>
+
+  <div id="videoModal" class="modal" hidden>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Video</h2>
+        <button id="modalClose" class="close-btn">Cerrar</button>
+      </div>
+      <div id="modalFrameWrap" class="modal-frame"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
