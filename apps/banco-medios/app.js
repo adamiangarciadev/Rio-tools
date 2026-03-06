@@ -28,42 +28,83 @@ async function init() {
 }
 
 function bindEvents() {
-  el.search.addEventListener("input", () => {
-    state.q = el.search.value.trim().toLowerCase();
-    applyFilters();
-  });
+  if (el.search) {
+    el.search.addEventListener("input", () => {
+      state.q = el.search.value.trim().toLowerCase();
+      applyFilters();
+    });
+  }
 
-  el.local.addEventListener("change", () => {
-    state.local = el.local.value;
-    applyFilters();
-  });
+  if (el.local) {
+    el.local.addEventListener("change", () => {
+      state.local = el.local.value;
+      applyFilters();
+    });
+  }
 
-  el.marca.addEventListener("change", () => {
-    state.marca = el.marca.value;
-    applyFilters();
-  });
+  if (el.marca) {
+    el.marca.addEventListener("change", () => {
+      state.marca = el.marca.value;
+      applyFilters();
+    });
+  }
 
-  el.modalClose.addEventListener("click", closeModal);
+  if (el.modalClose) {
+    el.modalClose.addEventListener("click", closeModal);
+  }
 
-  el.modal.addEventListener("click", (e) => {
-    if (e.target === el.modal) closeModal();
+  if (el.modal) {
+    el.modal.addEventListener("click", (e) => {
+      if (e.target === el.modal) {
+        closeModal();
+      }
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && el.modal && !el.modal.hidden) {
+      closeModal();
+    }
   });
 }
 
 async function loadData() {
-  el.grid.innerHTML = `<div class="empty">Cargando videos...</div>`;
-
-  const res = await fetch(API_URL);
-  const data = await res.json();
-
-  if (!data.ok) {
-    el.grid.innerHTML = `<div class="empty">Error al cargar datos.</div>`;
-    return;
+  if (el.grid) {
+    el.grid.innerHTML = `<div class="empty">Cargando videos...</div>`;
   }
 
-  state.items = data.items || [];
-  buildFilters();
-  applyFilters();
+  if (el.total) {
+    el.total.textContent = "Cargando...";
+  }
+
+  try {
+    const res = await fetch(API_URL, { method: "GET" });
+    const data = await res.json();
+
+    if (!data.ok) {
+      if (el.grid) {
+        el.grid.innerHTML = `<div class="empty">Error al cargar datos.</div>`;
+      }
+      if (el.total) {
+        el.total.textContent = "0 videos";
+      }
+      return;
+    }
+
+    state.items = Array.isArray(data.items) ? data.items : [];
+    buildFilters();
+    applyFilters();
+  } catch (error) {
+    console.error("Error cargando videos:", error);
+
+    if (el.grid) {
+      el.grid.innerHTML = `<div class="empty">No se pudieron cargar los videos.</div>`;
+    }
+
+    if (el.total) {
+      el.total.textContent = "0 videos";
+    }
+  }
 }
 
 function buildFilters() {
@@ -75,12 +116,20 @@ function buildFilters() {
     (item.marcas || []).forEach(x => marcas.add(x));
   });
 
-  fillSelect(el.local, [...locales].sort(), "Todos los locales");
-  fillSelect(el.marca, [...marcas].sort(), "Todas las marcas");
+  if (el.local) {
+    fillSelect(el.local, [...locales].sort((a, b) => a.localeCompare(b)), "Todos los locales");
+  }
+
+  if (el.marca) {
+    fillSelect(el.marca, [...marcas].sort((a, b) => a.localeCompare(b)), "Todas las marcas");
+  }
 }
 
 function fillSelect(select, values, placeholder) {
+  if (!select) return;
+
   select.innerHTML = "";
+
   const opt0 = document.createElement("option");
   opt0.value = "";
   opt0.textContent = placeholder;
@@ -97,8 +146,9 @@ function fillSelect(select, values, placeholder) {
 function applyFilters() {
   state.filtered = state.items.filter(item => {
     const text = [
-      item.nombre,
-      item.ruta,
+      item.nombre || "",
+      item.ruta || "",
+      item.carpetaOrigen || "",
       ...(item.locales || []),
       ...(item.marcas || [])
     ].join(" ").toLowerCase();
@@ -114,7 +164,11 @@ function applyFilters() {
 }
 
 function renderGrid() {
-  el.total.textContent = `${state.filtered.length} videos`;
+  if (el.total) {
+    el.total.textContent = `${state.filtered.length} videos`;
+  }
+
+  if (!el.grid) return;
 
   if (!state.filtered.length) {
     el.grid.innerHTML = `<div class="empty">No se encontraron videos.</div>`;
@@ -124,7 +178,7 @@ function renderGrid() {
   el.grid.innerHTML = state.filtered.map(item => `
     <article class="card">
       <div class="card-body">
-        <h3 class="card-title">${escapeHtml(item.nombre)}</h3>
+        <h3 class="card-title">${escapeHtml(item.nombre || "")}</h3>
 
         <div class="tags">
           ${(item.locales || []).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join("")}
@@ -135,8 +189,8 @@ function renderGrid() {
         <p class="meta">${escapeHtml(item.ruta || "")}</p>
 
         <div class="actions">
-          <button class="btn" data-id="${item.id}">Reproducir</button>
-          <a class="btn btn-link" href="${item.url}" target="_blank" rel="noopener noreferrer">Abrir en Drive</a>
+          <button class="btn" type="button" data-id="${escapeHtml(item.id || "")}">Reproducir</button>
+          <a class="btn btn-link" href="${escapeHtml(item.url || "#")}" target="_blank" rel="noopener noreferrer">Abrir en Drive</a>
         </div>
       </div>
     </article>
@@ -144,30 +198,42 @@ function renderGrid() {
 
   el.grid.querySelectorAll("button[data-id]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const item = state.filtered.find(x => x.id === btn.dataset.id);
-      if (item) openModal(item);
+      const item = state.filtered.find(x => String(x.id) === String(btn.dataset.id));
+      if (item) {
+        openModal(item);
+      }
     });
   });
 }
 
 function openModal(item) {
-  el.modalTitle.textContent = item.nombre;
-  el.modalFrameWrap.innerHTML = `
-    <iframe
-      src="${item.previewUrl}"
-      allow="autoplay"
-      allowfullscreen
-      frameborder="0"
-      width="100%"
-      height="100%">
-    </iframe>
-  `;
+  if (!el.modal || !el.modalTitle || !el.modalFrameWrap) return;
+
+  el.modalTitle.textContent = item.nombre || "Video";
+
+  el.modalFrameWrap.innerHTML = item.previewUrl
+    ? `
+      <iframe
+        src="${item.previewUrl}"
+        allow="autoplay; fullscreen"
+        allowfullscreen
+        frameborder="0"
+        width="100%"
+        height="100%">
+      </iframe>
+    `
+    : `<div class="empty">Este video no tiene URL de preview.</div>`;
+
   el.modal.hidden = false;
+  document.body.classList.add("modal-open");
 }
 
 function closeModal() {
-  el.modal.hidden = true;
+  if (!el.modal || !el.modalFrameWrap) return;
+
   el.modalFrameWrap.innerHTML = "";
+  el.modal.hidden = true;
+  document.body.classList.remove("modal-open");
 }
 
 function escapeHtml(str = "") {

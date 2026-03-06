@@ -209,3 +209,9 @@ body{
     height:55vh;
   }
 }
+.modal[hidden]{
+  display:none !important;
+}
+body.modal-open{
+  overflow:hidden;
+}
