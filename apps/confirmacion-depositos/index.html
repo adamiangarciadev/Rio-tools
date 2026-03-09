@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirmación de Depósitos - RIO</title>
+  <link rel="stylesheet" href="styles.css" />
+
+</head>
+<body>
+    <header class="container header-row header-bar">
+        <a href="../index.html" class="btn secondary back-btn">← Menú principal</a>
+
+        <div>
+            <h1>CONFIRMACIÓN DE DEPÓSITOS</h1>
+            <p class="muted">Carga de comprobantes para administración</p>
+        </div>
+    </header>
+
+  <main class="container page-grid">
+    <section class="card">
+      <h2>Datos del depósito</h2>
+
+      <div class="grid">
+        <label>
+          Local
+          <select id="localSelect" class="input">
+            <option value="">Seleccionar local</option>
+            <option value="AV2">AV2</option>
+            <option value="NAZCA">NAZCA</option>
+            <option value="LAMARCA">LAMARCA</option>
+            <option value="CORRIENTES">CORRIENTES</option>
+            <option value="CO2">CO2</option>
+            <option value="CASTELLI">CASTELLI</option>
+            <option value="QUILMES">QUILMES</option>
+            <option value="MORENO">MORENO</option>
+            <option value="SARMIENTO">SARMIENTO</option>
+            <option value="DEPOSITO">DEPOSITO</option>
+            <option value="PUEYRREDON">PUEYRREDON</option>
+          </select>
+        </label>
+
+        <label>
+          Monto
+          <input id="montoInput" class="input" type="text" placeholder="Ej: 125000" />
+        </label>
+
+        <label>
+          Cuenta donde depositaron
+          <select id="cuentaSelect" class="input">
+            <option value="">Seleccionar cuenta</option>
+            <option value="MERCADO PAGO">MERCADO PAGO</option>
+            <option value="BANCO GALICIA">BANCO GALICIA</option>
+            <option value="BANCO NACION">BANCO NACION</option>
+            <option value="CUENTA DNI">CUENTA DNI</option>
+          </select>
+        </label>
+
+        <label style="grid-column: 1 / -1;">
+          Observación
+          <textarea id="obsInput" class="input area" placeholder="Cliente en local / observación adicional"></textarea>
+        </label>
+
+        <div style="grid-column: 1 / -1;">
+          <label class="filebox">
+            <span>Subir comprobante</span>
+            <input id="fileInput" type="file" accept="image/*,.pdf" />
+          </label>
+          <div id="fileName" class="muted small">Ningún archivo seleccionado</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="saveBtn" class="btn primary">Guardar depósito</button>
+        <span id="status" class="muted"></span>
+      </div>
+    </section>
+
+    <aside class="card side-panel">
+      <div class="side-head">
+        <h2 id="recentTitle">Últimas 48 hs</h2>
+        <button id="refreshBtn" class="btn secondary">Actualizar</button>
+      </div>
+
+      <div id="depositList" class="deposit-list">
+        <div class="muted">Cargando depósitos...</div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
