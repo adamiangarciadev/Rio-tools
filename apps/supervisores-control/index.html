@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>RIO Tools · Supervisión</title>
+  <meta
+    name="description"
+    content="Panel de supervisión para tareas por local y tareas globales."
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand__logo">RIO</div>
+        <div class="brand__text">
+          <h1>Supervisión</h1>
+          <p>Control de tareas por local y globales</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav__btn active" id="tabLocalesBtn" data-tab="locales" type="button">
+          <span class="nav__icon">🏬</span>
+          <span>Tareas por local</span>
+        </button>
+
+        <button class="nav__btn" id="tabGlobalesBtn" data-tab="globales" type="button">
+          <span class="nav__icon">🌐</span>
+          <span>Tareas globales</span>
+        </button>
+      </nav>
+
+      <div class="sidebar__section">
+        <a class="back-btn" href="../index.html">← Volver al menú principal</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2 id="screenTitle">Tareas por local</h2>
+          <p id="screenSubtitle">
+            Creación, seguimiento y control de tareas por sucursal.
+          </p>
+        </div>
+
+        <div class="topbar__actions">
+          <button class="ghost-btn" id="refreshBtn" type="button">Actualizar</button>
+        </div>
+      </header>
+
+      <section class="summary-grid">
+        <article class="summary-card">
+          <span class="summary-card__label">Total tareas</span>
+          <strong class="summary-card__value" id="totalTareas">0</strong>
+        </article>
+
+        <article class="summary-card">
+          <span class="summary-card__label">Pendientes</span>
+          <strong class="summary-card__value" id="totalPendientes">0</strong>
+        </article>
+
+        <article class="summary-card">
+          <span class="summary-card__label">En curso</span>
+          <strong class="summary-card__value" id="totalEnCurso">0</strong>
+        </article>
+
+        <article class="summary-card">
+          <span class="summary-card__label">Realizadas</span>
+          <strong class="summary-card__value" id="totalRealizadas">0</strong>
+        </article>
+      </section>
+
+      <section class="panel active" id="panelLocales">
+        <div class="content-grid">
+          <section class="card form-card">
+            <div class="card__header">
+              <h3>Nueva tarea por local</h3>
+              <p>Cargar una tarea específica para una sucursal.</p>
+            </div>
+
+            <form id="formTareaLocal" class="form-grid">
+              <div class="field">
+                <label for="localCreadoPor">Supervisor</label>
+                <input
+                  type="text"
+                  id="localCreadoPor"
+                  name="creadoPor"
+                  placeholder="Nombre del supervisor"
+                  required
+                />
+              </div>
+
+              <div class="field">
+                <label for="localSucursal">Sucursal</label>
+                <select id="localSucursal" name="sucursal" required>
+                  <option value="">Seleccionar sucursal</option>
+                </select>
+              </div>
+
+              <div class="field field--full">
+                <label for="localTitulo">Título</label>
+                <input
+                  type="text"
+                  id="localTitulo"
+                  name="titulo"
+                  placeholder="Ej: Control de vidriera invierno"
+                  required
+                />
+              </div>
+
+              <div class="field field--full">
+                <label for="localDescripcion">Descripción</label>
+                <textarea
+                  id="localDescripcion"
+                  name="descripcion"
+                  rows="4"
+                  placeholder="Detalle de la tarea a controlar"
+                  required
+                ></textarea>
+              </div>
+
+              <div class="field">
+                <label for="localEstado">Estado inicial</label>
+                <select id="localEstado" name="estado" required>
+                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="EN CURSO">EN CURSO</option>
+                  <option value="REALIZADO CONFORME">REALIZADO CONFORME</option>
+                  <option value="REALIZADO INCONFORME">REALIZADO INCONFORME</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="localAdjuntos">Adjuntos</label>
+                <input
+                  type="file"
+                  id="localAdjuntos"
+                  name="adjuntos"
+                  accept="image/*,video/*"
+                  multiple
+                />
+              </div>
+
+              <div class="field field--full">
+                <button class="primary-btn" type="submit">Guardar tarea local</button>
+              </div>
+
+              <p class="form-msg" id="localFormMsg"></p>
+            </form>
+          </section>
+
+          <section class="card list-card">
+            <div class="card__header card__header--inline">
+              <div>
+                <h3>Listado de tareas por local</h3>
+                <p>Se muestra el título y al hacer click se despliega el detalle.</p>
+              </div>
+            </div>
+
+            <div class="filters">
+              <div class="field">
+                <label for="filtroLocalSucursal">Sucursal</label>
+                <select id="filtroLocalSucursal">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="filtroLocalEstado">Estado</label>
+                <select id="filtroLocalEstado">
+                  <option value="">Todos</option>
+                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="EN CURSO">EN CURSO</option>
+                  <option value="REALIZADO CONFORME">REALIZADO CONFORME</option>
+                  <option value="REALIZADO INCONFORME">REALIZADO INCONFORME</option>
+                </select>
+              </div>
+
+              <div class="field field--search">
+                <label for="buscarLocal">Buscar</label>
+                <input
+                  type="text"
+                  id="buscarLocal"
+                  placeholder="Buscar por título o descripción"
+                />
+              </div>
+            </div>
+
+            <div class="accordion-list" id="listaTareasLocales">
+              <div class="empty-state">
+                Todavía no hay tareas cargadas.
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="panel" id="panelGlobales">
+        <div class="content-grid">
+          <section class="card form-card">
+            <div class="card__header">
+              <h3>Nueva tarea global</h3>
+              <p>Crear una tarea que será controlada en todas las sucursales.</p>
+            </div>
+
+            <form id="formTareaGlobal" class="form-grid">
+              <div class="field">
+                <label for="globalCreadoPor">Supervisor</label>
+                <input
+                  type="text"
+                  id="globalCreadoPor"
+                  name="creadoPor"
+                  placeholder="Nombre del supervisor"
+                  required
+                />
+              </div>
+
+              <div class="field field--full">
+                <label for="globalTitulo">Título</label>
+                <input
+                  type="text"
+                  id="globalTitulo"
+                  name="titulo"
+                  placeholder="Ej: Control de cartelería general"
+                  required
+                />
+              </div>
+
+              <div class="field field--full">
+                <label for="globalDescripcion">Descripción</label>
+                <textarea
+                  id="globalDescripcion"
+                  name="descripcion"
+                  rows="4"
+                  placeholder="Detalle general de la tarea"
+                  required
+                ></textarea>
+              </div>
+
+              <div class="field">
+                <label for="globalAdjuntos">Adjuntos generales</label>
+                <input
+                  type="file"
+                  id="globalAdjuntos"
+                  name="adjuntos"
+                  accept="image/*,video/*"
+                  multiple
+                />
+              </div>
+
+              <div class="field field--full">
+                <button class="primary-btn" type="submit">Guardar tarea global</button>
+              </div>
+
+              <p class="form-msg" id="globalFormMsg"></p>
+            </form>
+          </section>
+
+          <section class="card list-card">
+            <div class="card__header card__header--inline">
+              <div>
+                <h3>Listado de tareas globales</h3>
+                <p>Cada tarea muestra el seguimiento individual por sucursal.</p>
+              </div>
+            </div>
+
+            <div class="filters">
+              <div class="field">
+                <label for="filtroGlobalSucursal">Sucursal</label>
+                <select id="filtroGlobalSucursal">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="filtroGlobalEstado">Estado</label>
+                <select id="filtroGlobalEstado">
+                  <option value="">Todos</option>
+                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="EN CURSO">EN CURSO</option>
+                  <option value="REALIZADO CONFORME">REALIZADO CONFORME</option>
+                  <option value="REALIZADO INCONFORME">REALIZADO INCONFORME</option>
+                </select>
+              </div>
+
+              <div class="field field--search">
+                <label for="buscarGlobal">Buscar</label>
+                <input
+                  type="text"
+                  id="buscarGlobal"
+                  placeholder="Buscar por título o descripción"
+                />
+              </div>
+            </div>
+
+            <div class="accordion-list" id="listaTareasGlobales">
+              <div class="empty-state">
+                Todavía no hay tareas globales cargadas.
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="mediaModal" aria-hidden="true">
+    <div class="modal__backdrop" id="mediaModalBackdrop"></div>
+    <div class="modal__dialog">
+      <div class="modal__header">
+        <h3 id="mediaModalTitle">Adjunto</h3>
+        <button class="icon-btn" id="mediaModalClose" type="button">✕</button>
+      </div>
+
+      <div class="modal__body" id="mediaModalBody"></div>
+    </div>
+  </div>
+
+  <template id="tplTareaLocal">
+    <article class="task-card">
+      <button class="task-card__head" type="button">
+        <div class="task-card__title-wrap">
+          <strong class="task-card__title"></strong>
+          <span class="task-card__meta"></span>
+        </div>
+        <span class="task-card__status"></span>
+      </button>
+
+      <div class="task-card__body">
+        <div class="task-card__section">
+          <h4>Descripción</h4>
+          <p class="task-card__desc"></p>
+        </div>
+
+        <div class="task-card__info-grid">
+          <div>
+            <span class="label">Sucursal</span>
+            <strong class="js-sucursal"></strong>
+          </div>
+          <div>
+            <span class="label">Creado por</span>
+            <strong class="js-creado-por"></strong>
+          </div>
+          <div>
+            <span class="label">Fecha</span>
+            <strong class="js-fecha"></strong>
+          </div>
+          <div>
+            <span class="label">Última actualización</span>
+            <strong class="js-actualizacion"></strong>
+          </div>
+        </div>
+
+        <div class="task-card__section">
+          <h4>Adjuntos</h4>
+          <div class="media-list js-adjuntos"></div>
+        </div>
+
+        <div class="task-card__section">
+          <h4>Actualizar tarea</h4>
+
+          <div class="form-grid form-grid--inline">
+            <div class="field field--full">
+              <label>Título</label>
+              <input type="text" class="js-edit-titulo" />
+            </div>
+
+            <div class="field field--full">
+              <label>Descripción</label>
+              <textarea class="js-edit-descripcion" rows="4"></textarea>
+            </div>
+
+            <div class="field">
+              <label>Estado</label>
+              <select class="js-edit-estado">
+                <option value="PENDIENTE">PENDIENTE</option>
+                <option value="EN CURSO">EN CURSO</option>
+                <option value="REALIZADO CONFORME">REALIZADO CONFORME</option>
+                <option value="REALIZADO INCONFORME">REALIZADO INCONFORME</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Nuevos adjuntos</label>
+              <input type="file" class="js-edit-adjuntos" accept="image/*,video/*" multiple />
+            </div>
+
+            <div class="field field--full">
+              <button type="button" class="primary-btn js-save-local">Guardar cambios</button>
+            </div>
+
+            <p class="form-msg js-edit-msg"></p>
+          </div>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <template id="tplTareaGlobal">
+    <article class="task-card">
+      <button class="task-card__head" type="button">
+        <div class="task-card__title-wrap">
+          <strong class="task-card__title"></strong>
+          <span class="task-card__meta"></span>
+        </div>
+        <span class="task-card__status">GLOBAL</span>
+      </button>
+
+      <div class="task-card__body">
+        <div class="task-card__section">
+          <h4>Descripción</h4>
+          <p class="task-card__desc"></p>
+        </div>
+
+        <div class="task-card__info-grid">
+          <div>
+            <span class="label">Creado por</span>
+            <strong class="js-creado-por"></strong>
+          </div>
+          <div>
+            <span class="label">Fecha</span>
+            <strong class="js-fecha"></strong>
+          </div>
+          <div>
+            <span class="label">Última actualización</span>
+            <strong class="js-actualizacion"></strong>
+          </div>
+        </div>
+
+        <div class="task-card__section">
+          <h4>Adjuntos generales</h4>
+          <div class="media-list js-adjuntos"></div>
+        </div>
+
+        <div class="task-card__section">
+          <h4>Estados por sucursal</h4>
+          <div class="branch-status-list js-estados-sucursales"></div>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <template id="tplEstadoSucursal">
+    <div class="branch-status-item">
+      <div class="branch-status-item__head">
+        <strong class="js-branch-name"></strong>
+        <span class="js-branch-state"></span>
+      </div>
+
+      <p class="js-branch-note"></p>
+
+      <div class="media-list js-branch-adjuntos"></div>
+
+      <div class="form-grid form-grid--inline">
+        <div class="field">
+          <label>Estado</label>
+          <select class="js-branch-edit-estado">
+            <option value="PENDIENTE">PENDIENTE</option>
+            <option value="EN CURSO">EN CURSO</option>
+            <option value="REALIZADO CONFORME">REALIZADO CONFORME</option>
+            <option value="REALIZADO INCONFORME">REALIZADO INCONFORME</option>
+          </select>
+        </div>
+
+        <div class="field field--full">
+          <label>Observación</label>
+          <textarea class="js-branch-edit-note" rows="3"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Nuevos adjuntos</label>
+          <input type="file" class="js-branch-edit-files" accept="image/*,video/*" multiple />
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button type="button" class="primary-btn js-save-branch">Guardar estado</button>
+        </div>
+
+        <p class="form-msg field--full js-branch-msg"></p>
+      </div>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
