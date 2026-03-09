@@ -735,41 +735,50 @@
   }
 
   function openMediaModal(item) {
-    const mediaUrl = item?.url || item?.previewUrl || item?.webViewLink;
-    if (!mediaUrl) return;
+  if (!item) return;
 
-    el.mediaModalTitle.textContent = item.name || "Adjunto";
-    el.mediaModalBody.innerHTML = "";
+  el.mediaModalTitle.textContent = item.name || "Adjunto";
+  el.mediaModalBody.innerHTML = "";
 
-    if (isImage(item)) {
-      const img = document.createElement("img");
-      img.src = mediaUrl;
-      img.alt = item.name || "Imagen";
-      el.mediaModalBody.appendChild(img);
-    } else if (isVideo(item)) {
-      const video = document.createElement("video");
-      video.src = mediaUrl;
-      video.controls = true;
-      video.playsInline = true;
-      el.mediaModalBody.appendChild(video);
-    } else {
-      const iframe = document.createElement("iframe");
-      iframe.src = item.previewUrl || item.webViewLink || mediaUrl;
-      iframe.width = "100%";
-      iframe.height = "600";
-      iframe.allow = "autoplay";
-      el.mediaModalBody.appendChild(iframe);
-    }
+  if (isImage(item)) {
+    const img = document.createElement("img");
+    img.src = item.url || item.downloadUrl || item.webViewLink || "";
+    img.alt = item.name || "Imagen";
 
-    el.mediaModal.classList.add("show");
-    el.mediaModal.setAttribute("aria-hidden", "false");
+    img.onerror = () => {
+      el.mediaModalBody.innerHTML = `
+        <div style="display:grid;gap:12px;text-align:center;">
+          <p>No se pudo previsualizar la imagen.</p>
+          <a class="primary-btn" href="${item.webViewLink || item.downloadUrl || "#"}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;text-decoration:none;">
+            Abrir en Drive
+          </a>
+        </div>
+      `;
+    };
+
+    el.mediaModalBody.appendChild(img);
+
+  } else if (isVideo(item)) {
+    const iframe = document.createElement("iframe");
+    iframe.src = item.previewUrl || item.webViewLink || "";
+    iframe.width = "100%";
+    iframe.height = "600";
+    iframe.allow = "autoplay";
+    iframe.setAttribute("allowfullscreen", "true");
+    el.mediaModalBody.appendChild(iframe);
+
+  } else {
+    const iframe = document.createElement("iframe");
+    iframe.src = item.previewUrl || item.webViewLink || item.downloadUrl || "";
+    iframe.width = "100%";
+    iframe.height = "600";
+    iframe.allow = "autoplay";
+    el.mediaModalBody.appendChild(iframe);
   }
 
-  function closeMediaModal() {
-    el.mediaModal.classList.remove("show");
-    el.mediaModal.setAttribute("aria-hidden", "true");
-    el.mediaModalBody.innerHTML = "";
-  }
+  el.mediaModal.classList.add("show");
+  el.mediaModal.setAttribute("aria-hidden", "false");
+}
 
   async function init() {
     populateSucursales();
