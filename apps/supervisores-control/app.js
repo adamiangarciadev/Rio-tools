@@ -124,10 +124,6 @@
     }).format(d);
   }
 
-  function nowIso() {
-    return new Date().toISOString();
-  }
-
   function makeId(prefix = "T") {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   }
@@ -211,11 +207,11 @@
     url.searchParams.set("accion", action);
 
     const res = await fetch(url.toString(), {
-        method: "POST",
-        headers: {
+      method: "POST",
+      headers: {
         "Content-Type": "text/plain;charset=utf-8"
-        },
-        body: JSON.stringify(payload)
+      },
+      body: JSON.stringify(payload)
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -223,8 +219,6 @@
   }
 
   async function loadData() {
-    if (!API_BASE) return;
-
     const data = await apiGet("listar_supervision");
     state.locales = Array.isArray(data?.locales) ? data.locales : [];
     state.globales = Array.isArray(data?.globales) ? data.globales : [];
@@ -247,6 +241,17 @@
         const option = document.createElement("option");
         option.value = sucursal;
         option.textContent = sucursal;
+        select.appendChild(option);
+      });
+    });
+
+    [el.localEstado, el.filtroLocalEstado, el.filtroGlobalEstado].forEach((select) => {
+      if (!select || select.options.length > 1) return;
+
+      ESTADOS.forEach((estado) => {
+        const option = document.createElement("option");
+        option.value = estado;
+        option.textContent = estado;
         select.appendChild(option);
       });
     });
@@ -328,10 +333,15 @@
     el.panelLocales?.classList.toggle("active", isLocales);
     el.panelGlobales?.classList.toggle("active", !isLocales);
 
-    el.screenTitle.textContent = isLocales ? "Tareas por local" : "Tareas globales";
-    el.screenSubtitle.textContent = isLocales
-      ? "Creación, seguimiento y control de tareas por sucursal."
-      : "Seguimiento centralizado de tareas globales por sucursal.";
+    if (el.screenTitle) {
+      el.screenTitle.textContent = isLocales ? "Tareas por local" : "Tareas globales";
+    }
+
+    if (el.screenSubtitle) {
+      el.screenSubtitle.textContent = isLocales
+        ? "Creación, seguimiento y control de tareas por sucursal."
+        : "Seguimiento centralizado de tareas globales por sucursal.";
+    }
 
     renderSummary();
   }
@@ -339,11 +349,11 @@
   async function handleSubmitLocal(ev) {
     ev.preventDefault();
 
-    const creadoPor = el.localCreadoPor.value.trim();
-    const sucursal = el.localSucursal.value;
-    const titulo = el.localTitulo.value.trim();
-    const descripcion = el.localDescripcion.value.trim();
-    const estado = el.localEstado.value;
+    const creadoPor = el.localCreadoPor?.value?.trim();
+    const sucursal = el.localSucursal?.value;
+    const titulo = el.localTitulo?.value?.trim();
+    const descripcion = el.localDescripcion?.value?.trim();
+    const estado = el.localEstado?.value;
 
     if (!creadoPor || !sucursal || !titulo || !descripcion || !estado) {
       setFormMessage(el.localFormMsg, "Completá todos los campos obligatorios.");
@@ -357,20 +367,18 @@
 
       const payload = {
         id: makeId("LOC"),
-        fecha: nowIso(),
         creadoPor,
         sucursal,
         titulo,
         descripcion,
         estado,
-        adjuntos: [],
         filesBase64
       };
 
       const res = await apiPost("crear_tarea_local", payload);
       if (!res?.ok) throw new Error(res?.error || "No se pudo crear la tarea local");
 
-      el.formTareaLocal.reset();
+      el.formTareaLocal?.reset();
       await refreshAll();
       setFormMessage(el.localFormMsg, "Tarea local guardada correctamente.");
     } catch (err) {
@@ -382,9 +390,9 @@
   async function handleSubmitGlobal(ev) {
     ev.preventDefault();
 
-    const creadoPor = el.globalCreadoPor.value.trim();
-    const titulo = el.globalTitulo.value.trim();
-    const descripcion = el.globalDescripcion.value.trim();
+    const creadoPor = el.globalCreadoPor?.value?.trim();
+    const titulo = el.globalTitulo?.value?.trim();
+    const descripcion = el.globalDescripcion?.value?.trim();
 
     if (!creadoPor || !titulo || !descripcion) {
       setFormMessage(el.globalFormMsg, "Completá todos los campos obligatorios.");
@@ -397,25 +405,17 @@
       const filesBase64 = await filesToBase64(el.globalAdjuntos?.files);
 
       const payload = {
-        id: makeId("GLO"),
-        fecha: nowIso(),
+        id: makeId("GLOB"),
         creadoPor,
         titulo,
         descripcion,
-        adjuntos: [],
-        filesBase64,
-        estadosSucursal: SUCURSALES.map((sucursal) => ({
-          sucursal,
-          estado: "PENDIENTE",
-          observacion: "",
-          adjuntos: []
-        }))
+        filesBase64
       };
 
       const res = await apiPost("crear_tarea_global", payload);
       if (!res?.ok) throw new Error(res?.error || "No se pudo crear la tarea global");
 
-      el.formTareaGlobal.reset();
+      el.formTareaGlobal?.reset();
       await refreshAll();
       setFormMessage(el.globalFormMsg, "Tarea global guardada correctamente.");
     } catch (err) {
@@ -425,93 +425,115 @@
   }
 
   function getFilteredLocales() {
-    const f = state.filtros.locales;
-    const q = normalizeText(f.q);
+    const { sucursal, estado, q } = state.filtros.locales;
+    const qq = normalizeText(q);
 
     return state.locales.filter((item) => {
-      const okSucursal = !f.sucursal || item.sucursal === f.sucursal;
-      const okEstado = !f.estado || item.estado === f.estado;
-      const text = normalizeText(`${item.titulo} ${item.descripcion} ${item.creadoPor} ${item.sucursal}`);
-      const okQ = !q || text.includes(q);
+      const okSucursal = !sucursal || item.sucursal === sucursal;
+      const okEstado = !estado || item.estado === estado;
+
+      const searchable = normalizeText([
+        item.id,
+        item.titulo,
+        item.descripcion,
+        item.sucursal,
+        item.estado,
+        item.creadoPor
+      ].join(" "));
+
+      const okQ = !qq || searchable.includes(qq);
+
       return okSucursal && okEstado && okQ;
     });
   }
 
   function getFilteredGlobales() {
-    const f = state.filtros.globales;
-    const q = normalizeText(f.q);
+    const { sucursal, estado, q } = state.filtros.globales;
+    const qq = normalizeText(q);
 
     return state.globales.filter((item) => {
-      const text = normalizeText(`${item.titulo} ${item.descripcion} ${item.creadoPor}`);
-      const okQ = !q || text.includes(q);
+      const searchable = normalizeText([
+        item.id,
+        item.titulo,
+        item.descripcion,
+        item.creadoPor
+      ].join(" "));
 
-      let okSucursal = true;
-      let okEstado = true;
+      const okQ = !qq || searchable.includes(qq);
 
-      if (f.sucursal) {
-        okSucursal = Array.isArray(item.estadosSucursal)
-          && item.estadosSucursal.some((x) => x.sucursal === f.sucursal);
-      }
-
-      if (f.estado) {
-        okEstado = Array.isArray(item.estadosSucursal)
-          && item.estadosSucursal.some((x) => {
-            const sameSucursal = !f.sucursal || x.sucursal === f.sucursal;
-            return sameSucursal && x.estado === f.estado;
-          });
-      }
+      const estadosSucursal = Array.isArray(item.estadosSucursal) ? item.estadosSucursal : [];
+      const okSucursal = !sucursal || estadosSucursal.some((x) => x.sucursal === sucursal);
+      const okEstado = !estado || estadosSucursal.some((x) => x.estado === estado);
 
       return okQ && okSucursal && okEstado;
     });
   }
 
-  function renderAll() {
-    renderLocales();
-    renderGlobales();
-    renderSummary();
-  }
-
   function renderSummary() {
-    if (state.tab === "locales") {
-      const items = getFilteredLocales();
+    const items = state.tab === "locales" ? getFilteredLocales() : getFilteredGlobales();
 
-      el.totalTareas.textContent = String(items.length);
-      el.totalPendientes.textContent = String(items.filter((x) => x.estado === "PENDIENTE").length);
-      el.totalEnCurso.textContent = String(items.filter((x) => x.estado === "EN CURSO").length);
-      el.totalRealizadas.textContent = String(
-        items.filter((x) =>
-          x.estado === "REALIZADO CONFORME" || x.estado === "REALIZADO INCONFORME"
-        ).length
-      );
-      return;
+    let totalPendientes = 0;
+    let totalEnCurso = 0;
+    let totalRealizadas = 0;
+
+    if (state.tab === "locales") {
+      items.forEach((item) => {
+        if (item.estado === "PENDIENTE") totalPendientes += 1;
+        else if (item.estado === "EN CURSO") totalEnCurso += 1;
+        else if (
+          item.estado === "REALIZADO CONFORME" ||
+          item.estado === "REALIZADO INCONFORME"
+        ) {
+          totalRealizadas += 1;
+        }
+      });
+    } else {
+      items.forEach((item) => {
+        const estados = Array.isArray(item.estadosSucursal) ? item.estadosSucursal : [];
+
+        estados.forEach((estadoItem) => {
+          const okSucursal =
+            !state.filtros.globales.sucursal ||
+            estadoItem.sucursal === state.filtros.globales.sucursal;
+
+          const okEstado =
+            !state.filtros.globales.estado ||
+            estadoItem.estado === state.filtros.globales.estado;
+
+          if (!okSucursal || !okEstado) return;
+
+          if (estadoItem.estado === "PENDIENTE") totalPendientes += 1;
+          else if (estadoItem.estado === "EN CURSO") totalEnCurso += 1;
+          else if (
+            estadoItem.estado === "REALIZADO CONFORME" ||
+            estadoItem.estado === "REALIZADO INCONFORME"
+          ) {
+            totalRealizadas += 1;
+          }
+        });
+      });
     }
 
-    const items = getFilteredGlobales();
-    const estados = items.flatMap((item) => {
-      const branches = Array.isArray(item.estadosSucursal) ? item.estadosSucursal : [];
-      return branches.filter((branch) => {
-        const okSucursal = !state.filtros.globales.sucursal || branch.sucursal === state.filtros.globales.sucursal;
-        const okEstado = !state.filtros.globales.estado || branch.estado === state.filtros.globales.estado;
-        return okSucursal && okEstado;
-      });
-    });
+    if (el.totalTareas) el.totalTareas.textContent = String(items.length);
+    if (el.totalPendientes) el.totalPendientes.textContent = String(totalPendientes);
+    if (el.totalEnCurso) el.totalEnCurso.textContent = String(totalEnCurso);
+    if (el.totalRealizadas) el.totalRealizadas.textContent = String(totalRealizadas);
+  }
 
-    el.totalTareas.textContent = String(items.length);
-    el.totalPendientes.textContent = String(estados.filter((x) => x.estado === "PENDIENTE").length);
-    el.totalEnCurso.textContent = String(estados.filter((x) => x.estado === "EN CURSO").length);
-    el.totalRealizadas.textContent = String(
-      estados.filter((x) =>
-        x.estado === "REALIZADO CONFORME" || x.estado === "REALIZADO INCONFORME"
-      ).length
-    );
+  function renderAll() {
+    renderSummary();
+    renderLocales();
+    renderGlobales();
   }
 
   function renderLocales() {
+    if (!el.listaTareasLocales) return;
+
     const items = getFilteredLocales();
     el.listaTareasLocales.innerHTML = "";
 
     if (!items.length) {
-      el.listaTareasLocales.innerHTML = `<div class="empty-state">No hay tareas para los filtros seleccionados.</div>`;
+      el.listaTareasLocales.innerHTML = `<div class="empty-state">No hay tareas locales para los filtros seleccionados.</div>`;
       return;
     }
 
@@ -531,15 +553,15 @@
       const actualizacion = $(".js-actualizacion", fragment);
       const adjuntos = $(".js-adjuntos", fragment);
 
-      title.textContent = item.titulo || "-";
-      meta.textContent = `${item.sucursal || "-"} · ${formatDate(item.fecha)}`;
+      if (title) title.textContent = item.titulo || "-";
+      if (meta) meta.textContent = `${item.sucursal || "-"} · ${formatDate(item.fecha)}`;
       statusToDataset(status, item.estado);
-      desc.textContent = item.descripcion || "-";
+      if (desc) desc.textContent = item.descripcion || "-";
 
-      sucursal.textContent = item.sucursal || "-";
-      creadoPor.textContent = item.creadoPor || "-";
-      fecha.textContent = formatDate(item.fecha);
-      actualizacion.textContent = formatDate(item.ultimaActualizacion);
+      if (sucursal) sucursal.textContent = item.sucursal || "-";
+      if (creadoPor) creadoPor.textContent = item.creadoPor || "-";
+      if (fecha) fecha.textContent = formatDate(item.fecha);
+      if (actualizacion) actualizacion.textContent = formatDate(item.ultimaActualizacion);
 
       renderAdjuntos(adjuntos, item.adjuntos);
 
@@ -585,8 +607,8 @@
         });
       }
 
-      head.addEventListener("click", () => {
-        card.classList.toggle("open");
+      head?.addEventListener("click", () => {
+        card?.classList.toggle("open");
       });
 
       el.listaTareasLocales.appendChild(fragment);
@@ -594,6 +616,8 @@
   }
 
   function renderGlobales() {
+    if (!el.listaTareasGlobales) return;
+
     const items = getFilteredGlobales();
     el.listaTareasGlobales.innerHTML = "";
 
@@ -617,19 +641,19 @@
       const adjuntos = $(".js-adjuntos", fragment);
       const estadosWrap = $(".js-estados-sucursales", fragment);
 
-      title.textContent = item.titulo || "-";
-      meta.textContent = `${formatDate(item.fecha)}`;
-      desc.textContent = item.descripcion || "-";
+      if (title) title.textContent = item.titulo || "-";
+      if (meta) meta.textContent = `${formatDate(item.fecha)}`;
+      if (desc) desc.textContent = item.descripcion || "-";
 
-      creadoPor.textContent = item.creadoPor || "-";
-      fecha.textContent = formatDate(item.fecha);
-      actualizacion.textContent = formatDate(item.ultimaActualizacion);
+      if (creadoPor) creadoPor.textContent = item.creadoPor || "-";
+      if (fecha) fecha.textContent = formatDate(item.fecha);
+      if (actualizacion) actualizacion.textContent = formatDate(item.ultimaActualizacion);
 
       renderAdjuntos(adjuntos, item.adjuntos);
       renderEstadosSucursal(estadosWrap, item);
 
-      head.addEventListener("click", () => {
-        card.classList.toggle("open");
+      head?.addEventListener("click", () => {
+        card?.classList.toggle("open");
       });
 
       el.listaTareasGlobales.appendChild(fragment);
@@ -637,6 +661,8 @@
   }
 
   function renderEstadosSucursal(container, tareaGlobal) {
+    if (!container) return;
+
     container.innerHTML = "";
 
     const selectedSucursal = state.filtros.globales.sucursal;
@@ -661,9 +687,9 @@
       const branchNote = $(".js-branch-note", fragment);
       const branchAdjuntos = $(".js-branch-adjuntos", fragment);
 
-      branchName.textContent = item.sucursal || "-";
+      if (branchName) branchName.textContent = item.sucursal || "-";
       statusToDataset(branchState, item.estado);
-      branchNote.textContent = item.observacion || "Sin observaciones.";
+      if (branchNote) branchNote.textContent = item.observacion || "Sin observaciones.";
       renderAdjuntos(branchAdjuntos, item.adjuntos);
 
       const editEstado = $(".js-branch-edit-estado", fragment);
@@ -710,6 +736,8 @@
   }
 
   function renderAdjuntos(container, adjuntos) {
+    if (!container) return;
+
     container.innerHTML = "";
 
     const items = Array.isArray(adjuntos) ? adjuntos : [];
@@ -735,50 +763,55 @@
   }
 
   function openMediaModal(item) {
-  if (!item) return;
+    if (!item || !el.mediaModal || !el.mediaModalBody || !el.mediaModalTitle) return;
 
-  el.mediaModalTitle.textContent = item.name || "Adjunto";
-  el.mediaModalBody.innerHTML = "";
+    el.mediaModalTitle.textContent = item.name || "Adjunto";
+    el.mediaModalBody.innerHTML = "";
 
-  if (isImage(item)) {
-    const img = document.createElement("img");
-    img.src = item.url || item.downloadUrl || item.webViewLink || "";
-    img.alt = item.name || "Imagen";
+    if (isImage(item)) {
+      const img = document.createElement("img");
+      img.src = item.url || item.downloadUrl || item.webViewLink || "";
+      img.alt = item.name || "Imagen";
 
-    img.onerror = () => {
-      el.mediaModalBody.innerHTML = `
-        <div style="display:grid;gap:12px;text-align:center;">
-          <p>No se pudo previsualizar la imagen.</p>
-          <a class="primary-btn" href="${item.webViewLink || item.downloadUrl || "#"}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;text-decoration:none;">
-            Abrir en Drive
-          </a>
-        </div>
-      `;
-    };
+      img.onerror = () => {
+        el.mediaModalBody.innerHTML = `
+          <div style="display:grid;gap:12px;text-align:center;">
+            <p>No se pudo previsualizar la imagen.</p>
+            <a class="primary-btn" href="${item.webViewLink || item.downloadUrl || "#"}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;text-decoration:none;">
+              Abrir en Drive
+            </a>
+          </div>
+        `;
+      };
 
-    el.mediaModalBody.appendChild(img);
+      el.mediaModalBody.appendChild(img);
+    } else if (isVideo(item)) {
+      const iframe = document.createElement("iframe");
+      iframe.src = item.previewUrl || item.webViewLink || "";
+      iframe.width = "100%";
+      iframe.height = "600";
+      iframe.allow = "autoplay";
+      iframe.setAttribute("allowfullscreen", "true");
+      el.mediaModalBody.appendChild(iframe);
+    } else {
+      const iframe = document.createElement("iframe");
+      iframe.src = item.previewUrl || item.webViewLink || item.downloadUrl || "";
+      iframe.width = "100%";
+      iframe.height = "600";
+      iframe.allow = "autoplay";
+      el.mediaModalBody.appendChild(iframe);
+    }
 
-  } else if (isVideo(item)) {
-    const iframe = document.createElement("iframe");
-    iframe.src = item.previewUrl || item.webViewLink || "";
-    iframe.width = "100%";
-    iframe.height = "600";
-    iframe.allow = "autoplay";
-    iframe.setAttribute("allowfullscreen", "true");
-    el.mediaModalBody.appendChild(iframe);
-
-  } else {
-    const iframe = document.createElement("iframe");
-    iframe.src = item.previewUrl || item.webViewLink || item.downloadUrl || "";
-    iframe.width = "100%";
-    iframe.height = "600";
-    iframe.allow = "autoplay";
-    el.mediaModalBody.appendChild(iframe);
+    el.mediaModal.classList.add("show");
+    el.mediaModal.setAttribute("aria-hidden", "false");
   }
 
-  el.mediaModal.classList.add("show");
-  el.mediaModal.setAttribute("aria-hidden", "false");
-}
+  function closeMediaModal() {
+    if (!el.mediaModal || !el.mediaModalBody) return;
+    el.mediaModal.classList.remove("show");
+    el.mediaModal.setAttribute("aria-hidden", "true");
+    el.mediaModalBody.innerHTML = "";
+  }
 
   async function init() {
     populateSucursales();
