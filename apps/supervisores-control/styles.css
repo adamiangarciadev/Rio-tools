@@ -777,3 +777,516 @@ input[type="file"]{
 .task-card__body textarea{
   min-height: 96px;
 }
+
+/* =========================================================
+   MOBILE / TABLET — RIO Tools Supervisión
+   Pegar al final del styles.css
+   ========================================================= */
+
+/* ---------- TABLET ---------- */
+@media (max-width: 1100px) {
+  .app-shell{
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar{
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .brand{
+    padding: 0 0 14px;
+  }
+
+  .nav{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  .sidebar__section{
+    margin-top: 0;
+  }
+
+  .back-btn{
+    width: 100%;
+  }
+
+  .main{
+    padding: 18px;
+    gap: 16px;
+  }
+
+  .topbar{
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar__actions{
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .topbar__actions > *{
+    flex: 1;
+  }
+
+  .summary-grid{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  .content-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- MOBILE GENERAL ---------- */
+@media (max-width: 768px) {
+  html{
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body{
+    overflow-x: hidden;
+  }
+
+  .sidebar{
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .brand{
+    gap: 12px;
+    align-items: center;
+  }
+
+  .brand__logo{
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    font-size: .95rem;
+  }
+
+  .brand__text h1{
+    font-size: 1.05rem;
+  }
+
+  .brand__text p{
+    font-size: .84rem;
+  }
+
+  .nav{
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .nav__btn{
+    min-height: 50px;
+    padding: 12px 12px;
+    border-radius: 12px;
+    font-size: .95rem;
+  }
+
+  .nav__icon{
+    font-size: 1rem;
+  }
+
+  .main{
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .topbar{
+    gap: 12px;
+  }
+
+  .topbar h2{
+    font-size: 1.35rem;
+    line-height: 1.1;
+  }
+
+  .topbar p{
+    font-size: .92rem;
+  }
+
+  .topbar__actions{
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .summary-grid{
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .summary-card{
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .summary-card__label{
+    font-size: .8rem;
+    margin-bottom: 6px;
+  }
+
+  .summary-card__value{
+    font-size: 1.5rem;
+  }
+
+  .content-grid{
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .card{
+    border-radius: 16px;
+  }
+
+  .card__header{
+    padding: 16px 16px 14px;
+  }
+
+  .card__header h3{
+    font-size: 1rem;
+  }
+
+  .card__header p{
+    font-size: .88rem;
+    line-height: 1.35;
+  }
+
+  /* Formularios */
+  form,
+  .form-grid,
+  .filters-grid,
+  .inputs-grid{
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  input,
+  select,
+  textarea,
+  button{
+    min-height: 46px;
+  }
+
+  input,
+  select,
+  textarea{
+    width: 100%;
+    max-width: 100%;
+    font-size: 16px; /* evita zoom en iPhone */
+  }
+
+  textarea{
+    min-height: 110px;
+    resize: vertical;
+  }
+
+  .form-actions,
+  .filters-actions{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .ghost-btn,
+  .back-btn,
+  .action-btn{
+    width: 100%;
+    min-height: 46px;
+    justify-content: center;
+  }
+
+  /* Listados */
+  .list-card{
+    overflow: visible;
+  }
+
+  .task-list,
+  .tasks-list,
+  .list-body{
+    display: grid;
+    gap: 12px;
+  }
+
+  .task-card{
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .task-card__head{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .task-card__title{
+    font-size: 1rem;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+
+  .task-card__meta{
+    font-size: .82rem;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .task-card__status{
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: .82rem;
+  }
+
+  .task-card__desc{
+    font-size: .92rem;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+
+  .task-card__body,
+  .task-card__content,
+  .task-card__details{
+    padding: 14px;
+    display: grid;
+    gap: 12px;
+  }
+
+  /* Filas de datos dentro de la tarjeta */
+  .meta-grid,
+  .task-meta-grid,
+  .detail-grid,
+  .info-grid{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .label,
+  .field-label{
+    font-size: .78rem;
+  }
+
+  .value,
+  .field-value{
+    font-size: .92rem;
+    word-break: break-word;
+  }
+
+  /* Estados por sucursal */
+  .branch-list,
+  .estado-sucursal-list,
+  .states-list{
+    display: grid;
+    gap: 10px;
+  }
+
+  .branch-item,
+  .estado-sucursal-item,
+  .state-row{
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .branch-head,
+  .estado-sucursal-head,
+  .state-row__head{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .branch-name,
+  .js-branch-name{
+    font-size: .95rem;
+    font-weight: 700;
+  }
+
+  .branch-note,
+  .js-branch-note{
+    font-size: .9rem;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  .js-branch-edit-estado,
+  .js-branch-edit-note,
+  .js-save-branch{
+    width: 100%;
+  }
+
+  /* Adjuntos */
+  .media-list,
+  .adjuntos-list,
+  .js-adjuntos,
+  .js-branch-adjuntos{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .media-chip{
+    min-height: 40px;
+    max-width: 100%;
+    padding: 8px 10px;
+    border-radius: 12px;
+    font-size: .84rem;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* Mensajes */
+  .form-msg,
+  .edit-msg,
+  .js-edit-msg,
+  .js-branch-msg{
+    font-size: .84rem;
+    line-height: 1.35;
+  }
+
+  .empty-state{
+    padding: 18px 14px;
+    text-align: center;
+    font-size: .92rem;
+    line-height: 1.4;
+  }
+
+  /* Modal de archivos */
+  .media-modal,
+  .modal{
+    padding: 10px;
+  }
+
+  .media-modal__dialog,
+  .modal__dialog,
+  .modal-content{
+    width: 100%;
+    max-width: 100%;
+    height: calc(100dvh - 20px);
+    max-height: calc(100dvh - 20px);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .media-modal__header,
+  .modal__header{
+    padding: 12px 14px;
+  }
+
+  .media-modal__title,
+  .modal__title{
+    font-size: .96rem;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+
+  .media-modal__body,
+  .modal__body{
+    padding: 0;
+    height: 100%;
+  }
+
+  .media-modal__body img,
+  .modal__body img{
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .media-modal__body iframe,
+  .modal__body iframe{
+    width: 100%;
+    height: 100%;
+    min-height: 60dvh;
+    border: 0;
+  }
+}
+
+/* ---------- MOBILE CHICO ---------- */
+@media (max-width: 560px) {
+  .sidebar{
+    padding: 12px;
+  }
+
+  .nav{
+    grid-template-columns: 1fr;
+  }
+
+  .main{
+    padding: 12px;
+  }
+
+  .summary-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card{
+    padding: 13px 14px;
+  }
+
+  .summary-card__value{
+    font-size: 1.4rem;
+  }
+
+  .topbar h2{
+    font-size: 1.2rem;
+  }
+
+  .task-card__head,
+  .task-card__body,
+  .task-card__content,
+  .task-card__details{
+    padding: 12px;
+  }
+
+  .task-card__title{
+    font-size: .96rem;
+  }
+
+  .task-card__meta,
+  .task-card__desc{
+    font-size: .88rem;
+  }
+
+  .media-chip{
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .card__header{
+    padding: 14px 14px 12px;
+  }
+}
+
+/* ---------- TACTIL / UX ---------- */
+@media (hover: none) and (pointer: coarse) {
+  .nav__btn:hover,
+  .back-btn:hover,
+  button:hover{
+    transform: none;
+  }
+
+  .nav__btn,
+  .back-btn,
+  .primary-btn,
+  .secondary-btn,
+  .ghost-btn,
+  .action-btn,
+  .media-chip{
+    min-height: 44px;
+  }
+}
