@@ -105,8 +105,8 @@
     const selectedLocal = (el.localSelect.value || localStorage.getItem(LS_LOCAL) || "").trim().toUpperCase();
 
     el.recentTitle.textContent = selectedLocal
-      ? `Últimas 48 hs · ${selectedLocal}`
-      : "Últimas 48 hs";
+      ? `Últimas 72 hs · ${selectedLocal}`
+      : "Últimas 72 hs";
 
     if (!selectedLocal) {
       el.depositList.innerHTML = `<div class="muted">Seleccioná un local para ver sus depósitos.</div>`;
@@ -134,7 +134,7 @@
 
   function renderDeposits(items) {
     if (!items.length) {
-      el.depositList.innerHTML = `<div class="muted">No hay depósitos cargados en las últimas 48 hs.</div>`;
+      el.depositList.innerHTML = `<div class="muted">No hay depósitos cargados en las últimas 72 hs.</div>`;
       return;
     }
 
