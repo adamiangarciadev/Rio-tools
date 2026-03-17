@@ -1,7 +1,7 @@
 ;(() => {
   "use strict";
 
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6aLfecTvHJlaM7UN8dsL5cE4OEXlO1qwxjfMtCqBr-fg8hvbvwKIO9gvIP8O6P9Lw/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUbN1TyBTJ1-JWOZD1z3qPO6LZn9YBHJcj3pob1AwUux4fsT06tWtlMWoNwmZoCljKhA/exec";
   const LS_LOCAL = "rio_deposito_local";
 
   const $ = (sel) => document.querySelector(sel);
@@ -25,22 +25,22 @@
   init();
 
   function init() {
-  const savedLocal = localStorage.getItem(LS_LOCAL);
-  if (savedLocal) el.localSelect.value = savedLocal;
+    const savedLocal = localStorage.getItem(LS_LOCAL);
+    if (savedLocal) el.localSelect.value = savedLocal;
 
-  el.localSelect.addEventListener("change", () => {
-    const local = el.localSelect.value || "";
-    localStorage.setItem(LS_LOCAL, local);
+    el.localSelect.addEventListener("change", () => {
+      const local = el.localSelect.value || "";
+      localStorage.setItem(LS_LOCAL, local);
+      loadRecentDeposits();
+    });
+
+    el.fileInput.addEventListener("change", onFileSelected);
+    el.saveBtn.addEventListener("click", guardarDeposito);
+    el.refreshBtn.addEventListener("click", loadRecentDeposits);
+
     loadRecentDeposits();
-  });
-
-  el.fileInput.addEventListener("change", onFileSelected);
-  el.saveBtn.addEventListener("click", guardarDeposito);
-  el.refreshBtn.addEventListener("click", loadRecentDeposits);
-
-  loadRecentDeposits();
-  setInterval(loadRecentDeposits, 60000);
-}
+    setInterval(loadRecentDeposits, 60000);
+  }
 
   function onFileSelected(e) {
     const f = e.target.files?.[0] || null;
@@ -81,13 +81,24 @@
       });
 
       const text = await res.text();
-      const data = JSON.parse(text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(text || "La respuesta del servidor no es JSON válido.");
+      }
 
       if (!data.ok) {
         throw new Error(data.error || "No se pudo guardar el depósito.");
       }
 
-      setStatus(`Depósito guardado correctamente. ID: ${data.id}`);
+      if (data.drive_ok) {
+        setStatus(`Depósito guardado correctamente. ID: ${data.id}`);
+      } else {
+        setStatus(`Depósito guardado. ID: ${data.id}. El comprobante no se pudo subir.`, true);
+      }
+
       resetForm();
       loadRecentDeposits();
 
@@ -99,42 +110,44 @@
   }
 
   async function loadRecentDeposits() {
-  try {
-    el.depositList.innerHTML = `<div class="muted">Cargando depósitos...</div>`;
+    try {
+      el.depositList.innerHTML = `<div class="muted">Cargando depósitos...</div>`;
 
-    const selectedLocal = (el.localSelect.value || localStorage.getItem(LS_LOCAL) || "").trim().toUpperCase();
+      const selectedLocal = (el.localSelect.value || localStorage.getItem(LS_LOCAL) || "").trim().toUpperCase();
 
-    el.recentTitle.textContent = selectedLocal
-      ? `Últimas 72 hs · ${selectedLocal}`
-      : "Últimas 72 hs";
+      el.recentTitle.textContent = selectedLocal
+        ? `Últimas 72 hs · ${selectedLocal}`
+        : "Últimas 72 hs";
 
-    if (!selectedLocal) {
-      el.depositList.innerHTML = `<div class="muted">Seleccioná un local para ver sus depósitos.</div>`;
-      return;
+      if (!selectedLocal) {
+        el.depositList.innerHTML = `<div class="muted">Seleccioná un local para ver sus depósitos.</div>`;
+        return;
+      }
+
+      const res = await fetch(`${SCRIPT_URL}?accion=ultimos_depositos&local=${encodeURIComponent(selectedLocal)}`);
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(text || "La respuesta del servidor no es JSON válido.");
+      }
+
+      if (!data.ok) {
+        throw new Error(data.error || "No se pudieron cargar los depósitos.");
+      }
+
+      renderDeposits(data.data || []);
+    } catch (err) {
+      el.depositList.innerHTML = `<div class="muted">Error al cargar depósitos.</div>`;
+      console.error(err);
     }
-
-    const res = await fetch(`${SCRIPT_URL}?accion=ultimos_depositos`);
-    const text = await res.text();
-    const data = JSON.parse(text);
-
-    if (!data.ok) {
-      throw new Error(data.error || "No se pudieron cargar los depósitos.");
-    }
-
-    const filtered = (data.data || []).filter(item =>
-      String(item.local || "").trim().toUpperCase() === selectedLocal
-    );
-
-    renderDeposits(filtered);
-  } catch (err) {
-    el.depositList.innerHTML = `<div class="muted">Error al cargar depósitos.</div>`;
-    console.error(err);
   }
-}
 
   function renderDeposits(items) {
     if (!items.length) {
-      el.depositList.innerHTML = `<div class="muted">No hay depósitos cargados en las últimas 48 hs.</div>`;
+      el.depositList.innerHTML = `<div class="muted">No hay depósitos cargados en las últimas 72 hs.</div>`;
       return;
     }
 
