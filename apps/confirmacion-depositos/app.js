@@ -1,7 +1,7 @@
 ;(() => {
   "use strict";
 
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwH7Z2pCJc3fJDYUw1qGqcC_54BHZXVZM9vX6MJYh5enc0tUAXeIN5Ijk5yIdvRkvIp/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7yOH-KQgGPtzpMwYVYj6t64p3z0IpRYaqkPqEH9MSP3LEl7J3wwNANNwfuDRQ1roy/exec";
   const LS_LOCAL = "rio_deposito_local";
 
   const $ = (sel) => document.querySelector(sel);
