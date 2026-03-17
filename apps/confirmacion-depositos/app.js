@@ -134,7 +134,7 @@
 
   function renderDeposits(items) {
     if (!items.length) {
-      el.depositList.innerHTML = `<div class="muted">No hay depósitos cargados en las últimas 72 hs.</div>`;
+      el.depositList.innerHTML = `<div class="muted">No hay depósitos cargados en las últimas 48 hs.</div>`;
       return;
     }
 
