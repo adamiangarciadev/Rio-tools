@@ -4,7 +4,7 @@ const state = {
   items: [],
   filtered: [],
   q: "",
-  local: "",
+  local: "ESTADOS/HISTORIAS",
   marca: ""
 };
 
