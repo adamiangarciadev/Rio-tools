@@ -93,6 +93,7 @@ async function loadData() {
 
     state.items = Array.isArray(data.items) ? data.items : [];
     buildFilters();
+    applyInitialFilterSelection();
     applyFilters();
   } catch (error) {
     console.error("Error cargando videos:", error);
@@ -117,11 +118,37 @@ function buildFilters() {
   });
 
   if (el.local) {
-    fillSelect(el.local, [...locales].sort((a, b) => a.localeCompare(b)), "Todos los locales");
+    fillSelect(
+      el.local,
+      [...locales].sort((a, b) => a.localeCompare(b)),
+      "Todos los locales"
+    );
   }
 
   if (el.marca) {
-    fillSelect(el.marca, [...marcas].sort((a, b) => a.localeCompare(b)), "Todas las marcas");
+    fillSelect(
+      el.marca,
+      [...marcas].sort((a, b) => a.localeCompare(b)),
+      "Todas las marcas"
+    );
+  }
+}
+
+function applyInitialFilterSelection() {
+  if (el.local && state.local) {
+    const exists = [...el.local.options].some(opt => opt.value === state.local);
+    el.local.value = exists ? state.local : "";
+    if (!exists) {
+      state.local = "";
+    }
+  }
+
+  if (el.marca && state.marca) {
+    const exists = [...el.marca.options].some(opt => opt.value === state.marca);
+    el.marca.value = exists ? state.marca : "";
+    if (!exists) {
+      state.marca = "";
+    }
   }
 }
 
@@ -189,8 +216,18 @@ function renderGrid() {
         <p class="meta">${escapeHtml(item.ruta || "")}</p>
 
         <div class="actions">
-          <button class="btn" type="button" data-id="${escapeHtml(item.id || "")}">Reproducir</button>
-          <a class="btn btn-link" href="${escapeHtml(item.url || "#")}" target="_blank" rel="noopener noreferrer">Abrir en Drive</a>
+          <button class="btn" type="button" data-id="${escapeHtml(item.id || "")}">
+            Reproducir
+          </button>
+          <a
+            class="btn btn-link"
+            href="${escapeHtml(getDownloadUrl(item.url || ""))}"
+            download
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Descargar
+          </a>
         </div>
       </div>
     </article>
@@ -206,6 +243,23 @@ function renderGrid() {
   });
 }
 
+function getDownloadUrl(url = "") {
+  if (!url) return "#";
+
+  const cleanUrl = String(url).trim();
+
+  const matchByFile = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  const matchById = cleanUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+
+  const fileId = matchByFile?.[1] || matchById?.[1];
+
+  if (fileId) {
+    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  }
+
+  return cleanUrl;
+}
+
 function openModal(item) {
   if (!el.modal || !el.modalTitle || !el.modalFrameWrap) return;
 
@@ -214,7 +268,7 @@ function openModal(item) {
   el.modalFrameWrap.innerHTML = item.previewUrl
     ? `
       <iframe
-        src="${item.previewUrl}"
+        src="${escapeHtml(item.previewUrl)}"
         allow="autoplay; fullscreen"
         allowfullscreen
         frameborder="0"
