@@ -136,6 +136,11 @@
       estado: canonEstado(r.estado || ""),
       observacion: r.observacion || "",
       carpeta_url: r.carpeta_url || "",
+      cod_recibe_sarmiento: String(r.cod_recibe_sarmiento || "").trim(),
+      cod_envia_sarmiento: String(r.cod_envia_sarmiento || "").trim(),
+      cod_recibe_sucursal: String(r.cod_recibe_sucursal || "").trim(),
+      cod_cierre: String(r.cod_cierre || "").trim(),
+      tipo_cierre: String(r.tipo_cierre || "").trim(),
     };
   }
 
@@ -152,8 +157,8 @@
     el.cardsWrap.innerHTML = visibles.map(r => {
       const etapa = resolverEtapaUI(r, state.sucursal);
       const badge = resolverBadge(etapa.codigo);
-
       const acciones = renderAcciones(r, etapa);
+      const auditoria = renderAuditoria(r);
 
       return `
         <article class="card">
@@ -199,16 +204,37 @@
           </div>
         </article>
 
-        ${r.observacion || r.carpeta_url ? `
+        ${(r.observacion || r.carpeta_url || auditoria) ? `
           <div class="extra">
             ${r.observacion ? `<div><strong>Obs:</strong> ${escapeHtml(r.observacion)}</div>` : ""}
             ${r.carpeta_url ? `<div><a href="${escapeAttr(r.carpeta_url)}" target="_blank" rel="noopener noreferrer">Ver carpeta</a></div>` : ""}
+            ${auditoria}
           </div>
         ` : ""}
       `;
     }).join("");
 
     bindActionButtons();
+  }
+
+  function renderAuditoria(r) {
+    const filas = [];
+
+    if (r.cod_recibe_sarmiento) {
+      filas.push(`<div><strong>Recibió en Sarmiento:</strong> ${escapeHtml(r.cod_recibe_sarmiento)}</div>`);
+    }
+    if (r.cod_envia_sarmiento) {
+      filas.push(`<div><strong>Envió desde Sarmiento:</strong> ${escapeHtml(r.cod_envia_sarmiento)}</div>`);
+    }
+    if (r.cod_recibe_sucursal) {
+      filas.push(`<div><strong>Recibió en sucursal:</strong> ${escapeHtml(r.cod_recibe_sucursal)}</div>`);
+    }
+    if (r.cod_cierre) {
+      const tipo = r.tipo_cierre ? ` (${escapeHtml(r.tipo_cierre)})` : "";
+      filas.push(`<div><strong>Cierre:</strong> ${escapeHtml(r.cod_cierre)}${tipo}</div>`);
+    }
+
+    return filas.join("");
   }
 
   function bindActionButtons() {
@@ -442,6 +468,11 @@
   }
 
   async function actualizarEstado(remito, nuevoEstado) {
+    const codigoPersonal = pedirCodigoPersonal(
+      `${nuevoEstado} · Remito ${remito}\n\nIngresá el código de personal:`
+    );
+    if (!codigoPersonal) return;
+
     try {
       el.estadoCarga.textContent = `Actualizando remito ${remito}...`;
 
@@ -451,7 +482,8 @@
           accion: "actualizarEstado",
           remito,
           sucursal: state.sucursal,
-          nuevoEstado
+          nuevoEstado,
+          codigoPersonal
         })
       });
 
@@ -467,6 +499,11 @@
   async function confirmarOk(remito) {
     if (!confirm(`¿Confirmar OK el remito ${remito}?`)) return;
 
+    const codigoPersonal = pedirCodigoPersonal(
+      `CONFIRMADO OK · Remito ${remito}\n\nIngresá el código de personal:`
+    );
+    if (!codigoPersonal) return;
+
     try {
       el.estadoCarga.textContent = `Confirmando remito ${remito}...`;
 
@@ -475,7 +512,8 @@
         body: JSON.stringify({
           accion: "confirmarOk",
           remito,
-          sucursal: state.sucursal
+          sucursal: state.sucursal,
+          codigoPersonal
         })
       });
 
@@ -522,6 +560,11 @@
   async function guardarDiferencias() {
     if (!state.remitoActivo) return;
 
+    const codigoPersonal = pedirCodigoPersonal(
+      `DIFERENCIAS · Remito ${state.remitoActivo}\n\nIngresá el código de personal:`
+    );
+    if (!codigoPersonal) return;
+
     try {
       el.guardarDifBtn.disabled = true;
       el.guardarDifBtn.textContent = "Guardando...";
@@ -537,7 +580,8 @@
           remito: state.remitoActivo,
           sucursal: state.sucursal,
           observacion: el.difObs.value.trim(),
-          archivos
+          archivos,
+          codigoPersonal
         })
       });
 
@@ -552,6 +596,19 @@
       el.guardarDifBtn.disabled = false;
       el.guardarDifBtn.textContent = "Guardar diferencias";
     }
+  }
+
+  function pedirCodigoPersonal(mensaje) {
+    const value = window.prompt(mensaje, "");
+    if (value === null) return "";
+
+    const codigo = String(value || "").trim();
+    if (!codigo) {
+      alert("Tenés que ingresar un código de personal.");
+      return "";
+    }
+
+    return codigo;
   }
 
   function fileToBase64Object(file) {
@@ -605,6 +662,7 @@
       "LAMARCA": "LAMARCA",
       "CORRIENTES": "CORRIENTES",
       "CASTELLI": "CASTELLI",
+      "PUEY": "PUEYRREDON",
       "PUEYRREDON": "PUEYRREDON",
       "SARMIENTO": "SARMIENTO",
       "MORENO": "MORENO",
