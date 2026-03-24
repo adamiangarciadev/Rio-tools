@@ -1,9 +1,13 @@
 ;(() => {
   "use strict";
 
-  const API_URL = "https://script.google.com/macros/s/AKfycbyHeHtA935aruQE6YsBM0lTp51_TWdNqMkz1CEfQ9Cem_uKKse9xOeRdezzD65riCaq/exec";
-
+  const API_URL = "https://script.google.com/macros/s/AKfycbyjV61vxornSXgFNt10L-IohoU2Bp002flTPV7LMjCr-PFGA98rFx_sgBQbB72zfEvR/exec";
   const LS_SUCURSAL = "mercaderia_transito_sucursal";
+
+  const GRUPO_1 = ["AVELLANEDA 2", "NAZCA", "LAMARCA"];
+  const GRUPO_2 = ["CORRIENTES", "CASTELLI", "PUEYRREDON"];
+  const SIEMPRE_SARMIENTO = ["MORENO", "QUILMES"];
+  const SARMIENTO = "SARMIENTO";
 
   const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -37,21 +41,35 @@
   }
 
   function bindEvents() {
-    el.sucursalSelect.addEventListener("change", async () => {
-      state.sucursal = el.sucursalSelect.value;
-      localStorage.setItem(LS_SUCURSAL, state.sucursal);
-      await cargarRemitos();
-    });
+    if (el.sucursalSelect) {
+      el.sucursalSelect.addEventListener("change", async () => {
+        state.sucursal = canonSucursal(el.sucursalSelect.value);
+        localStorage.setItem(LS_SUCURSAL, state.sucursal);
+        await cargarRemitos();
+      });
+    }
 
-    el.refreshBtn.addEventListener("click", cargarRemitos);
+    if (el.refreshBtn) {
+      el.refreshBtn.addEventListener("click", cargarRemitos);
+    }
 
-    el.cerrarModalBtn.addEventListener("click", cerrarModal);
-    el.modalDif.addEventListener("click", (e) => {
-      if (e.target === el.modalDif) cerrarModal();
-    });
+    if (el.cerrarModalBtn) {
+      el.cerrarModalBtn.addEventListener("click", cerrarModal);
+    }
 
-    el.difFiles.addEventListener("change", renderFilesPreview);
-    el.guardarDifBtn.addEventListener("click", guardarDiferencias);
+    if (el.modalDif) {
+      el.modalDif.addEventListener("click", (e) => {
+        if (e.target === el.modalDif) cerrarModal();
+      });
+    }
+
+    if (el.difFiles) {
+      el.difFiles.addEventListener("change", renderFilesPreview);
+    }
+
+    if (el.guardarDifBtn) {
+      el.guardarDifBtn.addEventListener("click", guardarDiferencias);
+    }
   }
 
   async function cargarSucursales() {
@@ -61,13 +79,17 @@
 
       if (!data.ok) throw new Error(data.error || "Error al cargar sucursales");
 
-      const sucursales = data.sucursales || [];
+      const sucursalesRaw = Array.isArray(data.sucursales) ? data.sucursales : [];
+      const sucursales = [...new Set(sucursalesRaw.map(canonSucursal).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b, "es")
+      );
 
       el.sucursalSelect.innerHTML =
         `<option value="">Elegí sucursal</option>` +
-        sucursales.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+        sucursales.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join("");
 
-      if (state.sucursal) {
+      if (state.sucursal && sucursales.includes(canonSucursal(state.sucursal))) {
+        state.sucursal = canonSucursal(state.sucursal);
         el.sucursalSelect.value = state.sucursal;
       } else if (sucursales.length) {
         state.sucursal = sucursales[0];
@@ -93,7 +115,7 @@
 
       if (!data.ok) throw new Error(data.error || "No se pudieron cargar los remitos");
 
-      state.remitos = data.remitos || [];
+      state.remitos = (data.remitos || []).map(normalizarRemito);
       renderRemitos();
 
       el.estadoCarga.textContent = `Actualizado: ${new Date().toLocaleTimeString("es-AR")}`;
@@ -103,125 +125,338 @@
     }
   }
 
+  function normalizarRemito(r) {
+    return {
+      ...r,
+      fecha: r.fecha || "",
+      remito: String(r.remito || "").trim(),
+      desde: canonSucursal(r.desde || ""),
+      hacia: canonSucursal(r.hacia || ""),
+      total_prendas: r.total_prendas || "",
+      estado: canonEstado(r.estado || ""),
+      observacion: r.observacion || "",
+      carpeta_url: r.carpeta_url || "",
+    };
+  }
+
   function renderRemitos() {
-    if (!state.remitos.length) {
+    const visibles = state.remitos
+      .filter(remitoDebeMostrarse)
+      .sort(ordenarRemitos);
+
+    if (!visibles.length) {
       el.cardsWrap.innerHTML = `<div class="empty">No hay remitos pendientes para esta sucursal.</div>`;
       return;
     }
 
-    el.cardsWrap.innerHTML = state.remitos.map(r => {
-      const estadoNorm = String(r.estado || "").trim().toUpperCase();
+    el.cardsWrap.innerHTML = visibles.map(r => {
+      const etapa = resolverEtapaUI(r, state.sucursal);
+      const badge = resolverBadge(etapa.codigo);
 
-      let badgeClass = "pendiente";
-      let badgeText = "PENDIENTE";
-
-      if (estadoNorm === "RECIBIDO") {
-        badgeClass = "recibido";
-        badgeText = "RECIBIDO";
-      } else if (estadoNorm === "DIFERENCIAS") {
-        badgeClass = "diferencias";
-        badgeText = "DIFERENCIAS";
-      }
-
-      let acciones = "";
-
-      if (!estadoNorm) {
-        acciones = `
-          <button class="btn primary" data-action="recibido" data-remito="${escapeAttr(r.remito)}">
-            RECIBIDO
-          </button>
-        `;
-      } else if (estadoNorm === "RECIBIDO") {
-        acciones = `
-          <button class="btn ok" data-action="confirmar" data-remito="${escapeAttr(r.remito)}">
-            CONFIRMADO OK
-          </button>
-          <button class="btn warn" data-action="diferencias" data-remito="${escapeAttr(r.remito)}">
-            DIFERENCIAS
-          </button>
-        `;
-      } else if (estadoNorm === "DIFERENCIAS") {
-        acciones = `
-          <button class="btn warn" data-action="diferencias" data-remito="${escapeAttr(r.remito)}">
-            EDITAR DIFERENCIAS
-          </button>
-        `;
-      }
+      const acciones = renderAcciones(r, etapa);
 
       return `
         <article class="card">
-          <div class="card-head">
-            <div>
-              <h3>Remito ${escapeHtml(r.remito)}</h3>
-            </div>
-            <span class="badge ${badgeClass}">${badgeText}</span>
+          <div class="card-left">
+            <h3>Remito ${escapeHtml(r.remito)}</h3>
+            <span class="badge ${badge.className}">${escapeHtml(badge.text)}</span>
           </div>
 
-          <div class="meta">
-            <div class="box">
+          <div class="card-center">
+            <div class="info">
               <span class="label">Fecha</span>
               <strong>${escapeHtml(r.fecha || "-")}</strong>
             </div>
-            <div class="box">
+
+            <div class="info">
               <span class="label">Desde</span>
               <strong>${escapeHtml(r.desde || "-")}</strong>
             </div>
-            <div class="box">
+
+            <div class="info">
               <span class="label">Hacia</span>
               <strong>${escapeHtml(r.hacia || "-")}</strong>
             </div>
-            <div class="box">
-              <span class="label">Total prendas</span>
+
+            <div class="info">
+              <span class="label">Prendas</span>
               <strong>${escapeHtml(String(r.total_prendas || "-"))}</strong>
+            </div>
+
+            <div class="info">
+              <span class="label">Circuito</span>
+              <strong>${requiereSarmiento(r.desde, r.hacia) ? "CON SARMIENTO" : "DIRECTO"}</strong>
+            </div>
+
+            <div class="info">
+              <span class="label">Etapa actual</span>
+              <strong>${escapeHtml(etapa.label)}</strong>
             </div>
           </div>
 
-          ${r.observacion ? `
-            <div class="obs-box">
-              <strong>Observaciones:</strong>
-              <div>${escapeHtml(r.observacion)}</div>
-            </div>
-          ` : ""}
-
-          ${r.carpeta_url ? `
-            <div class="link-box">
-              <strong>Carpeta de diferencias:</strong>
-              <div><a href="${escapeAttr(r.carpeta_url)}" target="_blank" rel="noopener noreferrer">Abrir carpeta</a></div>
-            </div>
-          ` : ""}
-
-          <div class="actions">${acciones}</div>
+          <div class="card-right">
+            ${acciones}
+          </div>
         </article>
+
+        ${r.observacion || r.carpeta_url ? `
+          <div class="extra">
+            ${r.observacion ? `<div><strong>Obs:</strong> ${escapeHtml(r.observacion)}</div>` : ""}
+            ${r.carpeta_url ? `<div><a href="${escapeAttr(r.carpeta_url)}" target="_blank" rel="noopener noreferrer">Ver carpeta</a></div>` : ""}
+          </div>
+        ` : ""}
       `;
     }).join("");
 
+    bindActionButtons();
+  }
+
+  function bindActionButtons() {
     el.cardsWrap.querySelectorAll("[data-action]").forEach(btn => {
       btn.addEventListener("click", async () => {
         const action = btn.dataset.action;
         const remito = btn.dataset.remito;
+        const nuevoEstado = btn.dataset.estado || "";
 
-        if (action === "recibido") await marcarRecibido(remito);
-        if (action === "confirmar") await confirmarOk(remito);
-        if (action === "diferencias") abrirModal(remito);
+        if (action === "estado") {
+          await actualizarEstado(remito, nuevoEstado);
+        }
+
+        if (action === "confirmar") {
+          await confirmarOk(remito);
+        }
+
+        if (action === "diferencias") {
+          abrirModal(remito);
+        }
       });
     });
   }
 
-  async function marcarRecibido(remito) {
+  function renderAcciones(r, etapa) {
+    if (!etapa.accion) return "";
+
+    if (etapa.accion === "estado") {
+      return `
+        <button
+          class="btn primary"
+          data-action="estado"
+          data-remito="${escapeAttr(r.remito)}"
+          data-estado="${escapeAttr(etapa.nuevoEstado)}"
+        >
+          ${escapeHtml(etapa.boton)}
+        </button>
+      `;
+    }
+
+    if (etapa.accion === "decision_final") {
+      return `
+        <button class="btn ok" data-action="confirmar" data-remito="${escapeAttr(r.remito)}">
+          CONFIRMADO OK
+        </button>
+        <button class="btn warn" data-action="diferencias" data-remito="${escapeAttr(r.remito)}">
+          DIFERENCIAS
+        </button>
+      `;
+    }
+
+    if (etapa.accion === "editar_diferencias") {
+      return `
+        <button class="btn warn" data-action="diferencias" data-remito="${escapeAttr(r.remito)}">
+          EDITAR DIFERENCIAS
+        </button>
+      `;
+    }
+
+    return "";
+  }
+
+  function remitoDebeMostrarse(r) {
+    const suc = canonSucursal(state.sucursal);
+    const origen = canonSucursal(r.desde);
+    const destino = canonSucursal(r.hacia);
+    const estado = canonEstado(r.estado);
+    const usaSarmiento = requiereSarmiento(origen, destino);
+
+    if (estado === "CONFIRMADO OK") return false;
+
+    if (!usaSarmiento) {
+      return suc === destino;
+    }
+
+    if (suc === SARMIENTO) {
+      return [
+        "",
+        "ENVIADO A SUCURSAL",
+        "RECIBIDO EN SARMIENTO"
+      ].includes(estado);
+    }
+
+    return suc === destino && [
+      "ENVIADO A DESTINO",
+      "RECIBIDO EN SUCURSAL",
+      "DIFERENCIAS"
+    ].includes(estado);
+  }
+
+  function resolverEtapaUI(r, sucursalActual) {
+    const suc = canonSucursal(sucursalActual);
+    const origen = canonSucursal(r.desde);
+    const destino = canonSucursal(r.hacia);
+    const estado = canonEstado(r.estado);
+    const usaSarmiento = requiereSarmiento(origen, destino);
+
+    if (!usaSarmiento) {
+      if (estado === "" || estado === "ENVIADO A SUCURSAL") {
+        return {
+          codigo: "ENVIADO A SUCURSAL",
+          label: "Esperando recepción en sucursal",
+          accion: "estado",
+          boton: "RECIBIDO EN SUCURSAL",
+          nuevoEstado: "RECIBIDO EN SUCURSAL",
+        };
+      }
+
+      if (estado === "RECIBIDO" || estado === "RECIBIDO EN SUCURSAL") {
+        return {
+          codigo: "RECIBIDO EN SUCURSAL",
+          label: "Recibido en sucursal",
+          accion: "decision_final",
+        };
+      }
+
+      if (estado === "DIFERENCIAS") {
+        return {
+          codigo: "DIFERENCIAS",
+          label: "Diferencias cargadas",
+          accion: "editar_diferencias",
+        };
+      }
+
+      return {
+        codigo: estado || "PENDIENTE",
+        label: estado || "Pendiente",
+        accion: null,
+      };
+    }
+
+    if (suc === SARMIENTO) {
+      if (estado === "" || estado === "ENVIADO A SUCURSAL") {
+        return {
+          codigo: "ENVIADO A SUCURSAL",
+          label: `En tránsito hacia ${SARMIENTO}`,
+          accion: "estado",
+          boton: "RECIBIDO EN SARMIENTO",
+          nuevoEstado: "RECIBIDO EN SARMIENTO",
+        };
+      }
+
+      if (estado === "RECIBIDO EN SARMIENTO") {
+        return {
+          codigo: "RECIBIDO EN SARMIENTO",
+          label: `Listo para enviar a ${destino}`,
+          accion: "estado",
+          boton: `ENVIADO A ${destino}`,
+          nuevoEstado: "ENVIADO A DESTINO",
+        };
+      }
+
+      return {
+        codigo: estado || "PENDIENTE",
+        label: estado || "Pendiente",
+        accion: null,
+      };
+    }
+
+    if (suc === destino) {
+      if (estado === "ENVIADO A DESTINO") {
+        return {
+          codigo: "ENVIADO A DESTINO",
+          label: "En tránsito hacia sucursal final",
+          accion: "estado",
+          boton: "RECIBIDO EN SUCURSAL",
+          nuevoEstado: "RECIBIDO EN SUCURSAL",
+        };
+      }
+
+      if (estado === "RECIBIDO EN SUCURSAL" || estado === "RECIBIDO") {
+        return {
+          codigo: "RECIBIDO EN SUCURSAL",
+          label: "Recibido en sucursal",
+          accion: "decision_final",
+        };
+      }
+
+      if (estado === "DIFERENCIAS") {
+        return {
+          codigo: "DIFERENCIAS",
+          label: "Diferencias cargadas",
+          accion: "editar_diferencias",
+        };
+      }
+    }
+
+    return {
+      codigo: estado || "PENDIENTE",
+      label: estado || "Pendiente",
+      accion: null,
+    };
+  }
+
+  function resolverBadge(codigo) {
+    const c = canonEstado(codigo);
+
+    if (c === "DIFERENCIAS") {
+      return { className: "diferencias", text: "DIFERENCIAS" };
+    }
+
+    if (
+      c === "RECIBIDO EN SUCURSAL" ||
+      c === "RECIBIDO EN SARMIENTO" ||
+      c === "ENVIADO A DESTINO" ||
+      c === "ENVIADO A SUCURSAL"
+    ) {
+      return { className: "recibido", text: c };
+    }
+
+    return { className: "pendiente", text: c || "PENDIENTE" };
+  }
+
+  function ordenarRemitos(a, b) {
+    const prioridad = (r) => {
+      const e = canonEstado(r.estado);
+
+      if (e === "DIFERENCIAS") return 1;
+      if (e === "RECIBIDO EN SUCURSAL") return 2;
+      if (e === "ENVIADO A DESTINO") return 3;
+      if (e === "RECIBIDO EN SARMIENTO") return 4;
+      if (e === "ENVIADO A SUCURSAL" || e === "") return 5;
+      return 9;
+    };
+
+    const pa = prioridad(a);
+    const pb = prioridad(b);
+    if (pa !== pb) return pa - pb;
+
+    return String(b.remito).localeCompare(String(a.remito), "es", { numeric: true });
+  }
+
+  async function actualizarEstado(remito, nuevoEstado) {
     try {
-      el.estadoCarga.textContent = `Marcando remito ${remito} como recibido...`;
+      el.estadoCarga.textContent = `Actualizando remito ${remito}...`;
 
       const res = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({
-          accion: "marcarRecibido",
+          accion: "actualizarEstado",
           remito,
-          sucursal: state.sucursal
+          sucursal: state.sucursal,
+          nuevoEstado
         })
       });
 
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "No se pudo marcar recibido");
+      if (!data.ok) throw new Error(data.error || "No se pudo actualizar el estado");
 
       await cargarRemitos();
     } catch (err) {
@@ -337,6 +572,62 @@
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  }
+
+  function requiereSarmiento(origen, destino) {
+    const o = canonSucursal(origen);
+    const d = canonSucursal(destino);
+
+    if (!o || !d) return false;
+    if (o === SARMIENTO || d === SARMIENTO) return false;
+
+    if (SIEMPRE_SARMIENTO.includes(o) || SIEMPRE_SARMIENTO.includes(d)) {
+      return true;
+    }
+
+    const ambosGrupo1 = GRUPO_1.includes(o) && GRUPO_1.includes(d);
+    const ambosGrupo2 = GRUPO_2.includes(o) && GRUPO_2.includes(d);
+
+    if (ambosGrupo1 || ambosGrupo2) return false;
+
+    return true;
+  }
+
+  function canonSucursal(valor) {
+    const v = norm(valor);
+
+    const alias = {
+      "AVELLANEDA": "AVELLANEDA 2",
+      "AVELLANEDA2": "AVELLANEDA 2",
+      "AV 2": "AVELLANEDA 2",
+      "AV2": "AVELLANEDA 2",
+      "NAZCA": "NAZCA",
+      "LAMARCA": "LAMARCA",
+      "CORRIENTES": "CORRIENTES",
+      "CASTELLI": "CASTELLI",
+      "PUEYRREDON": "PUEYRREDON",
+      "SARMIENTO": "SARMIENTO",
+      "MORENO": "MORENO",
+      "QUILMES": "QUILMES",
+    };
+
+    return alias[v] || v;
+  }
+
+  function canonEstado(valor) {
+    const v = norm(valor);
+
+    if (v === "RECIBIDO") return "RECIBIDO EN SUCURSAL";
+    return v;
+  }
+
+  function norm(str) {
+    return String(str || "")
+      .trim()
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ");
   }
 
   function escapeHtml(str) {
