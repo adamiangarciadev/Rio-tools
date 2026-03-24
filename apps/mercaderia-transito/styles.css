@@ -1,0 +1,283 @@
+:root{
+  --bg:#0f1115;
+  --panel:#171b22;
+  --panel-2:#1d2330;
+  --text:#e8edf5;
+  --muted:#9aa5b5;
+  --border:#2a3140;
+  --primary:#4f8cff;
+  --ok:#1f9d55;
+  --warn:#d97706;
+  --danger:#dc2626;
+  --radius:14px;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+  background:linear-gradient(180deg,#0e1117,#0b0d12);
+  color:var(--text);
+}
+
+/* TOPBAR */
+
+.topbar{
+  padding:18px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.topbar h1{
+  margin:0;
+  font-size:24px;
+}
+
+.topbar p{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.top-actions{
+  display:flex;
+  align-items:end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* CONTENEDOR */
+
+.container{
+  max-width:1200px;
+  margin:0 auto;
+  padding:16px;
+}
+
+.estado-carga{
+  margin-bottom:10px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* INPUTS */
+
+select,input,textarea{
+  background:#0f141d;
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:8px 10px;
+}
+
+/* BOTONES */
+
+.btn{
+  border:none;
+  border-radius:10px;
+  padding:8px 12px;
+  font-weight:600;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.btn.primary{ background:var(--primary); color:#fff; }
+.btn.secondary{ background:#2b3342; color:#fff; }
+.btn.ok{ background:var(--ok); color:#fff; }
+.btn.warn{ background:var(--warn); color:#fff; }
+.btn.ghost{ background:transparent; border:1px solid var(--border); color:#fff; }
+
+/* LISTA */
+
+.cards{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+/* ITEM */
+
+.card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:12px 14px;
+}
+
+/* BLOQUE IZQUIERDO */
+
+.card-left{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:220px;
+}
+
+.card-left h3{
+  margin:0;
+  font-size:16px;
+}
+
+/* INFO CENTRAL */
+
+.card-center{
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+  flex:1;
+}
+
+.info{
+  display:flex;
+  flex-direction:column;
+  font-size:12px;
+}
+
+.info .label{
+  color:var(--muted);
+  font-size:11px;
+}
+
+.info strong{
+  font-size:13px;
+}
+
+/* ESTADO */
+
+.badge{
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  background:#2b3342;
+  width:fit-content;
+}
+
+.badge.recibido{ background:#1e3a8a; }
+.badge.diferencias{ background:#7c2d12; }
+.badge.pendiente{ background:#374151; }
+
+/* DERECHA (ACCIONES) */
+
+.card-right{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  align-items:flex-end;
+}
+
+/* OBS / LINK */
+
+.extra{
+  margin-top:8px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.extra a{
+  color:#93c5fd;
+  text-decoration:none;
+}
+
+/* MODAL */
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+
+.hidden{ display:none; }
+
+.modal-box{
+  width:min(700px,100%);
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+}
+
+.modal-head, .modal-actions{
+  padding:14px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.modal-actions{
+  border-bottom:none;
+  border-top:1px solid var(--border);
+  justify-content:flex-end;
+}
+
+.modal-body{
+  padding:14px;
+}
+
+.campo{
+  margin-bottom:12px;
+}
+
+.campo label{
+  display:block;
+  margin-bottom:5px;
+  font-weight:600;
+  font-size:13px;
+}
+
+textarea{
+  width:100%;
+  min-height:100px;
+  resize:vertical;
+}
+
+.files-preview{
+  margin-top:6px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* EMPTY */
+
+.empty{
+  padding:20px;
+  text-align:center;
+  border:1px dashed var(--border);
+  border-radius:12px;
+  color:var(--muted);
+}
+
+/* MOBILE */
+
+@media (max-width:800px){
+
+  .card{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .card-right{
+    width:100%;
+    flex-direction:row;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+  }
+
+  .card-center{
+    width:100%;
+    gap:10px;
+  }
+
+}
