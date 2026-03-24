@@ -312,3 +312,6 @@ textarea{
   border:none;
   background:#111;
 }
+#searchRemito{
+  min-width:220px;
+}

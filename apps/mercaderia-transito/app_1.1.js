@@ -16,7 +16,6 @@
     refreshBtn: $("#refreshBtn"),
     estadoCarga: $("#estadoCarga"),
     cardsWrap: $("#cardsWrap"),
-    searchRemito: $("#searchRemito"),
 
     modalDif: $("#modalDif"),
     cerrarModalBtn: $("#cerrarModalBtn"),
@@ -36,7 +35,6 @@
     sucursal: localStorage.getItem(LS_SUCURSAL) || "",
     remitos: [],
     remitoActivo: null,
-    search: "",
   };
 
   init();
@@ -58,13 +56,6 @@
 
     if (el.refreshBtn) {
       el.refreshBtn.addEventListener("click", cargarRemitos);
-    }
-
-    if (el.searchRemito) {
-      el.searchRemito.addEventListener("input", () => {
-        state.search = String(el.searchRemito.value || "").trim().toUpperCase();
-        renderRemitos();
-      });
     }
 
     if (el.cerrarModalBtn) {
@@ -108,38 +99,30 @@
         a.localeCompare(b, "es")
       );
 
-      if (el.sucursalSelect) {
-        el.sucursalSelect.innerHTML =
-          `<option value="">Elegí sucursal</option>` +
-          sucursales.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join("");
-      }
+      el.sucursalSelect.innerHTML =
+        `<option value="">Elegí sucursal</option>` +
+        sucursales.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join("");
 
       if (state.sucursal && sucursales.includes(canonSucursal(state.sucursal))) {
         state.sucursal = canonSucursal(state.sucursal);
-        if (el.sucursalSelect) el.sucursalSelect.value = state.sucursal;
+        el.sucursalSelect.value = state.sucursal;
       } else if (sucursales.length) {
         state.sucursal = sucursales[0];
-        if (el.sucursalSelect) el.sucursalSelect.value = state.sucursal;
+        el.sucursalSelect.value = state.sucursal;
         localStorage.setItem(LS_SUCURSAL, state.sucursal);
       }
     } catch (err) {
-      if (el.estadoCarga) {
-        el.estadoCarga.textContent = `Error cargando sucursales: ${err.message}`;
-      }
+      el.estadoCarga.textContent = `Error cargando sucursales: ${err.message}`;
     }
   }
 
   async function cargarRemitos() {
     if (!state.sucursal) {
-      if (el.cardsWrap) {
-        el.cardsWrap.innerHTML = `<div class="empty">Seleccioná una sucursal.</div>`;
-      }
+      el.cardsWrap.innerHTML = `<div class="empty">Seleccioná una sucursal.</div>`;
       return;
     }
 
-    if (el.estadoCarga) {
-      el.estadoCarga.textContent = `Cargando remitos de ${state.sucursal}...`;
-    }
+    el.estadoCarga.textContent = `Cargando remitos de ${state.sucursal}...`;
 
     try {
       const res = await fetch(`${API_URL}?accion=listar&sucursal=${encodeURIComponent(state.sucursal)}`);
@@ -150,16 +133,10 @@
       state.remitos = (data.remitos || []).map(normalizarRemito);
       renderRemitos();
 
-      if (el.estadoCarga) {
-        el.estadoCarga.textContent = `Actualizado: ${new Date().toLocaleTimeString("es-AR")}`;
-      }
+      el.estadoCarga.textContent = `Actualizado: ${new Date().toLocaleTimeString("es-AR")}`;
     } catch (err) {
-      if (el.estadoCarga) {
-        el.estadoCarga.textContent = `Error: ${err.message}`;
-      }
-      if (el.cardsWrap) {
-        el.cardsWrap.innerHTML = `<div class="empty">No se pudo cargar la información.</div>`;
-      }
+      el.estadoCarga.textContent = `Error: ${err.message}`;
+      el.cardsWrap.innerHTML = `<div class="empty">No se pudo cargar la información.</div>`;
     }
   }
 
@@ -186,17 +163,12 @@
   function renderRemitos() {
     const visibles = state.remitos
       .filter(remitoDebeMostrarse)
-      .filter(remitoCoincideBusqueda)
       .sort(ordenarRemitos);
 
     if (!visibles.length) {
-      if (el.cardsWrap) {
-        el.cardsWrap.innerHTML = `<div class="empty">No hay remitos pendientes para esta sucursal.</div>`;
-      }
+      el.cardsWrap.innerHTML = `<div class="empty">No hay remitos pendientes para esta sucursal.</div>`;
       return;
     }
-
-    if (!el.cardsWrap) return;
 
     el.cardsWrap.innerHTML = visibles.map(r => {
       const etapa = resolverEtapaUI(r, state.sucursal);
@@ -294,8 +266,6 @@
   }
 
   function bindActionButtons() {
-    if (!el.cardsWrap) return;
-
     el.cardsWrap.querySelectorAll("[data-action]").forEach(btn => {
       btn.addEventListener("click", async () => {
         const action = btn.dataset.action;
@@ -386,23 +356,6 @@
       "RECIBIDO EN SUCURSAL",
       "DIFERENCIAS"
     ].includes(estado);
-  }
-
-  function remitoCoincideBusqueda(r) {
-    const q = String(state.search || "").trim().toUpperCase();
-    if (!q) return true;
-
-    const texto = [
-      r.remito || "",
-      r.desde || "",
-      r.hacia || "",
-      r.estado || "",
-      r.observacion || ""
-    ]
-      .join(" ")
-      .toUpperCase();
-
-    return texto.includes(q);
   }
 
   function resolverEtapaUI(r, sucursalActual) {
@@ -554,9 +507,7 @@
     if (!codigoPersonal) return;
 
     try {
-      if (el.estadoCarga) {
-        el.estadoCarga.textContent = `Actualizando remito ${remito}...`;
-      }
+      el.estadoCarga.textContent = `Actualizando remito ${remito}...`;
 
       const res = await fetch(API_URL, {
         method: "POST",
@@ -587,9 +538,7 @@
     if (!codigoPersonal) return;
 
     try {
-      if (el.estadoCarga) {
-        el.estadoCarga.textContent = `Confirmando remito ${remito}...`;
-      }
+      el.estadoCarga.textContent = `Confirmando remito ${remito}...`;
 
       const res = await fetch(API_URL, {
         method: "POST",
@@ -614,21 +563,19 @@
     state.remitoActivo = remito;
     const actual = state.remitos.find(x => String(x.remito) === String(remito));
 
-    if (el.difRemito) el.difRemito.value = remito;
-    if (el.difObs) el.difObs.value = actual?.observacion || "";
-    if (el.difFiles) el.difFiles.value = "";
-    if (el.filesPreview) el.filesPreview.innerHTML = "";
+    el.difRemito.value = remito;
+    el.difObs.value = actual?.observacion || "";
+    el.difFiles.value = "";
+    el.filesPreview.innerHTML = "";
 
-    if (el.modalDif) {
-      el.modalDif.classList.remove("hidden");
-    }
+    el.modalDif.classList.remove("hidden");
   }
 
   function cerrarModal() {
-    if (el.modalDif) el.modalDif.classList.add("hidden");
+    el.modalDif.classList.add("hidden");
     state.remitoActivo = null;
-    if (el.difFiles) el.difFiles.value = "";
-    if (el.filesPreview) el.filesPreview.innerHTML = "";
+    el.difFiles.value = "";
+    el.filesPreview.innerHTML = "";
   }
 
   function abrirPdfModal(remito, fileId) {
@@ -637,38 +584,26 @@
       return;
     }
 
-    if (el.pdfModalTitle) {
-      el.pdfModalTitle.textContent = `Visualizar remito ${remito}`;
-    }
-    if (el.pdfViewerFrame) {
-      el.pdfViewerFrame.src = `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/preview`;
-    }
-    if (el.modalPdf) {
-      el.modalPdf.classList.remove("hidden");
-    }
+    el.pdfModalTitle.textContent = `Visualizar remito ${remito}`;
+    el.pdfViewerFrame.src = `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/preview`;
+    el.modalPdf.classList.remove("hidden");
   }
 
   function cerrarPdfModal() {
-    if (el.modalPdf) {
-      el.modalPdf.classList.add("hidden");
-    }
-    if (el.pdfViewerFrame) {
-      el.pdfViewerFrame.src = "";
-    }
+    el.modalPdf.classList.add("hidden");
+    el.pdfViewerFrame.src = "";
   }
 
   function renderFilesPreview() {
-    const files = Array.from((el.difFiles && el.difFiles.files) || []);
+    const files = Array.from(el.difFiles.files || []);
     if (!files.length) {
-      if (el.filesPreview) el.filesPreview.innerHTML = "";
+      el.filesPreview.innerHTML = "";
       return;
     }
 
-    if (el.filesPreview) {
-      el.filesPreview.innerHTML = files
-        .map(f => `<div>${escapeHtml(f.name)} — ${(f.size / 1024 / 1024).toFixed(2)} MB</div>`)
-        .join("");
-    }
+    el.filesPreview.innerHTML = files
+      .map(f => `<div>${escapeHtml(f.name)} — ${(f.size / 1024 / 1024).toFixed(2)} MB</div>`)
+      .join("");
   }
 
   async function guardarDiferencias() {
@@ -680,13 +615,11 @@
     if (!codigoPersonal) return;
 
     try {
-      if (el.guardarDifBtn) {
-        el.guardarDifBtn.disabled = true;
-        el.guardarDifBtn.textContent = "Guardando...";
-      }
+      el.guardarDifBtn.disabled = true;
+      el.guardarDifBtn.textContent = "Guardando...";
 
       const archivos = await Promise.all(
-        Array.from((el.difFiles && el.difFiles.files) || []).map(fileToBase64Object)
+        Array.from(el.difFiles.files || []).map(fileToBase64Object)
       );
 
       const res = await fetch(API_URL, {
@@ -695,7 +628,7 @@
           accion: "guardarDiferencias",
           remito: state.remitoActivo,
           sucursal: state.sucursal,
-          observacion: el.difObs ? el.difObs.value.trim() : "",
+          observacion: el.difObs.value.trim(),
           archivos,
           codigoPersonal
         })
@@ -709,10 +642,8 @@
     } catch (err) {
       alert(err.message);
     } finally {
-      if (el.guardarDifBtn) {
-        el.guardarDifBtn.disabled = false;
-        el.guardarDifBtn.textContent = "Guardar diferencias";
-      }
+      el.guardarDifBtn.disabled = false;
+      el.guardarDifBtn.textContent = "Guardar diferencias";
     }
   }
 
