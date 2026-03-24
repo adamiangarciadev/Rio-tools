@@ -281,3 +281,34 @@ textarea{
   }
 
 }
+.card-title-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.btn.view{
+  background:#2b3342;
+  color:#fff;
+}
+
+.modal-pdf-box{
+  width:min(1100px,100%);
+  height:min(90vh,900px);
+  display:flex;
+  flex-direction:column;
+}
+
+.modal-pdf-body{
+  flex:1;
+  padding:0;
+}
+
+#pdfViewerFrame{
+  width:100%;
+  height:100%;
+  min-height:70vh;
+  border:none;
+  background:#111;
+}

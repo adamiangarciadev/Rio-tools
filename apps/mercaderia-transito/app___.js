@@ -24,11 +24,6 @@
     difObs: $("#difObs"),
     difFiles: $("#difFiles"),
     filesPreview: $("#filesPreview"),
-
-    modalPdf: $("#modalPdf"),
-    cerrarPdfModalBtn: $("#cerrarPdfModalBtn"),
-    pdfModalTitle: $("#pdfModalTitle"),
-    pdfViewerFrame: $("#pdfViewerFrame"),
   };
 
   const state = {
@@ -74,16 +69,6 @@
 
     if (el.guardarDifBtn) {
       el.guardarDifBtn.addEventListener("click", guardarDiferencias);
-    }
-
-    if (el.cerrarPdfModalBtn) {
-      el.cerrarPdfModalBtn.addEventListener("click", cerrarPdfModal);
-    }
-
-    if (el.modalPdf) {
-      el.modalPdf.addEventListener("click", (e) => {
-        if (e.target === el.modalPdf) cerrarPdfModal();
-      });
     }
   }
 
@@ -151,7 +136,6 @@
       estado: canonEstado(r.estado || ""),
       observacion: r.observacion || "",
       carpeta_url: r.carpeta_url || "",
-      file_id: String(r.file_id || "").trim(),
       cod_recibe_sarmiento: String(r.cod_recibe_sarmiento || "").trim(),
       cod_envia_sarmiento: String(r.cod_envia_sarmiento || "").trim(),
       cod_recibe_sucursal: String(r.cod_recibe_sucursal || "").trim(),
@@ -179,19 +163,7 @@
       return `
         <article class="card">
           <div class="card-left">
-            <div class="card-title-row">
-              <h3>Remito ${escapeHtml(r.remito)}</h3>
-              ${r.file_id ? `
-                <button
-                  class="btn view"
-                  data-action="ver-pdf"
-                  data-remito="${escapeAttr(r.remito)}"
-                  data-fileid="${escapeAttr(r.file_id)}"
-                >
-                  VER
-                </button>
-              ` : ""}
-            </div>
+            <h3>Remito ${escapeHtml(r.remito)}</h3>
             <span class="badge ${badge.className}">${escapeHtml(badge.text)}</span>
           </div>
 
@@ -271,7 +243,6 @@
         const action = btn.dataset.action;
         const remito = btn.dataset.remito;
         const nuevoEstado = btn.dataset.estado || "";
-        const fileId = btn.dataset.fileid || "";
 
         if (action === "estado") {
           await actualizarEstado(remito, nuevoEstado);
@@ -283,10 +254,6 @@
 
         if (action === "diferencias") {
           abrirModal(remito);
-        }
-
-        if (action === "ver-pdf") {
-          abrirPdfModal(remito, fileId);
         }
       });
     });
@@ -576,22 +543,6 @@
     state.remitoActivo = null;
     el.difFiles.value = "";
     el.filesPreview.innerHTML = "";
-  }
-
-  function abrirPdfModal(remito, fileId) {
-    if (!fileId) {
-      alert("Este remito no tiene archivo PDF asociado.");
-      return;
-    }
-
-    el.pdfModalTitle.textContent = `Visualizar remito ${remito}`;
-    el.pdfViewerFrame.src = `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/preview`;
-    el.modalPdf.classList.remove("hidden");
-  }
-
-  function cerrarPdfModal() {
-    el.modalPdf.classList.add("hidden");
-    el.pdfViewerFrame.src = "";
   }
 
   function renderFilesPreview() {
