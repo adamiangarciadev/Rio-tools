@@ -8,6 +8,7 @@
   const GRUPO_2 = ["CORRIENTES", "CASTELLI", "PUEYRREDON"];
   const SIEMPRE_SARMIENTO = ["MORENO", "QUILMES"];
   const SARMIENTO = "SARMIENTO";
+  const DEPOSITO = "DEPOSITO";
 
   const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -754,8 +755,14 @@
     const d = canonSucursal(destino);
 
     if (!o || !d) return false;
+
+    // Si uno de los dos es SARMIENTO, no hay circuito intermedio
     if (o === SARMIENTO || d === SARMIENTO) return false;
 
+    // DEPOSITO siempre va directo
+    if (o === "DEPOSITO" || d === "DEPOSITO") return false;
+
+    // MORENO y QUILMES siempre pasan por SARMIENTO
     if (SIEMPRE_SARMIENTO.includes(o) || SIEMPRE_SARMIENTO.includes(d)) {
       return true;
     }
@@ -763,8 +770,10 @@
     const ambosGrupo1 = GRUPO_1.includes(o) && GRUPO_1.includes(d);
     const ambosGrupo2 = GRUPO_2.includes(o) && GRUPO_2.includes(d);
 
+    // Entre los mismos grupos va directo
     if (ambosGrupo1 || ambosGrupo2) return false;
 
+    // Entre grupos distintos pasa por SARMIENTO
     return true;
   }
 
@@ -785,6 +794,7 @@
       "SARMIENTO": "SARMIENTO",
       "MORENO": "MORENO",
       "QUILMES": "QUILMES",
+      "DEPOSITO": "DEPOSITO"
     };
 
     return alias[v] || v;
