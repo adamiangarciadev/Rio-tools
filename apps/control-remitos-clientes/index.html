@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control de Remitos · RIO Tools</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="back-btn" href="https://adamiangarciadev.github.io/Rio-tools/">← Volver</a>
+
+  <header class="hero">
+    <h1>Control de Remitos</h1>
+    <p>Vista por sucursal con afectación de estado</p>
+  </header>
+
+  <main class="container">
+    <section class="panel filters">
+      <div class="field">
+        <label for="sucursalSelect">Sucursal</label>
+        <select id="sucursalSelect">
+          <option value="">Seleccionar sucursal</option>
+        </select>
+      </div>
+
+      <div class="field grow">
+        <label for="searchInput">Buscar remito o cliente</label>
+        <input type="text" id="searchInput" placeholder="Buscar..." />
+      </div>
+
+      <div class="field actions">
+        <button id="btnReload" class="btn">Actualizar</button>
+        <button id="btnClearSucursal" class="btn secondary">Borrar sucursal guardada</button>
+      </div>
+    </section>
+
+    <section class="panel stats">
+      <div class="stat">
+        <span>Total visibles</span>
+        <strong id="totalVisible">0</strong>
+      </div>
+      <div class="stat">
+        <span>Sucursal actual</span>
+        <strong id="currentSucursal">-</strong>
+      </div>
+      <div class="stat">
+        <span>Última actualización</span>
+        <strong id="lastUpdate">-</strong>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div id="statusMsg" class="status">Esperando sucursal...</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Remito</th>
+              <th>Desde</th>
+              <th>Cliente</th>
+              <th>Vendedor</th>
+              <th>Total prendas</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td colspan="8">Sin datos</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® -
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
