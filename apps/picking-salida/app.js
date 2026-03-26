@@ -10,9 +10,9 @@
   "use strict";
 
   // ====== Config ======
-  const RESPONSABLES = ["DAVID","DIEGO","JOEL","MARTIN","MIGUEL","NAHUEL","RODRIGO","RAMON","ROBERTO","SERGIO","PATO","FRANCO"];
-  const SUCURSALES  = ["AV2","NAZCA","LAMARCA","CORRIENTES","CO2","CASTELLI","QUILMES","MORENO","SARMIENTO","DEPOSITO","PUEYRREDON"];
-  const CSV_FILES   = ["equivalencia.csv", "equivalencia2.csv"]; // ambos si existen
+  const RESPONSABLES = ["DAVID","DIEGO","JOEL","MARTIN","MIGUEL","NAHUEL","RODRIGO","RAMON","ROBERTO","SERGIO","PATO","FRANCO","DAMIAN"];
+  const SUCURSALES  = ["AV2","NAZCA","LAMARCA","CORRIENTES","CASTELLI","QUILMES","MORENO","SARMIENTO","DEPOSITO","PUEYRREDON"];
+  const CSV_FILES   = ["../../data/equivalencia.csv", "../../data/equivalencia2.csv"]; // ambos si existen
 
   const LS_META  = "pickeo_meta_v1";
   const AUTOCOMMIT_IDLE_MS = 80;
