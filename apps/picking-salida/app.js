@@ -18,7 +18,7 @@
   const MIN_LEN_FOR_COMMIT = 3;
 
   // ====== Apps Script ======
-  const SCRIPT_URL_CUADERNILLO = "https://script.google.com/macros/s/AKfycbx1a1dG_ZAVst5YrxZ4VcvhGFHuiHmbDNSOhUmeROug7oKeQSjqG8msgy1i-KBLTzlR-g/exec";
+  const SCRIPT_URL_CUADERNILLO = "https://script.google.com/macros/s/AKfycbyAlP7xFvmRAcYq06a7asCB8gWU_6X6m6Eq0QXx1gW4sWcJURywVxI_sXYrYrigmbDUcA/exec";
 
   const SCRIPT_URL_SARMIENTO  = "https://script.google.com/macros/s/AKfycbzpGGyA_acQYDzZldHnameD5Xwo8hGW6-eaFjAlDZfljsuU5tqkeCb8Nizk_e2CitDU/exec";
   const SCRIPT_URL_AV2        = "https://script.google.com/macros/s/AKfycbwPNl9zyKtgun43MijeiFL3BtGTyM79_a4pocTYlYOr9Q5KllWra6s2HjbGIr11XFGy9w/exec";
@@ -541,7 +541,19 @@
       return;
     }
 
-    const origen = el.origenSelect?.value || "";
+    const origen = (el.origenSelect?.value || "").toUpperCase().trim();
+    const destino = (el.destinoSelect?.value || "").toUpperCase().trim();
+
+    if (!origen){
+      signalError("Seleccioná un ORIGEN.");
+      return;
+    }
+
+    if (!destino){
+      signalError("Seleccioná un DESTINO.");
+      return;
+    }
+
     const scriptUrlOrigen = getScriptUrlForOrigen(origen);
 
     if (!scriptUrlOrigen){
@@ -567,7 +579,7 @@
       updateRemitoUI(remito);
 
       const fileName = resolveFilename(remito);
-      const folderName = (el.destinoSelect?.value || "INVENTARIO").toString().toUpperCase();
+      const folderName = destino || "INVENTARIO";
 
       await guardarTxtEnOrigen({
         content,
@@ -585,12 +597,26 @@
   }
 
   async function crearRemitoEnCuadernillo(){
+    const origen = (el.origenSelect?.value || "").toUpperCase().trim();
+    const destino = (el.destinoSelect?.value || "").toUpperCase().trim();
+    const responsable = (el.respSelect?.value || "").toUpperCase().trim();
+    const bultos = (el.bultosInput?.value || "0").trim();
+
+    if (!origen) {
+      throw new Error("Falta seleccionar ORIGEN.");
+    }
+
+    if (!destino) {
+      throw new Error("Falta seleccionar DESTINO.");
+    }
+
     const payload = {
       accion: "crear_remito",
       fecha: formatFechaCuadernillo(new Date()),
-      destino: el.destinoSelect?.value || "",
-      bultos: el.bultosInput?.value || "0",
-      responsable: el.respSelect?.value || "",
+      origen: origen,
+      destino: destino,
+      bultos: bultos,
+      responsable: responsable,
       aclaracion: ""
     };
 
@@ -637,7 +663,6 @@
       throw new Error(`TXT HTTP ${res.status}`);
     }
 
-    // si tu script de TXT no devuelve JSON, no lo fuerces
     let data = null;
     try {
       data = await res.json();

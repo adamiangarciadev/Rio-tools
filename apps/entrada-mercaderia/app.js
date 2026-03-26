@@ -5,7 +5,7 @@
   // ====== Config ======
   const RESPONSABLES = ["DAVID","DIEGO","JOEL","MARTIN","MIGUEL","NAHUEL","RODRIGO","RAMON","ROBERTO","SERGIO","PATO","FRANCO","ANGEL","JESUS","MATIAS","BRENDA","VALENTINA","LUCIANO","ORIANA","AGUSTIN","SARA","SOLEDAD GALEANO","ALAN","ENZO","SOLEDAD SIERRA","DAIANA","PEDRO"];
   const SUCURSALES  = ["AV2","NAZCA","LAMARCA","CORRIENTES","CO2","CASTELLI","QUILMES","MORENO","SARMIENTO","DEPOSITO","PUEYRREDON"];
-  const CSV_FILES   = ["../../data/equivalencia.csv", "../../data/equivalencia2.csv"];; // ambos si existen
+  const CSV_FILES   = ["../../data/equivalencia.csv", "../../data/equivalencia2.csv"]; // ambos si existen
 
   RESPONSABLES.sort((a, b) => a.localeCompare(b, "es"));
   SUCURSALES.sort((a, b) => a.localeCompare(b, "es"));
