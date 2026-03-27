@@ -103,24 +103,6 @@ Rio-tools/
 
 La interfaz utiliza un **tema oscuro personalizado** con variables CSS, layout en grilla de 4 columnas para escritorio con adaptación responsiva a 2 columnas y 1 columna en pantallas menores. El diseño apunta a claridad y velocidad de uso en entornos operativos.
 
----
-
-## 📦 Instalación y Uso
-
-Por tratarse de una herramienta de uso interno alojada en GitHub Pages, **no requiere instalación**. Solo es necesario acceder a la URL del repositorio publicada.
-
-Para desarrollo local:
-
-```bash
-# Clonar el repositorio
-git clone https://github.com/adamiangarciadev/Rio-tools.git
-
-# Acceder a la carpeta
-cd Rio-tools
-
-# Abrir index.html en el navegador
-# O usar una extensión como Live Server (VS Code)
-```
 
 ---
 
