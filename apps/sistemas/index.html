@@ -1,104 +1,455 @@
-<!-- index.html (SIN TOKEN) -->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SISTEMAS | RIO Tools</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REMITOS CON DIFERENCIAS</title>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CDPZFHV1BV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CDPZFHV1BV');
+  </script>
+
+  <style>
+    :root{
+      --bg:#0f1115;
+      --panel:#171a21;
+      --text:#e6eaf0;
+      --muted:#9aa4b2;
+      --border:#2a3140;
+      --accent:#60a5fa;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#0f1115,#0c0e13);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .wrap{
+      width:min(1400px, 96%);
+      margin:0 auto;
+      padding:24px 16px 60px;
+      flex:1;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:20px;
+      position:relative;
+      padding-top:12px;
+    }
+
+    .back-btn{
+      position:absolute;
+      top:0;
+      left:0;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      text-decoration:none;
+      color:#e6eaf0;
+      background:linear-gradient(180deg,#1e2430,#181c27);
+      border:1px solid #2a3140;
+      border-radius:12px;
+      padding:10px 14px;
+      font-weight:600;
+      box-shadow:0 2px 3px rgba(0,0,0,.3);
+    }
+
+    .back-btn:hover{
+      background:linear-gradient(180deg,#2a3140,#202530);
+    }
+
+    .title-box{
+      padding-top:52px;
+    }
+
+    h1{
+      margin:0 0 6px;
+      font-size:30px;
+    }
+
+    .sub{
+      color:var(--muted);
+      margin:0;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .input{
+      background:#10141d;
+      border:1px solid #273042;
+      color:#dbe3ef;
+      padding:11px 12px;
+      border-radius:12px;
+      min-width:280px;
+      outline:none;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid #2b3342;
+      background:#1b2030;
+      color:#e6eaf0;
+      padding:11px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+    }
+
+    .btn:hover{
+      filter:brightness(1.05);
+    }
+
+    .btn.ok{
+      background:linear-gradient(180deg,#0b3b2f,#0a2f25);
+      border-color:#124236;
+      color:#d1fae5;
+    }
+
+    .btn.pdf{
+      background:linear-gradient(180deg,#1f2937,#111827);
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid #232734;
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:0 1px 0 #0b0d12 inset;
+    }
+
+    .status{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      border-radius:14px;
+      border:1px solid #232734;
+      background:#131720;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:1150px;
+    }
+
+    th, td{
+      padding:12px 10px;
+      border-bottom:1px solid #232734;
+      text-align:left;
+      vertical-align:top;
+      font-size:14px;
+    }
+
+    th{
+      position:sticky;
+      top:0;
+      background:#151922;
+      z-index:1;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      border:1px solid transparent;
+    }
+
+    .badge.warn{
+      background:rgba(245,158,11,.12);
+      color:#fbbf24;
+      border-color:rgba(245,158,11,.35);
+    }
+
+    .badge.ok{
+      background:rgba(34,197,94,.12);
+      color:#86efac;
+      border-color:rgba(34,197,94,.35);
+    }
+
+    .link-btn, .link-dif{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px 10px;
+      border-radius:10px;
+      text-decoration:none;
+      font-size:13px;
+      font-weight:600;
+      border:1px solid #2b3342;
+      background:#1b2030;
+      color:#e6eaf0;
+    }
+
+    .muted{
+      color:var(--muted);
+    }
+
+    .empty{
+      padding:30px;
+      text-align:center;
+      color:var(--muted);
+    }
+
+    .obs{
+      white-space:pre-wrap;
+      line-height:1.35;
+      max-width:320px;
+    }
+
+    footer{
+      text-align:center;
+      padding:18px 12px 26px;
+      color:var(--muted);
+    }
+
+    @media (max-width: 900px){
+      .toolbar{
+        width:100%;
+      }
+
+      .input{
+        min-width:100%;
+      }
+
+      h1{
+        font-size:24px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="back-btn" href="https://adamiangarciadev.github.io/Rio-tools/">← Volver</a>
 
-<header class="container header-row">
-  <div>
-    <h1>SISTEMAS</h1>
-    <p class="muted">Mesa de ayuda interna (Tickets RIO)</p>
-  </div>
-
-  <div class="top-actions">
-    <button id="refreshBtn" class="btn primary">Actualizar</button>
-  </div>
-</header>
-
-<main class="container">
-  <section class="card">
-    <h2>Crear ticket</h2>
-
-    <div class="row">
-      <label>Sucursal
-        <select id="sucursalSel" class="input"></select>
-      </label>
-
-      <label>Tipo
-        <select id="tipoSel" class="input">
-          <option>Sistema/Dragon</option>
-          <option>Impresora/Labels</option>
-          <option>Red/Internet</option>
-          <option>PC/Windows</option>
-          <option>Otro</option>
-        </select>
-      </label>
-
-      <label>Prioridad
-        <select id="prioSel" class="input">
-          <option>Alta</option>
-          <option>Media</option>
-          <option>Baja</option>
-        </select>
-      </label>
-
-      <label>WhatsApp (opcional)
-        <input id="telInput" class="input" type="text" inputmode="numeric" placeholder="1122334455" />
-      </label>
-
-      <label>Email (opcional)
-        <input id="mailInput" class="input" type="email" placeholder="local@email.com" />
-      </label>
-    </div>
-
-    <label style="margin-top:10px;">Descripción
-      <textarea id="descInput" class="textarea" placeholder="Ej: NO ME PRENDE LA PANTALLA..."></textarea>
-    </label>
-
-    <div class="row" style="margin-top:10px;">
-      <button id="createBtn" class="btn primary">Crear ticket</button>
-      <span id="createMsg" class="muted"></span>
-    </div>
-  </section>
-
-  <section class="card">
-    <div class="row space-between center">
-      <h2>Tickets</h2>
-      <div class="row">
-        <label class="mini">Estado
-          <select id="fEstado" class="input">
-            <option value="">Todos</option>
-            <option>Pendiente</option>
-            <option>En Curso</option>
-            <option>Seguimiento</option>
-            <option>Resuelto</option>
-          </select>
-        </label>
-
-        <label class="mini">Sucursal
-          <select id="fSucursal" class="input">
-            <option value="">Todas</option>
-          </select>
-        </label>
-
-        <label class="mini">Buscar
-          <input id="qInput" class="input" type="text" placeholder="ID / descripción / tipo" />
-        </label>
+      <div class="title-box">
+        <h1>REMITOS CON DIFERENCIAS</h1>
+        <p class="sub">Control de remitos pendientes de confirmación</p>
       </div>
-    </div>
 
-    <div id="tableWrap" class="table-wrap"></div>
-    <p class="muted small" id="footInfo"></p>
-  </section>
-</main>
+      <div class="toolbar">
+        <input id="searchInput" class="input" type="text" placeholder="Buscar remito, sucursal u observación..." />
+        <button id="refreshBtn" class="btn">Actualizar</button>
+      </div>
+    </header>
 
-<footer class="container foot muted">RIO Tools Suite</footer>
+    <section class="card">
+      <p id="status" class="status">Cargando...</p>
 
-<script src="./app.js"></script>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>N° Remito</th>
+              <th>PDF</th>
+              <th>Sucursal</th>
+              <th>Estado</th>
+              <th>Observación</th>
+              <th>Diferencias</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr>
+              <td colspan="8" class="empty">Cargando datos...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® -
+  </footer>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzmGESqmu43IMT-vaIIhB-ecJj_fHjv3OVXhGhdx9yfmvkj33ZgqXeQQ1sasZXZFkp_Pg/exec";
+
+    const state = {
+      items: [],
+      filtered: []
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+
+    const el = {
+      tbody: $("#tbody"),
+      status: $("#status"),
+      searchInput: $("#searchInput"),
+      refreshBtn: $("#refreshBtn")
+    };
+
+    async function apiGet(params = {}) {
+      const url = new URL(API_URL);
+      Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+      const res = await fetch(url.toString());
+      return await res.json();
+    }
+
+    async function apiPost(body = {}) {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+      return await res.json();
+    }
+
+    async function loadData() {
+      setStatus("Cargando remitos con diferencias...");
+
+      try {
+        const data = await apiGet({ accion: "listar" });
+
+        if (!data.ok) {
+          setStatus("Error al cargar datos.");
+          renderRows([]);
+          return;
+        }
+
+        state.items = Array.isArray(data.items) ? data.items : [];
+        applyFilter();
+      } catch (err) {
+        console.error(err);
+        setStatus("Error de red al cargar datos.");
+        renderRows([]);
+      }
+    }
+
+    function applyFilter() {
+      const q = (el.searchInput.value || "").trim().toLowerCase();
+
+      state.filtered = state.items.filter(item => {
+        const text = [
+          item.fecha,
+          item.remito,
+          item.sucursal,
+          item.estado,
+          item.observacion
+        ].join(" ").toLowerCase();
+
+        return !q || text.includes(q);
+      });
+
+      renderRows(state.filtered);
+      setStatus(`Mostrando ${state.filtered.length} remito(s) con estado DIFERENCIAS.`);
+    }
+
+    function renderRows(rows) {
+      if (!rows.length) {
+        el.tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty">No hay remitos con diferencias.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      el.tbody.innerHTML = rows.map(item => {
+        const pdfBtn = item.pdfUrl
+          ? `<a class="link-btn" href="${item.pdfUrl}" target="_blank" rel="noopener noreferrer">Ver PDF</a>`
+          : `<span class="muted">Sin PDF</span>`;
+
+        const difBtn = item.linkDiferencias
+          ? `<a class="link-dif" href="${item.linkDiferencias}" target="_blank" rel="noopener noreferrer">Abrir</a>`
+          : `<span class="muted">Sin link</span>`;
+
+        return `
+          <tr>
+            <td>${escapeHtml(item.fecha || "")}</td>
+            <td><strong>${escapeHtml(item.remito || "")}</strong></td>
+            <td>${pdfBtn}</td>
+            <td>${escapeHtml(item.sucursal || "")}</td>
+            <td><span class="badge warn">${escapeHtml(item.estado || "")}</span></td>
+            <td class="obs">${escapeHtml(item.observacion || "")}</td>
+            <td>${difBtn}</td>
+            <td>
+              <button class="btn ok" onclick="confirmarFila(${Number(item.rowNumber)})">
+                Confirmar
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function confirmarFila(rowNumber) {
+      const ok = confirm("¿Querés cambiar el estado a CONFIRMADO?");
+      if (!ok) return;
+
+      try {
+        const data = await apiPost({
+          accion: "confirmar",
+          rowNumber: rowNumber
+        });
+
+        if (!data.ok) {
+          alert(data.error || "No se pudo actualizar.");
+          return;
+        }
+
+        await loadData();
+      } catch (err) {
+        console.error(err);
+        alert("Error de red al actualizar.");
+      }
+    }
+
+    function setStatus(msg) {
+      el.status.textContent = msg;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    el.searchInput.addEventListener("input", applyFilter);
+    el.refreshBtn.addEventListener("click", loadData);
+
+    loadData();
+    setInterval(() => {
+      if (document.activeElement !== el.searchInput) {
+        loadData();
+      }
+    }, 180000);
+  </script>
 </body>
 </html>

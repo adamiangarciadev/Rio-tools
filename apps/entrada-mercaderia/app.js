@@ -2,10 +2,11 @@
    - Carga equivalencia.csv + equivalencia2.csv desde ../../data/
    - Carga padrón real desde ../../data/ASISTENCIA_RIO - PADRON.csv
    - Usa vendedor_id como código de responsable
-   - Guarda metadata en localStorage
+   - Guarda metadata y escaneos en localStorage
    - Genera TXT con nombre:
      YYMMDD REM<remito> <sucursal> RESP<codigo>.txt
-   - Envía el TXT al Apps Script con metadata extra para backup por sucursal
+   - DESCARGA el TXT en la PC
+   - ENVÍA una copia al Apps Script para backup en Google Drive
 */
 
 ;(() => {
@@ -41,11 +42,11 @@
     "../../data/padron.csv"
   ];
 
-  // Carpeta raíz compartida para guardar copia por sucursal
+  // Carpeta raíz de backup en Drive
   const BACKUP_ROOT_FOLDER_ID = "1HoQBiMRvflZuyLtCaJyRBWio1C5i6ofH";
 
-  const LS_META = "entrada_mercaderia_meta_v3";
-  const LS_SCANS = "entrada_mercaderia_scans_v3";
+  const LS_META = "entrada_mercaderia_meta_v4";
+  const LS_SCANS = "entrada_mercaderia_scans_v4";
 
   const AUTOCOMMIT_IDLE_MS = 80;
   const MIN_LEN_FOR_COMMIT = 3;
@@ -140,7 +141,7 @@
     }
 
     if (el.saveBtn) {
-      el.saveBtn.addEventListener("click", guardarEnDrive);
+      el.saveBtn.addEventListener("click", guardarTXT);
     }
 
     if (el.resetBtn) {
@@ -209,7 +210,7 @@
   }
 
   // =========================================================
-  // PADRÓN RESPONSABLES
+  // PADRÓN
   // =========================================================
   async function loadPadronResponsables() {
     responsables = [];
@@ -235,9 +236,7 @@
           showPill("ok", "Listo para recibir");
           return;
         }
-      } catch (_) {
-        // seguir buscando en otras rutas
-      }
+      } catch (_) {}
     }
 
     fillResponsablesSelects();
@@ -516,9 +515,9 @@
   }
 
   // =========================================================
-  // GUARDAR TXT / DRIVE
+  // GUARDAR TXT
   // =========================================================
-  function guardarEnDrive() {
+  async function guardarTXT() {
     if (!scans.length) {
       note("No hay escaneos para guardar.");
       flash("err");
@@ -564,7 +563,11 @@
     const fileName = resolveFilename();
     const folderName = sucursalEntrada.toUpperCase();
 
-    enviarArchivoAGoogleDrive({
+    // 1) Descarga local en la PC
+    downloadTXT(fileName, content);
+
+    // 2) Envío al backend para copia en Drive
+    await enviarArchivoAGoogleDrive({
       content,
       fileName,
       folderName,
@@ -585,7 +588,7 @@
       }
     });
 
-    note("Archivo enviado a Drive.");
+    note(`TXT descargado y enviado a Drive: ${fileName}`);
   }
 
   function resolveFilename() {
@@ -601,6 +604,22 @@
 
     const base = `${fecha} REM${remito} ${sucursal} RESP${respEntrada.code || "SINCOD"}`.trim();
     return ensureTxt(sanitize(base));
+  }
+
+  function downloadTXT(fileName, content) {
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.style.display = "none";
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
   function getSelectedResponsable(select) {
@@ -623,13 +642,13 @@
     return SCRIPT_URLS[s] || "";
   }
 
-  function enviarArchivoAGoogleDrive({ content, fileName, folderName, meta = {} }) {
+  async function enviarArchivoAGoogleDrive({ content, fileName, folderName, meta = {} }) {
     const sucursal = el.sucursalEntradaSelect?.value || "";
     const scriptUrl = getScriptUrlForSucursal(sucursal);
 
     if (!scriptUrl) {
       console.warn("No hay SCRIPT_URL configurada para la sucursal de entrada:", sucursal);
-      note("No hay script configurado para esta sucursal.");
+      note("TXT descargado, pero no hay script configurado para esta sucursal.");
       return;
     }
 
@@ -642,19 +661,29 @@
     };
 
     try {
-      fetch(scriptUrl, {
+      const resp = await fetch(scriptUrl, {
         method: "POST",
-        mode: "no-cors",
         headers: {
           "Content-Type": "text/plain;charset=utf-8"
         },
         body: JSON.stringify(payload)
       });
 
-      console.log("Archivo enviado:", payload);
+      let data = null;
+      try {
+        data = await resp.json();
+      } catch (_) {}
+
+      if (!resp.ok) {
+        console.error("Error Apps Script:", data || resp.statusText);
+        note("TXT descargado, pero falló el envío a Drive.");
+        return;
+      }
+
+      console.log("Archivo enviado:", data || payload);
     } catch (err) {
       console.error("Error al enviar a Apps Script:", err);
-      note("Error al enviar a Drive.");
+      note("TXT descargado, pero hubo error enviando a Drive.");
     }
   }
 
