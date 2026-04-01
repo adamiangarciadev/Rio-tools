@@ -26,6 +26,7 @@
   const SCRIPT_URL_AV2        = "https://script.google.com/macros/s/AKfycbwPNl9zyKtgun43MijeiFL3BtGTyM79_a4pocTYlYOr9Q5KllWra6s2HjbGIr11XFGy9w/exec";
   const SCRIPT_URL_PUEYRREDON = "https://script.google.com/macros/s/AKfycbxKRHA79kv30UEjOU_eeehr8evuVPhqDFfSaanJgeJPgUSEZao5eLqsTyO73CdLvgZE/exec";
   const SCRIPT_URL_DEPOSITO   = "https://script.google.com/macros/s/AKfycbxidW-8kYw_w6Wsym4UU6euKDBLbZV-n2NapYarZvtx3tifPWPv22Ck4-y4F27xRqjx/exec";
+  const SCRIPT_URL_MORENO     = "https://script.google.com/macros/s/AKfycbz29YHxH7c85ReyLtaiDoodbCwDYZSvELtBYB35qMMdIwSxtVUIZk1ffQg8TJoqeLQs9A/exec";
 
   // ====== Estado ======
   let rows = [];
@@ -814,6 +815,7 @@
     if (o === "AV2")        return SCRIPT_URL_AV2;
     if (o === "PUEYRREDON") return SCRIPT_URL_PUEYRREDON;
     if (o === "DEPOSITO")   return SCRIPT_URL_DEPOSITO;
+    if (o === "MORENO")   return SCRIPT_URL_MORENO;
     return "";
   }
 
