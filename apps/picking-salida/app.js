@@ -36,6 +36,7 @@
   let audioCtx = null;
   let scanTimer = null;
   let currentRemito = "";
+  let isSaving = false;
 
   // ====== Elementos ======
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
@@ -285,6 +286,16 @@
     note(msg || "Error al guardar");
     showPill("danger", "Error al guardar");
     beepError();
+  }
+
+  function setDownloadState(saving) {
+    isSaving = Boolean(saving);
+
+    if (!el.downloadBtn) return;
+
+    el.downloadBtn.disabled = isSaving;
+    el.downloadBtn.setAttribute("aria-disabled", String(isSaving));
+    el.downloadBtn.textContent = isSaving ? "GUARDANDO..." : "GUARDAR";
   }
 
   function updateRemitoUI(remito) {
@@ -641,6 +652,12 @@
   async function downloadTxt() {
     ensureAudio();
 
+    if (isSaving) {
+      note("El TXT ya se esta guardando. Espera un momento.");
+      showPill("warn", "Guardando...");
+      return;
+    }
+
     if (!scans.length) {
       showPill("warn", "No hay escaneos");
       note("No hay escaneos para guardar.");
@@ -668,8 +685,9 @@
       return;
     }
 
-    showPill("warn", "Guardando…");
-    note("Generando remito y guardando TXT…");
+    setDownloadState(true);
+    showPill("warn", "Guardando...");
+    note("Generando remito y guardando TXT...");
 
     const ordered = scans.slice().reverse();
     const lines = ordered.map(s => String(s.code));
@@ -700,6 +718,8 @@
     } catch (err) {
       console.error(err);
       signalError(err?.message || "Error al guardar.");
+    } finally {
+      setDownloadState(false);
     }
   }
 

@@ -177,6 +177,12 @@ p{margin:0 0 12px 0}
 
 .btn-guardar-inline:hover{ filter: brightness(1.06); }
 .btn-guardar-inline:active{ transform: translateY(1px); }
+.btn-guardar-inline:disabled{
+  opacity: .65;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
+}
 /* ===== Conteo por artículo ===== */
 #panel-counter .panel-title{ margin:0 0 10px; }
 

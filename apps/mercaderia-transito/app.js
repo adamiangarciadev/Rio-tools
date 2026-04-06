@@ -7,7 +7,7 @@
   const SCRIPT_URL_PICKING_TRANSITO = "https://script.google.com/macros/s/AKfycbw8AmleDr1QUztLFUMBcmhOIglNKdp3AVXc_N8W81GshcOEKK2jGzX3-68ZYajI30-bRg/exec";
   const GRUPO_1 = ["AVELLANEDA 2", "NAZCA", "LAMARCA"];
   const GRUPO_2 = ["CORRIENTES", "CASTELLI", "PUEYRREDON"];
-  const SIEMPRE_SARMIENTO = ["MORENO", "QUILMES"];
+  const SIEMPRE_SARMIENTO = ["QUILMES"];
   const SARMIENTO = "SARMIENTO";
   const DEPOSITO = "DEPOSITO";
   const AUTOCOMMIT_IDLE_MS = 80;
