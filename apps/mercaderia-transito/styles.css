@@ -280,6 +280,18 @@ textarea{
     gap:10px;
   }
 
+  .modal-picking-body{
+    grid-template-columns:1fr;
+  }
+
+  .picking-grid{
+    grid-template-columns:1fr;
+  }
+
+  .pick-list{
+    max-height:300px;
+  }
+
 }
 .card-title-row{
   display:flex;
@@ -291,6 +303,10 @@ textarea{
 .btn.view{
   background:#2b3342;
   color:#fff;
+}
+
+.btn-picking-trigger{
+  align-self:flex-start;
 }
 
 .modal-pdf-box{
@@ -311,6 +327,241 @@ textarea{
   min-height:70vh;
   border:none;
   background:#111;
+}
+
+.modal-picking-box{
+  width:min(1280px,100%);
+  max-height:min(92vh,980px);
+  display:flex;
+  flex-direction:column;
+}
+
+.modal-picking-body{
+  display:grid;
+  grid-template-columns:minmax(0,1.3fr) minmax(320px,.9fr);
+  gap:16px;
+  overflow:auto;
+}
+
+.picking-main,
+.picking-side{
+  min-width:0;
+}
+
+.picking-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+
+.scan-input{
+  width:100%;
+  background:#0f1216;
+  color:#e5e7eb;
+  border:2px solid var(--border);
+  border-radius:12px;
+  padding:16px 14px;
+  font-size:20px;
+  letter-spacing:.5px;
+}
+
+.scan-input.ok{
+  border-color:var(--ok);
+  box-shadow:0 0 0 3px rgba(34,197,94,.2);
+}
+
+.scan-input.err{
+  border-color:var(--danger);
+  box-shadow:0 0 0 3px rgba(220,38,38,.2);
+}
+
+.scan-meta{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+
+.muted{
+  color:var(--muted);
+}
+
+.small{
+  font-size:12px;
+}
+
+.last-scans{
+  margin-top:10px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.last-scans .ok{ color:#86efac; }
+.last-scans .err{ color:#fca5a5; }
+
+.pick-list-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+
+.pick-list{
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#0f1216;
+  max-height:540px;
+  overflow:auto;
+}
+
+.pick-row{
+  display:grid;
+  grid-template-columns:34px 1fr 110px;
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+
+.pick-row:last-child{
+  border-bottom:0;
+}
+
+.pick-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:26px;
+  height:26px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  font-weight:700;
+}
+
+.pick-badge.ok{ color:#86efac; }
+.pick-badge.err{ color:#fca5a5; }
+
+.pick-code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  color:var(--text);
+  word-break:break-word;
+}
+
+.pick-del{
+  justify-self:end;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+}
+
+.pick-del:hover{
+  filter:brightness(1.1);
+}
+
+.panel-title{
+  margin:0 0 10px;
+}
+
+.art-counter{
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--panel-2);
+  padding:10px;
+}
+
+.art-item{
+  border-bottom:1px solid var(--border);
+  padding:8px 0;
+}
+
+.art-item:last-child{
+  border-bottom:0;
+}
+
+.art-item summary{
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  list-style:none;
+}
+
+.art-item summary::-webkit-details-marker{
+  display:none;
+}
+
+.art-sum-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.art-code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  color:var(--text);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:560px;
+}
+
+.art-total{
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:2px 10px;
+  color:var(--text);
+  background:rgba(255,255,255,.03);
+  white-space:nowrap;
+  font-size:12px;
+}
+
+.art-arrow{
+  width:22px;
+  height:22px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border);
+  border-radius:999px;
+  color:var(--muted);
+  flex:0 0 auto;
+}
+
+.art-item[open] .art-arrow{
+  transform:rotate(90deg);
+}
+
+.art-variants{
+  margin:10px 0 2px 34px;
+  display:grid;
+  gap:6px;
+}
+
+.art-variant{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:6px 8px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:rgba(255,255,255,.02);
+  color:var(--text);
+  font-size:13px;
+}
+
+.art-variant small{
+  color:var(--muted);
+}
+
+.picking-actions{
+  gap:10px;
 }
 #searchRemito{
   min-width:220px;

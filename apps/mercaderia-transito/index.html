@@ -90,6 +90,72 @@
   </div>
 </div>
 
+  <div id="modalPicking" class="modal hidden">
+    <div class="modal-box modal-picking-box">
+      <div class="modal-head">
+        <h2>Realizar picking</h2>
+        <button id="cerrarPickingModalBtn" class="btn ghost">✕</button>
+      </div>
+
+      <div class="modal-body modal-picking-body">
+        <section class="picking-main">
+          <div class="picking-grid">
+            <div class="campo">
+              <label>Remito</label>
+              <input id="pickingRemito" type="text" readonly />
+            </div>
+
+            <div class="campo">
+              <label>Sucursal final</label>
+              <input id="pickingSucursal" type="text" readonly />
+            </div>
+
+            <div class="campo">
+              <label>Código de quien realiza el picking</label>
+              <input id="pickingCodigo" type="text" inputmode="numeric" placeholder="Ej: 1234" />
+            </div>
+          </div>
+
+          <div class="campo">
+            <label>Escanear mercadería</label>
+            <input
+              id="pickingScanInput"
+              class="scan-input"
+              type="text"
+              autocomplete="off"
+              placeholder="Escaneá el código..."
+            />
+          </div>
+
+          <div class="scan-meta">
+            <span id="pickingScanCount" class="badge">0 escaneados</span>
+            <span id="pickingNoti" class="muted"></span>
+          </div>
+
+          <div id="pickingLastScans" class="last-scans"></div>
+
+          <section class="panel" id="pickingCounterPanel">
+            <h3 class="panel-title">Conteo por artículo</h3>
+            <div id="pickingArtCounter" class="art-counter muted">Sin escaneos.</div>
+          </section>
+        </section>
+
+        <aside class="picking-side">
+          <div class="pick-list-head">
+            <span>Pickeado</span>
+            <span class="muted small">Eliminar borra 1 ocurrencia</span>
+          </div>
+          <div id="pickingPickList" class="pick-list"></div>
+        </aside>
+      </div>
+
+      <div class="modal-actions picking-actions">
+        <button id="resetPickingBtn" class="btn secondary" type="button">Limpiar</button>
+        <button id="descargarPickingBtn" class="btn primary" type="button">Descargar TXT</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
   <footer>
     RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® - 
