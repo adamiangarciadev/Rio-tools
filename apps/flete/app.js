@@ -71,8 +71,9 @@ async function cargar() {
   const sucursal = sucursalSelect.value;
   const buscar = inputBuscar ? inputBuscar.value.trim() : "";
 
-  if (!sucursal) {
-    lista.innerHTML = `<p class="empty">Seleccionar destino</p>`;
+  // ❗ SOLO bloquear si NO hay sucursal Y NO hay búsqueda
+  if (!sucursal && !buscar) {
+    lista.innerHTML = `<p class="empty">Seleccionar destino o buscar</p>`;
     return;
   }
 
