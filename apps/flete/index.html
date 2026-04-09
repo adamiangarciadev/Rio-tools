@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fletero RIO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- BOTON VOLVER -->
+<a href="https://adamiangarciadev.github.io/Rio-tools/" class="back-btn">←</a>
+
+<header>
+  <h1>Fletero</h1>
+
+  <select id="sucursal">
+    <option value="">Seleccionar destino</option>
+    <option>AVELLANEDA 2</option>
+    <option>NAZCA</option>
+    <option>DEPOSITO</option>
+    <option>SARMIENTO</option>
+    <option>QUILMES</option>
+    <option>MORENO</option>
+  </select>
+</header>
+
+<main id="lista">
+  <!-- Cards dinámicas -->
+</main>
+
+<footer>
+  RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® -
+</footer>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbxuI6mHMR6ukB_WE4P_QFgUIt7I2ovnxFilQZH646gWTnPQNJSv5H_5siuD5WqgoLWzSw/exec";
+
+const sucursalSelect = document.getElementById("sucursal");
+const lista = document.getElementById("lista");
+
+sucursalSelect.addEventListener("change", cargar);
+
+async function cargar() {
+  const sucursal = sucursalSelect.value;
+  if (!sucursal) return;
+
+  lista.innerHTML = "<p class='loading'>Cargando...</p>";
+
+  const res = await fetch(`${API}?accion=listar&sucursal=${encodeURIComponent(sucursal)}`);
+  const data = await res.json();
+
+  lista.innerHTML = "";
+
+  if (!data.remitos.length) {
+    lista.innerHTML = "<p class='empty'>Sin remitos</p>";
+    return;
+  }
+
+  data.remitos.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="row">
+        <span class="label">Remito</span>
+        <span class="value">${r.remito}</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Desde</span>
+        <span class="value">${r.desde}</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Estado</span>
+        <span class="value estado">${r.estado}</span>
+      </div>
+
+      <button onclick="retirar(${r.id})">
+        RETIRADO
+      </button>
+    `;
+
+    lista.appendChild(card);
+  });
+}
+
+async function retirar(id) {
+  await fetch(API, {
+    method: "POST",
+    body: JSON.stringify({
+      accion: "retirado",
+      id: id
+    })
+  });
+
+  cargar();
+}
+</script>
+
+<!-- Google tag -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CDPZFHV1BV"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-CDPZFHV1BV');
+</script>
+
+</body>
+</html>
