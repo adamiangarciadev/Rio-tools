@@ -81,19 +81,7 @@ button {
   color: #000;
 }
 
-/* BOTON VOLVER */
-.back-btn {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  background: #222;
-  padding: 10px 14px;
-  border-radius: 10px;
-  text-decoration: none;
-  color: white;
-  font-size: 18px;
-  z-index: 1000;
-}
+
 
 /* MENSAJES */
 .loading, .empty {

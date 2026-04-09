@@ -2,14 +2,24 @@ const API = "https://script.google.com/macros/s/AKfycbxuI6mHMR6ukB_WE4P_QFgUIt7I
 
 const sucursalSelect = document.getElementById("sucursal");
 const lista = document.getElementById("lista");
+const inputBuscar = document.getElementById("buscar");
 
 // =========================
 // INIT
 // =========================
-document.addEventListener("DOMContentLoaded", () => {
-  sucursalSelect.addEventListener("change", cargar);
+document.addEventListener("DOMContentLoaded", async () => {
+  await cargarSucursales();
 
-  // opcional: recordar última sucursal
+  sucursalSelect.addEventListener("change", () => {
+    guardarSucursal();
+    cargar();
+  });
+
+  if (inputBuscar) {
+    inputBuscar.addEventListener("input", debounce(cargar, 300));
+  }
+
+  // restaurar última sucursal
   const last = localStorage.getItem("sucursal");
   if (last) {
     sucursalSelect.value = last;
@@ -18,29 +28,67 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =========================
+// GUARDAR SUCURSAL
+// =========================
+function guardarSucursal() {
+  localStorage.setItem("sucursal", sucursalSelect.value);
+}
+
+// =========================
+// CARGAR SUCURSALES
+// =========================
+async function cargarSucursales() {
+  try {
+    const res = await fetch(`${API}?accion=sucursales`);
+    const data = await res.json();
+
+    if (!data.ok) throw new Error(data.error);
+
+    sucursalSelect.innerHTML = `<option value="">Seleccionar destino</option>`;
+
+    if (!data.sucursales || data.sucursales.length === 0) {
+      sucursalSelect.innerHTML = `<option value="">Sin sucursales</option>`;
+      return;
+    }
+
+    data.sucursales.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      sucursalSelect.appendChild(opt);
+    });
+
+  } catch (err) {
+    console.error(err);
+    sucursalSelect.innerHTML = `<option value="">Error cargando sucursales</option>`;
+  }
+}
+
+// =========================
 // CARGAR REMITOS
 // =========================
 async function cargar() {
   const sucursal = sucursalSelect.value;
+  const buscar = inputBuscar ? inputBuscar.value.trim() : "";
 
-  if (!sucursal) return;
+  if (!sucursal) {
+    lista.innerHTML = `<p class="empty">Seleccionar destino</p>`;
+    return;
+  }
 
-  localStorage.setItem("sucursal", sucursal);
-
-  lista.innerHTML = `<p class="loading">Cargando remitos...</p>`;
+  lista.innerHTML = `<p class="loading">Cargando...</p>`;
 
   try {
-    const res = await fetch(`${API}?accion=listar&sucursal=${encodeURIComponent(sucursal)}`);
+    const res = await fetch(
+      `${API}?accion=listar&sucursal=${encodeURIComponent(sucursal)}&buscar=${encodeURIComponent(buscar)}`
+    );
+
     const data = await res.json();
 
-    lista.innerHTML = "";
-
-    if (!data.ok) {
-      throw new Error(data.error || "Error API");
-    }
+    if (!data.ok) throw new Error(data.error);
 
     if (!data.remitos || data.remitos.length === 0) {
-      lista.innerHTML = `<p class="empty">No hay remitos para este destino</p>`;
+      lista.innerHTML = `<p class="empty">Sin resultados</p>`;
       return;
     }
 
@@ -53,7 +101,7 @@ async function cargar() {
 }
 
 // =========================
-// RENDER CARDS
+// RENDER
 // =========================
 function render(remitos) {
   lista.innerHTML = "";
@@ -83,13 +131,10 @@ function render(remitos) {
         <span class="value estado">${r.estado}</span>
       </div>
 
-      <button data-id="${r.id}">
-        RETIRADO
-      </button>
+      <button>RETIRADO</button>
     `;
 
     const btn = card.querySelector("button");
-
     btn.addEventListener("click", () => retirar(r.id, btn, card));
 
     lista.appendChild(card);
@@ -97,10 +142,9 @@ function render(remitos) {
 }
 
 // =========================
-// RETIRAR REMITO
+// RETIRAR
 // =========================
 async function retirar(id, btn, card) {
-  // evitar doble click
   btn.disabled = true;
   btn.innerText = "ENVIANDO...";
 
@@ -115,30 +159,33 @@ async function retirar(id, btn, card) {
 
     const data = await res.json();
 
-    if (!data.ok) {
-      throw new Error(data.error || "Error al actualizar");
-    }
+    if (!data.ok) throw new Error(data.error);
 
     // feedback visual
-    card.style.opacity = "0.4";
+    card.style.opacity = "0.5";
     btn.innerText = "✔ ENVIADO";
 
-    // vibración en celular (si soporta)
+    // vibración si es celular
     if (navigator.vibrate) {
-      navigator.vibrate(100);
+      navigator.vibrate(80);
     }
 
-    // recargar lista después de 1s
-    setTimeout(() => {
-      cargar();
-    }, 800);
+    setTimeout(cargar, 700);
 
   } catch (err) {
     console.error(err);
-
     btn.disabled = false;
     btn.innerText = "REINTENTAR";
-
-    alert("Error al enviar");
   }
+}
+
+// =========================
+// DEBOUNCE
+// =========================
+function debounce(fn, delay) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
 }
