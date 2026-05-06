@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seguimiento Shipnow Interno · RIO Tools</title>
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CDPZFHV1BV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CDPZFHV1BV');
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+
+<body>
+  <a class="back-home" href="https://adamiangarciadev.github.io/Rio-tools/">← Volver</a>
+
+  <header class="hero">
+    <div>
+      <p class="eyebrow">RIO Tools Suite</p>
+      <h1>Seguimiento interno de Shipnow</h1>
+      <p class="sub">Carga de pedidos, rótulo PDF con QR, panel de hubs y dashboard logístico.</p>
+    </div>
+    <div class="status-pill" id="apiStatus">API pendiente</div>
+  </header>
+
+  <main class="layout">
+    <nav class="tabs" aria-label="Secciones">
+      <button class="tab active" data-view="carga">Carga local</button>
+      <button class="tab" data-view="panel">Panel operativo</button>
+      <button class="tab" data-view="dashboard">Dashboard</button>
+      <button class="tab" data-view="seguimiento">Seguimiento</button>
+    </nav>
+
+    <section id="view-carga" class="view active">
+      <section class="card">
+        <div class="card-head">
+          <h2>Nuevo envío</h2>
+          <span class="hint">Reemplaza el envío de datos por WhatsApp.</span>
+        </div>
+
+        <form id="formEnvio" class="form-grid">
+          <label>Sucursal origen
+            <select id="sucursalOrigen" name="sucursalOrigen" required>
+              <option value="">Cargando locales...</option>
+            </select>
+          </label>
+
+          <p class="hint" style="margin-top:0;">
+            Se cargan automáticamente desde <code>locales.csv</code>. El remitente del rótulo sale de esta sucursal.
+          </p>
+
+          <label>Tipo de envío
+            <select id="tipoEnvio" name="tipoEnvio" required>
+              <option value="SHIPNOW_DOMICILIO">Shipnow domicilio</option>
+              <option value="SHIPNOW_OCA">Shipnow OCA</option>
+              <option value="TRANSPORTE">Expreso / Transporte</option>
+            </select>
+          </label>
+
+          <label>Responsable local
+            <select id="responsableLocal" name="responsable" required>
+              <option value="">Cargando responsables...</option>
+            </select>
+          </label>
+
+          <label>Remito / pedido interno
+            <input id="remito" name="remito" placeholder="Opcional" />
+          </label>
+
+          <label>Nombre y apellido
+            <input id="cliente" name="cliente" required />
+          </label>
+
+          <label>Mail
+            <input id="mail" name="mail" type="email" required />
+          </label>
+
+          <label>Teléfono
+            <input id="telefono" name="telefono" required />
+          </label>
+
+          <label>DNI o CUIL
+            <input id="dniCuil" name="dniCuil" required />
+          </label>
+
+          <label class="full field-domicilio">Domicilio completo
+            <input id="domicilio" name="domicilio" />
+          </label>
+
+          <label class="field-domicilio">Entrecalles
+            <input id="entrecalles" name="entrecalles" />
+          </label>
+
+          <label class="field-oca hidden full">Sucursal OCA
+            <input id="sucursalOca" name="sucursalOca" />
+          </label>
+
+          <label>Localidad
+            <input id="localidad" name="localidad" required />
+          </label>
+
+          <label>Provincia
+            <input id="provincia" name="provincia" required />
+          </label>
+
+          <label>C.P.
+            <input id="cp" name="cp" required />
+          </label>
+
+          <label class="field-transporte hidden full">Transporte
+            <input id="transporte" name="transporte" />
+          </label>
+
+          <label class="full">Observaciones
+            <textarea id="observaciones" name="observaciones" rows="3" placeholder="Notas internas, bultos, aclaraciones, etc."></textarea>
+          </label>
+
+          <div class="actions full">
+            <button type="submit" class="btn primary">Generar tracking + rótulo</button>
+            <button type="button" id="btnLimpiar" class="btn">Limpiar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card result-card hidden" id="resultadoCard">
+        <h2>Envío generado</h2>
+        <div class="result-grid">
+          <div>
+            <span class="label">Tracking interno</span>
+            <strong id="trackingGenerado"></strong>
+          </div>
+          <div>
+            <span class="label">Hub asignado</span>
+            <strong id="hubGenerado"></strong>
+          </div>
+          <div>
+            <span class="label">Estado</span>
+            <strong id="estadoGenerado"></strong>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="btnPDF" class="btn primary">Descargar rótulo PDF</button>
+          <button id="btnCopiarTracking" class="btn">Copiar tracking</button>
+        </div>
+      </section>
+    </section>
+
+    <section id="view-panel" class="view">
+      <section class="card">
+        <div class="card-head">
+          <h2>Panel operativo</h2>
+          <span class="hint">Hubs: Sarmiento / Avellaneda / Logística Web</span>
+        </div>
+
+        <div class="toolbar">
+          <select id="filtroHub">
+            <option value="TODOS">Todos</option>
+            <option value="SARMIENTO">Sarmiento</option>
+            <option value="AVELLANEDA">Avellaneda</option>
+            <option value="WEB">Logística Web</option>
+          </select>
+
+          <select id="filtroEstado">
+            <option value="TODOS">Todos los estados</option>
+          </select>
+
+          <input id="buscarPanel" placeholder="Buscar tracking, cliente, sucursal..." />
+          <button id="btnActualizarPanel" class="btn">Actualizar</button>
+        </div>
+
+        <div id="panelLista" class="cards-list"></div>
+      </section>
+    </section>
+
+    <section id="view-dashboard" class="view">
+      <section class="dashboard-grid">
+        <div class="metric"><span>Total activos</span><strong id="mTotal">0</strong></div>
+        <div class="metric"><span>Pendientes local</span><strong id="mPendientes">0</strong></div>
+        <div class="metric"><span>En hubs</span><strong id="mHubs">0</strong></div>
+        <div class="metric"><span>Listos web</span><strong id="mWeb">0</strong></div>
+        <div class="metric danger"><span>Con demora</span><strong id="mDemora">0</strong></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Dashboard logístico</h2>
+          <button id="btnActualizarDashboard" class="btn">Actualizar</button>
+        </div>
+
+        <div class="dash-cols">
+          <div>
+            <h3>Por hub</h3>
+            <div id="dashHub" class="bar-list"></div>
+          </div>
+          <div>
+            <h3>Por estado</h3>
+            <div id="dashEstado" class="bar-list"></div>
+          </div>
+          <div>
+            <h3>Alertas</h3>
+            <div id="dashAlertas" class="cards-list compact"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="view-seguimiento" class="view">
+      <section class="card narrow">
+        <h2>Buscar seguimiento</h2>
+        <div class="tracking-search">
+          <input id="trackingInput" placeholder="Ej: RIO-SN-260429-0001" />
+          <button id="btnBuscarTracking" class="btn primary">Buscar</button>
+        </div>
+        <div id="trackingDetalle" class="tracking-detail"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® -
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
