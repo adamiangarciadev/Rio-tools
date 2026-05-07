@@ -372,7 +372,7 @@
     $('#btnLimpiar')?.addEventListener('click', () => {
       $('#formEnvio').reset();
       toggleTipoEnvio();
-      $('#resultadoCard').classList.add('hidden');
+      $('#resultadoCard')?.classList.add('hidden');
       ultimoEnvio = null;
     });
 
@@ -791,10 +791,6 @@
       throw new Error('No cargó la librería jsPDF');
     }
 
-    if (!window.QRCode?.toDataURL) {
-      throw new Error('No cargó la librería de QR');
-    }
-
     const branchName = normalizarTexto(e.sucursalOrigen || e.remitenteSucursal || '');
     const branchData = e.remitente || obtenerRemitente(branchName) || {};
 
@@ -881,11 +877,29 @@
     }
 
     async function qrDataUrl(text) {
-      return await QRCode.toDataURL(text, {
-        margin: 1,
-        width: 300,
-        errorCorrectionLevel: 'M'
-      });
+      if (window.QRCode && typeof window.QRCode.toDataURL === 'function') {
+        return await window.QRCode.toDataURL(text, {
+          margin: 1,
+          width: 300,
+          errorCorrectionLevel: 'M'
+        });
+      }
+
+      try {
+        const url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(text);
+        const res = await fetch(url);
+        const blob = await res.blob();
+
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (err) {
+        console.warn('No se pudo generar QR. Se genera rótulo sin QR:', err);
+        return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=';
+      }
     }
 
     const tracking = data.tracking || generarTrackingInterno();
@@ -1052,28 +1066,28 @@
   }
 
   async function api(payload) {
-  if (!API_URL || API_URL.includes('PEGAR_URL')) return mockApi(payload);
-
-  try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
-
-    const text = await res.text();
+    if (!API_URL || API_URL.includes('PEGAR_URL')) return mockApi(payload);
 
     try {
-      return JSON.parse(text);
-    } catch (e) {
-      console.error('Apps Script no devolvió JSON:', text);
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const text = await res.text();
+
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.error('Apps Script no devolvió JSON:', text);
+        return mockApi(payload);
+      }
+
+    } catch (err) {
+      console.warn('Apps Script falló. Genero rótulo local:', err);
       return mockApi(payload);
     }
-
-  } catch (err) {
-    console.warn('Apps Script falló. Genero rótulo local:', err);
-    return mockApi(payload);
   }
-}
 
   async function mockApi(payload) {
     const k = 'rio_shipnow_mock';
