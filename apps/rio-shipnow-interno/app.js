@@ -1,7 +1,7 @@
 ;(() => {
   'use strict';
 
-  const API_URL = 'https://script.google.com/macros/s/AKfycbyiODeaPUIztaz30WTYXB8oemR5QlqqIgfMexJMhx96fdMVOT_KwrZonSzJN2GIxBo4BQ/exec';
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwPy8eu3WeKB4tqiu238bnFMtb-diMKvXru2INUIMpYjw139bVk7VY2nzXKC5ovfw/exec';
 
   const HOME_TRACKING_URL = location.href.split('#')[0].split('?')[0];
   const LOCALES_CSV_URL = './locales.csv';
@@ -1052,36 +1052,28 @@
   }
 
   async function api(payload) {
-    if (!API_URL || API_URL.includes('PEGAR_URL')) return mockApi(payload);
+  if (!API_URL || API_URL.includes('PEGAR_URL')) return mockApi(payload);
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    const text = await res.text();
 
     try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const text = await res.text();
-
-      try {
-        return JSON.parse(text);
-      } catch {
-        return {
-          ok: false,
-          error: text
-            ? `La API devolvió una respuesta inválida: ${text.slice(0, 180)}`
-            : 'La API devolvió una respuesta vacía'
-        };
-      }
-    } catch (err) {
-      return {
-        ok: false,
-        error: err.message
-      };
+      return JSON.parse(text);
+    } catch (e) {
+      console.error('Apps Script no devolvió JSON:', text);
+      return mockApi(payload);
     }
+
+  } catch (err) {
+    console.warn('Apps Script falló. Genero rótulo local:', err);
+    return mockApi(payload);
   }
+}
 
   async function mockApi(payload) {
     const k = 'rio_shipnow_mock';
