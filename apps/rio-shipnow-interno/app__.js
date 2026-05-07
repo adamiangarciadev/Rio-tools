@@ -1,7 +1,7 @@
 ;(() => {
   'use strict';
 
-  const API_URL = 'https://script.google.com/macros/s/AKfycbyiODeaPUIztaz30WTYXB8oemR5QlqqIgfMexJMhx96fdMVOT_KwrZonSzJN2GIxBo4BQ/exec';
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzzKML24eDQugWTMGJ2F4BdAkklj5twc8ISk4HwhB5gmUTWqOnoCW7fqBSVc4shgh8A/exec';
 
   const HOME_TRACKING_URL = location.href.split('#')[0].split('?')[0];
   const LOCALES_CSV_URL = './locales.csv';
