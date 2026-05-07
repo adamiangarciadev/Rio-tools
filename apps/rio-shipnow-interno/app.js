@@ -56,20 +56,34 @@
   document.addEventListener('DOMContentLoaded', init);
 
   async function init() {
-    await loadLocalesCsv();
-    await cargarPadron();
-    fillSelects();
-    bindTabs();
-    bindCarga();
-    bindPanel();
-    bindDashboard();
-    bindTracking();
-    toggleTipoEnvio();
-    setApiStatus();
-    cargarPanel();
+    try {
+      await loadLocalesCsv();
+      await cargarPadron();
+      fillSelects();
+      bindTabs();
+      bindCarga();
+      bindPanel();
+      bindDashboard();
+      bindTracking();
+      toggleTipoEnvio();
+      setApiStatus();
+      cargarPanel();
+    } catch (err) {
+      console.error('Error al iniciar la app:', err);
+      setApiStatus('err', 'Error al iniciar');
+      alert('La app no pudo inicializarse correctamente. ' + (err.message || err));
+    }
   }
 
-  function setApiStatus() {
+  function setApiStatus(state, text) {
+    if (!apiStatus) return;
+
+    if (state && text) {
+      apiStatus.textContent = text;
+      apiStatus.className = `status-pill ${state}`;
+      return;
+    }
+
     if (!API_URL || API_URL.includes('PEGAR_URL')) {
       apiStatus.textContent = 'Configurar API_URL';
       apiStatus.className = 'status-pill err';
@@ -197,6 +211,7 @@
         locales.push(suc);
       });
 
+      asegurarLocalesMinimos();
       locales = Array.from(new Set(locales)).sort((a, b) => a.localeCompare(b, 'es'));
 
       if (!locales.length) cargarLocalesFallback();
@@ -226,6 +241,27 @@
     });
 
     console.warn('Usando locales fallback:', LOCALES);
+  }
+
+  function asegurarLocalesMinimos() {
+    LOCALES_FALLBACK.forEach(sucursal => {
+      const key = normalizarTexto(sucursal);
+
+      if (!LOCALES[key]) {
+        LOCALES[key] = {
+          sucursal: key,
+          domicilio: '',
+          localidad: '',
+          provincia: '',
+          cp: '',
+          telefono: '',
+          pais: 'AR',
+          hub: resolverHub(key)
+        };
+      }
+
+      locales.push(key);
+    });
   }
 
   async function cargarPadron() {
@@ -340,76 +376,114 @@
       ultimoEnvio = null;
     });
 
-    $('#btnPDF')?.addEventListener('click', () => {
-      if (ultimoEnvio) generarPDFRotulo(ultimoEnvio);
+    $('#btnPDF')?.addEventListener('click', async () => {
+      if (!ultimoEnvio) return;
+
+      try {
+        await generarPDFRotulo(ultimoEnvio);
+      } catch (err) {
+        console.error('No se pudo generar el PDF manualmente:', err);
+        alert('No se pudo generar el rótulo PDF. ' + (err.message || err));
+      }
     });
 
     $('#btnCopiarTracking')?.addEventListener('click', async () => {
       if (!ultimoEnvio) return;
-      await navigator.clipboard.writeText(ultimoEnvio.idTracking);
-      alert('Tracking copiado.');
+
+      try {
+        await copiarTexto(ultimoEnvio.idTracking);
+        alert('Tracking copiado.');
+      } catch (err) {
+        console.error('No se pudo copiar el tracking:', err);
+        alert('No se pudo copiar el tracking automáticamente. ' + (err.message || err));
+      }
     });
 
     $('#formEnvio')?.addEventListener('submit', async ev => {
       ev.preventDefault();
 
-      const data = Object.fromEntries(new FormData(ev.target).entries());
+      const form = ev.target;
+      const submitBtn = $('button[type="submit"]', form);
+      const originalText = submitBtn?.textContent || '';
 
-      data.sucursalOrigen = normalizarTexto(data.sucursalOrigen);
-      data.hubAsignado = resolverHub(data.sucursalOrigen);
-      data.estado = 'CARGADO EN LOCAL';
-      data.accion = 'crearEnvio';
-      data.urlSeguimientoBase = HOME_TRACKING_URL;
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Generando...';
+        }
 
-      const responsableSelect = $('#responsableLocal');
-      const opt = responsableSelect?.selectedOptions?.[0];
+        const data = Object.fromEntries(new FormData(form).entries());
 
-      data.responsable = data.responsable || responsableSelect?.value || '';
-      data.responsableId = opt?.dataset?.id || '';
-      data.responsableTelefono = opt?.dataset?.telefono || '';
+        data.sucursalOrigen = normalizarTexto(data.sucursalOrigen);
+        data.hubAsignado = resolverHub(data.sucursalOrigen);
+        data.estado = 'CARGADO EN LOCAL';
+        data.accion = 'crearEnvio';
+        data.urlSeguimientoBase = HOME_TRACKING_URL;
 
-      const remitente = obtenerRemitente(data.sucursalOrigen);
+        const responsableSelect = $('#responsableLocal');
+        const opt = responsableSelect?.selectedOptions?.[0];
 
-      if (!remitente) {
-        alert('No se encontró el remitente para la sucursal: ' + data.sucursalOrigen);
-        return;
+        data.responsable = data.responsable || responsableSelect?.value || '';
+        data.responsableId = opt?.dataset?.id || '';
+        data.responsableTelefono = opt?.dataset?.telefono || '';
+
+        const remitente = obtenerRemitente(data.sucursalOrigen);
+
+        if (!remitente) {
+          alert('No se encontró el remitente para la sucursal: ' + data.sucursalOrigen);
+          return;
+        }
+
+        data.remitenteSucursal = remitente.sucursal;
+        data.remitenteDomicilio = remitente.domicilio;
+        data.remitenteLocalidad = remitente.localidad;
+        data.remitenteProvincia = remitente.provincia;
+        data.remitenteCp = remitente.cp;
+        data.remitenteTelefono = remitente.telefono;
+
+        const faltan = validarPayload(data);
+        if (faltan.length) {
+          alert('Faltan datos: ' + faltan.join(', '));
+          return;
+        }
+
+        const res = await api(data);
+
+        if (!res.ok) {
+          alert('Error: ' + (res.error || 'No se pudo crear el envío'));
+          return;
+        }
+
+        ultimoEnvio = res.envio || data;
+
+        if (!ultimoEnvio.idTracking) {
+          ultimoEnvio.idTracking = generarTrackingInterno();
+        }
+
+        ultimoEnvio.remitente = remitente;
+
+        $('#trackingGenerado').textContent = ultimoEnvio.idTracking;
+        $('#hubGenerado').textContent = ultimoEnvio.hubAsignado || data.hubAsignado;
+        $('#estadoGenerado').textContent = ultimoEnvio.estado || data.estado;
+        $('#resultadoCard').classList.remove('hidden');
+
+        try {
+          await generarPDFRotulo(ultimoEnvio);
+        } catch (pdfErr) {
+          console.error('No se pudo generar el rótulo PDF:', pdfErr);
+          alert(`El tracking se generó, pero falló el PDF: ${pdfErr.message || pdfErr}`);
+        }
+
+        cargarPanel();
+      } catch (err) {
+        console.error('Error al generar tracking:', err);
+        alert('No se pudo generar el tracking + rótulo. ' + (err.message || err));
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
       }
-
-      data.remitenteSucursal = remitente.sucursal;
-      data.remitenteDomicilio = remitente.domicilio;
-      data.remitenteLocalidad = remitente.localidad;
-      data.remitenteProvincia = remitente.provincia;
-      data.remitenteCp = remitente.cp;
-      data.remitenteTelefono = remitente.telefono;
-
-      const faltan = validarPayload(data);
-      if (faltan.length) {
-        alert('Faltan datos: ' + faltan.join(', '));
-        return;
-      }
-
-      const res = await api(data);
-
-      if (!res.ok) {
-        alert('Error: ' + (res.error || 'No se pudo crear el envío'));
-        return;
-      }
-
-      ultimoEnvio = res.envio || data;
-
-      if (!ultimoEnvio.idTracking) {
-        ultimoEnvio.idTracking = generarTrackingInterno();
-      }
-
-      ultimoEnvio.remitente = remitente;
-
-      $('#trackingGenerado').textContent = ultimoEnvio.idTracking;
-      $('#hubGenerado').textContent = ultimoEnvio.hubAsignado || data.hubAsignado;
-      $('#estadoGenerado').textContent = ultimoEnvio.estado || data.estado;
-      $('#resultadoCard').classList.remove('hidden');
-
-      await generarPDFRotulo(ultimoEnvio);
-      cargarPanel();
     });
   }
 
@@ -713,6 +787,14 @@
   }
 
   async function generarPDFRotulo(e) {
+    if (!window.jspdf?.jsPDF) {
+      throw new Error('No cargó la librería jsPDF');
+    }
+
+    if (!window.QRCode?.toDataURL) {
+      throw new Error('No cargó la librería de QR');
+    }
+
     const branchName = normalizarTexto(e.sucursalOrigen || e.remitenteSucursal || '');
     const branchData = e.remitente || obtenerRemitente(branchName) || {};
 
@@ -945,16 +1027,54 @@
     return new Date().toLocaleDateString('es-AR');
   }
 
+  async function copiarTexto(texto) {
+    const value = String(texto || '');
+
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+      await navigator.clipboard.writeText(value);
+      return;
+    }
+
+    const input = document.createElement('input');
+    input.value = value;
+    input.setAttribute('readonly', '');
+    input.style.position = 'absolute';
+    input.style.left = '-9999px';
+    document.body.appendChild(input);
+    input.select();
+
+    const ok = document.execCommand('copy');
+    document.body.removeChild(input);
+
+    if (!ok) {
+      throw new Error('El navegador bloqueó el copiado');
+    }
+  }
+
   async function api(payload) {
     if (!API_URL || API_URL.includes('PEGAR_URL')) return mockApi(payload);
 
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(payload)
       });
 
-      return await res.json();
+      const text = await res.text();
+
+      try {
+        return JSON.parse(text);
+      } catch {
+        return {
+          ok: false,
+          error: text
+            ? `La API devolvió una respuesta inválida: ${text.slice(0, 180)}`
+            : 'La API devolvió una respuesta vacía'
+        };
+      }
     } catch (err) {
       return {
         ok: false,
