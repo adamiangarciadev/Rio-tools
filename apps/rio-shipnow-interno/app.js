@@ -50,6 +50,7 @@
       bindPanel();
       bindDashboard();
       bindTracking();
+      bindAccionesOperativasGlobal();
       toggleTipoEnvio();
       setApiStatus();
       cargarPanel();
@@ -390,7 +391,7 @@
         btn.classList.add("active");
         $(`#view-${btn.dataset.view}`).classList.add("active");
 
-        if (btn.dataset.view === "panel") cargarPanel();
+        if (btn.dataset.view === "seguimiento") cargarPanel();
         if (btn.dataset.view === "dashboard") cargarDashboard();
       });
     });
@@ -656,33 +657,6 @@
       ? rows.map(renderOpCard).join("")
       : '<div class="op-card">Sin envíos para el filtro seleccionado.</div>';
 
-    $$(".op-action").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const idTracking = btn.dataset.id;
-        const nuevoEstado = btn.dataset.estado;
-        const responsable = prompt("Código de responsable que actualiza el estado:");
-
-        if (!responsable) return;
-
-        const res = await api({
-          accion: "actualizarEstado",
-          idTracking,
-          tracking: idTracking,
-          nuevoEstado,
-          estado: nuevoEstado,
-          responsableCodigo: responsable,
-          responsable,
-          ultimaUbicacion: resolverUltimaUbicacionPorEstado({ estado: nuevoEstado })
-        });
-
-        if (!res.ok) {
-          alert("Error: " + (res.error || "No se pudo actualizar"));
-          return;
-        }
-
-        cargarPanel();
-      });
-    });
   }
 
   function renderOpCard(x) {
@@ -846,6 +820,43 @@
     renderTracking(res.envio);
   }
 
+  function renderBotonesOperativos(envio) {
+    const acciones = siguientesEstados(envio)
+      .filter((e) => !["CON PROBLEMA", "CANCELADO"].includes(e));
+
+    if (!acciones.length) return "";
+
+    return `
+      <div class="actions tracking-actions">
+        ${acciones.map((estado) => `
+          <button
+            class="btn primary op-action"
+            data-id="${escapeHtml(envio.idTracking)}"
+            data-estado="${escapeHtml(estado)}"
+          >
+            ${escapeHtml(estado)}
+          </button>
+        `).join("")}
+
+        <button
+          class="btn op-action"
+          data-id="${escapeHtml(envio.idTracking)}"
+          data-estado="CON PROBLEMA"
+        >
+          CON PROBLEMA
+        </button>
+
+        <button
+          class="btn danger op-action"
+          data-id="${escapeHtml(envio.idTracking)}"
+          data-estado="CANCELADO"
+        >
+          CANCELADO
+        </button>
+      </div>
+    `;
+  }
+
   function renderTracking(x) {
     const flow = flujoPorEnvio(x);
     const idx = flow.indexOf(x.estado);
@@ -870,7 +881,69 @@
           <div><strong>${escapeHtml(e)}</strong></div>
         </div>`).join("")}
       </div>
+
+      ${renderBotonesOperativos(x)}
     </div>`;
+  }
+
+  function bindAccionesOperativasGlobal() {
+    document.addEventListener("click", async (ev) => {
+      const btn = ev.target.closest(".op-action");
+      if (!btn) return;
+
+      ev.preventDefault();
+
+      const idTracking = btn.dataset.id;
+      const nuevoEstado = btn.dataset.estado;
+
+      if (!idTracking || !nuevoEstado) {
+        alert("Falta tracking o estado en el botón.");
+        return;
+      }
+
+      const responsable = prompt("Código de responsable que actualiza el estado:");
+      if (!responsable) return;
+
+      const textoOriginal = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Actualizando...";
+
+      try {
+        const res = await api({
+          accion: "actualizarEstado",
+          idTracking,
+          tracking: idTracking,
+          nuevoEstado,
+          estado: nuevoEstado,
+          responsableCodigo: responsable,
+          responsable,
+          ultimaUbicacion: resolverUltimaUbicacionPorEstado({ estado: nuevoEstado })
+        });
+
+        if (!res.ok) {
+          alert("Error: " + (res.error || "No se pudo actualizar"));
+          return;
+        }
+
+        const input = $("#trackingInput");
+        if (input && input.value.trim() === idTracking) {
+          await buscarTracking();
+        }
+
+        await cargarPanel();
+
+        const dashView = $("#view-dashboard");
+        if (dashView && dashView.classList.contains("active")) {
+          await cargarDashboard();
+        }
+      } catch (err) {
+        console.error("Error actualizando estado:", err);
+        alert("No se pudo actualizar el estado. " + (err.message || err));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+      }
+    });
   }
 
   async function generarPDFRotulo(e) {
@@ -1105,8 +1178,8 @@
       campo("IMPRESO POR:", data.impresoPor || "", innerX + 88, y, 34, innerW - 122);
 
       doc.setFont("times", "bold");
-      doc.setFontSize(16);
-      doc.text("LENCERÍA RÍO", W / 2, offsetY + LABEL_H - 5, { align: "center" });
+      doc.setFontSize(20);
+      doc.text("LENCERIA RÍO", M + ((W - M * 2) / 2), offsetY + 18, { align: "center" });
     }
 
     drawLabel(M);

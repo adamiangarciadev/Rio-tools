@@ -45,7 +45,6 @@
   <main class="layout">
     <nav class="tabs" aria-label="Secciones">
       <button class="tab active" data-view="carga">Carga local</button>
-      <button class="tab" data-view="panel">Panel operativo</button>
       <button class="tab" data-view="dashboard">Dashboard</button>
       <button class="tab" data-view="seguimiento">Seguimiento</button>
     </nav>
@@ -181,33 +180,6 @@
       </section>
     </section>
 
-    <section id="view-panel" class="view">
-      <section class="card">
-        <div class="card-head">
-          <h2>Panel operativo</h2>
-          <span class="hint">Hubs: Sarmiento / Avellaneda / Logística Web</span>
-        </div>
-
-        <div class="toolbar">
-          <select id="filtroHub">
-            <option value="TODOS">Todos</option>
-            <option value="SARMIENTO">Sarmiento</option>
-            <option value="AVELLANEDA">Avellaneda</option>
-            <option value="WEB">Logística Web</option>
-          </select>
-
-          <select id="filtroEstado">
-            <option value="TODOS">Todos los estados</option>
-          </select>
-
-          <input id="buscarPanel" placeholder="Buscar tracking, cliente, sucursal..." />
-          <button id="btnActualizarPanel" class="btn">Actualizar</button>
-        </div>
-
-        <div id="panelLista" class="cards-list"></div>
-      </section>
-    </section>
-
     <section id="view-dashboard" class="view">
       <section class="dashboard-grid">
         <div class="metric"><span>Total activos</span><strong id="mTotal">0</strong></div>
@@ -241,13 +213,28 @@
     </section>
 
     <section id="view-seguimiento" class="view">
-      <section class="card narrow">
-        <h2>Buscar seguimiento</h2>
+      <section class="card">
+        <h2>Seguimiento operativo</h2>
         <div class="tracking-search">
-          <input id="trackingInput" placeholder="Ej: RIO-SN-260429-0001" />
+          <input id="trackingInput" placeholder="Ej: RIO-SN-260508-0008" />
           <button id="btnBuscarTracking" class="btn primary">Buscar</button>
+          <button id="btnActualizarPanel" class="btn">Actualizar panel</button>
         </div>
         <div id="trackingDetalle" class="tracking-detail"></div>
+        <hr class="soft-separator" />
+        <div class="toolbar">
+          <select id="filtroHub">
+            <option value="TODOS">Todos</option>
+            <option value="SARMIENTO">Sarmiento</option>
+            <option value="AVELLANEDA">Avellaneda</option>
+            <option value="WEB">Logística Web</option>
+          </select>
+          <select id="filtroEstado">
+            <option value="TODOS">Todos los estados</option>
+          </select>
+          <input id="buscarPanel" placeholder="Buscar tracking, cliente, sucursal..." />
+        </div>
+        <div id="panelLista" class="cards-list"></div>
       </section>
     </section>
   </main>
@@ -256,6 +243,6 @@
     RIO Tools Suite · GitHub Pages · Uso interno by - ADAMIANGARCIADEV® -
   </footer>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>
