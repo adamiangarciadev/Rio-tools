@@ -1,7 +1,7 @@
 ﻿;(() => {
   "use strict";
 
-  const API_URL = "https://script.google.com/macros/s/AKfycbwPy8eu3WeKB4tqiu238bnFMtb-diMKvXru2INUIMpYjw139bVk7VY2nzXKC5ovfw/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbwi4i-Xsud2rISeNV8cjAJ8iX47ksiuAxfQgRPZFf7LRI75-2wFZEttbX1xeHj815gcVg/exec";
 
   const HOME_TRACKING_URL = location.href.split("#")[0].split("?")[0];
   const LOCALES_CSV_URL = "./locales.csv";
@@ -443,6 +443,7 @@
         }
 
         const data = Object.fromEntries(new FormData(form).entries());
+        data.direccionOca = String(data.direccionOca || "").trim();
 
         data.sucursalOrigen = normalizarTexto(data.sucursalOrigen);
         data.centroAsignado = resolverCentroInicial(data.sucursalOrigen);
@@ -819,7 +820,7 @@
     });
 
     const url = new URL(location.href);
-    const id = url.searchParams.get("t") || url.searchParams.get("tracking");
+    const id = url.searchParams.get("tracking") || url.searchParams.get("t");
 
     if (id) {
       $$(".tab").find((b) => b.dataset.view === "seguimiento")?.click();
@@ -884,7 +885,7 @@
 
     const data = {
       tracking: e.idTracking,
-      qrUrl: `${HOME_TRACKING_URL}?t=${encodeURIComponent(e.idTracking)}`,
+      qrUrl: `${HOME_TRACKING_URL}?tracking=${encodeURIComponent(e.idTracking)}`,
       tipoEnvio: e.tipoEnvio,
       centro: e.centroAsignado || e.hubAsignado || resolverCentroInicial(e.sucursalOrigen),
 
@@ -911,6 +912,7 @@
       transporte: {
         nombre: e.transporte || (e.tipoEnvio === "TRANSPORTE" ? "" : "SHIPNOW"),
         sucursalOca: e.sucursalOca || "",
+        direccionOca: e.direccionOca || "",
         guia: e.guia || e.numeroGuia || "",
         observaciones: e.observaciones || ""
       },
@@ -947,6 +949,8 @@
     const W = 210;
     const H = 297;
     const M = 6;
+    const GAP = 5;
+    const LABEL_H = (H - M * 2 - GAP) / 2;
     const negro = [0, 0, 0];
 
     function rect(x, y, w, h, fill = false) {
@@ -959,26 +963,26 @@
     }
 
     function tituloBarra(texto, x, y, w) {
-      rect(x, y, w, 8, true);
+      rect(x, y, w, 6, true);
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text(texto, x + 3, y + 5.7);
+      doc.setFontSize(10);
+      doc.text(texto, x + 2.5, y + 4.3);
       doc.setTextColor(0, 0, 0);
     }
 
-    function campo(label, value, x, y, wLabel, wValue, h = 8, size = 10) {
+    function campo(label, value, x, y, wLabel, wValue, h = 6, size = 8) {
       rect(x, y, wLabel, h);
       rect(x + wLabel, y, wValue, h);
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(size);
-      doc.text(label, x + 2, y + 5.3);
+      doc.text(label, x + 1.5, y + 4.1);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(size);
       const txt = String(value || "").toUpperCase();
-      doc.text(txt, x + wLabel + 3, y + 5.3, { maxWidth: wValue - 5 });
+      doc.text(txt, x + wLabel + 2, y + 4.1, { maxWidth: wValue - 4 });
     }
 
     async function qrDataUrl(text) {
@@ -1011,135 +1015,102 @@
     const qrText = data.qrUrl || `${location.origin}${location.pathname}?tracking=${encodeURIComponent(tracking)}`;
     const qr = await qrDataUrl(qrText);
 
-    doc.setLineWidth(0.8);
-    rect(M, M, W - M * 2, H - M * 2);
+    function drawLabel(offsetY) {
+      const innerX = M + 3;
+      const innerW = W - M * 2 - 6;
+      const qrSize = 25;
+      let y = offsetY + 4;
 
-    rect(M, M, 142, 60);
-    rect(148, M, 56, 60);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(27);
-    doc.text("DESPACHO DE PEDIDOS", 13, 22);
-
-    doc.setFontSize(10);
-    doc.text("N° DE SEGUIMIENTO INTERNO:", 10, 37);
-
-    doc.setFillColor(0, 0, 0);
-    doc.rect(74, 31, 58, 9, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.text(tracking, 77, 37.2);
-    doc.setTextColor(0, 0, 0);
-
-    doc.setFontSize(10);
-    doc.text("TIPO DE ENVÍO:", 10, 47);
-    doc.setFont("helvetica", "normal");
-    doc.text(String(data.tipoEnvio || "").toUpperCase(), 53, 47);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("CENTRO ASIGNADO:", 10, 56);
-    doc.setFont("helvetica", "normal");
-    doc.text(String(data.centro || "").toUpperCase(), 53, 56);
-
-    doc.addImage(qr, "PNG", 158, 10, 34, 34);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.text("ESCANEA PARA SEGUIMIENTO", 153, 51);
-
-    let y = 66;
-
-    tituloBarra("REMITENTE", M, y, W - M * 2);
-    y += 8;
-
-    campo("SUCURSAL:", data.remitente?.sucursal, M, y, 40, 158);
-    y += 8;
-    campo("DOMICILIO:", data.remitente?.domicilio, M, y, 40, 158);
-    y += 8;
-    campo("LOCALIDAD:", data.remitente?.localidad, M, y, 40, 65);
-    campo("CÓDIGO POSTAL:", data.remitente?.cp, 111, y, 42, 51);
-    y += 8;
-    campo("TELÉFONO:", data.remitente?.telefono, M, y, 40, 158);
-    y += 13;
-
-    tituloBarra("DESTINATARIO", M, y, W - M * 2);
-    y += 8;
-
-    campo("NOMBRE Y APELLIDO:", data.destinatario?.nombre, M, y, 50, 148);
-    y += 8;
-    campo("D.N.I. / C.U.I.L.:", data.destinatario?.dni, M, y, 50, 60);
-    campo("TELÉFONO:", data.destinatario?.telefono, 116, y, 37, 51);
-    y += 8;
-    campo("DOMICILIO:", data.destinatario?.domicilio, M, y, 50, 148);
-    y += 8;
-    campo("ENTRE CALLES:", data.destinatario?.entrecalles, M, y, 50, 148);
-    y += 8;
-    campo("LOCALIDAD:", data.destinatario?.localidad, M, y, 50, 60);
-    campo("CÓDIGO POSTAL:", data.destinatario?.cp, 116, y, 37, 51);
-    y += 8;
-    campo("PROVINCIA:", data.destinatario?.provincia, M, y, 50, 148);
-    y += 13;
-
-    tituloBarra("TRANSPORTE DE ENVÍO", M, y, W - M * 2);
-    y += 8;
-
-    campo("TRANSPORTE:", data.transporte?.nombre, M, y, 68, 130);
-    y += 8;
-
-    if (String(data.tipoEnvio || "").toUpperCase().includes("OCA")) {
-      campo("SUCURSAL OCA:", data.transporte?.sucursalOca, M, y, 68, 130);
-      y += 8;
-    } else {
-      campo("N° DE GUÍA / CÓDIGO:", data.transporte?.guia || "A DESIGNAR", M, y, 68, 130);
-      y += 8;
-    }
-
-    campo("OBSERVACIONES:", data.transporte?.observaciones, M, y, 68, 130);
-    y += 13;
-
-    tituloBarra("CONTROL INTERNO (CIRCUITO RIO)", M, y, W - M * 2);
-    y += 8;
-
-    const etapas = data.etapas || [
-      "CARGADO EN\nSUCURSAL",
-      "RECIBIDO EN\nAVELLANEDA",
-      "RECIBIDO EN\nLOGÍSTICA WEB"
-    ];
-
-    const boxW = (W - M * 2) / etapas.length;
-    const boxH = 45;
-
-    etapas.forEach((etapa, i) => {
-      const x = M + i * boxW;
-      rect(x, y, boxW, boxH);
+      doc.setLineWidth(0.6);
+      rect(M, offsetY, W - M * 2, LABEL_H);
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
+      doc.setFontSize(18);
+      doc.text("DESPACHO DE PEDIDOS", innerX, y + 6);
 
-      const lines = etapa.split("\n");
-      lines.forEach((line, idx) => {
-        doc.text(line, x + boxW / 2, y + 8 + idx * 4, { align: "center" });
-      });
-
-      doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
-      doc.text("□ FECHA: ___/___/___", x + 3, y + 29);
-      doc.text("FIRMA: __________", x + 3, y + 39);
+      doc.text("N° DE SEGUIMIENTO INTERNO", innerX, y + 13);
 
-      if (i < etapas.length - 1) {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text("→", x + boxW - 3, y + 25);
+      doc.setFillColor(0, 0, 0);
+      doc.rect(innerX, y + 15, 62, 8, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.text(tracking, innerX + 2, y + 20.5);
+      doc.setTextColor(0, 0, 0);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("TIPO DE ENVÍO:", innerX, y + 28);
+      doc.setFont("helvetica", "normal");
+      doc.text(String(data.tipoEnvio || "").toUpperCase(), innerX + 24, y + 28);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("CENTRO:", innerX + 72, y + 28);
+      doc.setFont("helvetica", "normal");
+      doc.text(String(data.centro || "").toUpperCase(), innerX + 86, y + 28);
+
+      doc.addImage(qr, "PNG", M + W - M * 2 - qrSize - 7, y + 1, qrSize, qrSize);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.5);
+      doc.text("SEGUIMIENTO", M + W - M * 2 - qrSize - 1, y + qrSize + 4, { align: "right" });
+
+      y += 34;
+
+      tituloBarra("REMITENTE", innerX, y, innerW);
+      y += 6;
+      campo("SUCURSAL:", data.remitente?.sucursal, innerX, y, 32, innerW - 32);
+      y += 6;
+      campo("DOMICILIO:", data.remitente?.domicilio, innerX, y, 32, innerW - 32);
+      y += 6;
+      campo("LOCALIDAD:", data.remitente?.localidad, innerX, y, 32, 70);
+      campo("CP:", data.remitente?.cp, innerX + 102, y, 14, innerW - 116);
+      y += 6;
+      campo("TELÉFONO:", data.remitente?.telefono, innerX, y, 32, innerW - 32);
+      y += 8;
+
+      tituloBarra("DESTINATARIO", innerX, y, innerW);
+      y += 6;
+      campo("NOMBRE:", data.destinatario?.nombre, innerX, y, 32, innerW - 32);
+      y += 6;
+      campo("DNI/CUIL:", data.destinatario?.dni, innerX, y, 32, 58);
+      campo("TEL:", data.destinatario?.telefono, innerX + 90, y, 18, innerW - 108);
+      y += 6;
+      campo("DOMICILIO:", data.destinatario?.domicilio, innerX, y, 32, innerW - 32);
+      y += 6;
+      campo("ENTRECALLES:", data.destinatario?.entrecalles, innerX, y, 32, innerW - 32);
+      y += 6;
+      campo("LOCALIDAD:", data.destinatario?.localidad, innerX, y, 32, 58);
+      campo("CP:", data.destinatario?.cp, innerX + 90, y, 18, 26);
+      campo("PROV.:", data.destinatario?.provincia, innerX + 134, y, 22, innerW - 156);
+      y += 8;
+
+      tituloBarra("TRANSPORTE", innerX, y, innerW);
+      y += 6;
+      campo("NOMBRE:", data.transporte?.nombre, innerX, y, 32, innerW - 32);
+      y += 6;
+
+      if (String(data.tipoEnvio || "").toUpperCase().includes("OCA")) {
+        campo("SUC. OCA:", data.transporte?.sucursalOca, innerX, y, 32, innerW - 32);
+        y += 6;
+        campo("DIR. OCA:", data.transporte?.direccionOca, innerX, y, 32, innerW - 32);
+        y += 6;
+      } else {
+        campo("GUÍA/CÓD.:", data.transporte?.guia || "A DESIGNAR", innerX, y, 32, innerW - 32);
+        y += 6;
       }
-    });
 
-    y += boxH + 7;
+      campo("OBS.:", data.transporte?.observaciones, innerX, y, 32, innerW - 32);
+      y += 8;
+      campo("FECHA:", data.fecha || fechaHoyAR(), innerX, y, 32, 56);
+      campo("IMPRESO POR:", data.impresoPor || "", innerX + 88, y, 34, innerW - 122);
 
-    campo("FECHA DE IMPRESIÓN:", data.fecha || fechaHoyAR(), M, y, 48, 55);
-    campo("IMPRESO POR:", data.impresoPor || "", 120, y, 35, 49);
+      doc.setFont("times", "bold");
+      doc.setFontSize(16);
+      doc.text("LENCERÍA RÍO", W / 2, offsetY + LABEL_H - 5, { align: "center" });
+    }
 
-    doc.setFont("times", "bold");
-    doc.setFontSize(24);
-    doc.text("LENCERÍA RÍO", W / 2, 286, { align: "center" });
+    drawLabel(M);
+    drawLabel(M + LABEL_H + GAP);
 
     doc.save(`${tracking}.pdf`);
   }
