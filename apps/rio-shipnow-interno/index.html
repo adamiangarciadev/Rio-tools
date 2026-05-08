@@ -11,9 +11,9 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-CDPZFHV1BV"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-CDPZFHV1BV');
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "G-CDPZFHV1BV");
   </script>
 
   <!-- jsPDF -->
@@ -64,7 +64,7 @@
             </select>
           </label>
 
-          <p class="hint" style="margin-top:0;">
+          <p class="hint" style="margin-top: 0;">
             Se cargan automáticamente desde <code>locales.csv</code>. El remitente del rótulo sale de esta sucursal.
           </p>
 
@@ -77,9 +77,12 @@
           </label>
 
           <label>Responsable local
-            <select id="responsableLocal" name="responsable" required>
-              <option value="">Cargando responsables...</option>
-            </select>
+            <input
+              id="responsableLocal"
+              name="responsable"
+              placeholder="Código de responsable"
+              required
+            />
           </label>
 
           <label>Remito / pedido interno
@@ -236,9 +239,9 @@
   </main>
 
   <footer>
-    RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® -
+    RIO Tools Suite · GitHub Pages · Uso interno by - ADAMIANGARCIADEV® -
   </footer>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

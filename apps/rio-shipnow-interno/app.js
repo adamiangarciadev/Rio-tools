@@ -1,22 +1,31 @@
 ;(() => {
-  'use strict';
+  "use strict";
 
-  const API_URL = 'https://script.google.com/macros/s/AKfycbwPy8eu3WeKB4tqiu238bnFMtb-diMKvXru2INUIMpYjw139bVk7VY2nzXKC5ovfw/exec';
+  const API_URL = "https://script.google.com/macros/s/AKfycbwPy8eu3WeKB4tqiu238bnFMtb-diMKvXru2INUIMpYjw139bVk7VY2nzXKC5ovfw/exec";
 
-  const HOME_TRACKING_URL = location.href.split('#')[0].split('?')[0];
-  const LOCALES_CSV_URL = './locales.csv';
-  const PADRON_CSV_URL = './Padron.csv';
+  const HOME_TRACKING_URL = location.href.split("#")[0].split("?")[0];
+  const LOCALES_CSV_URL = "./locales.csv";
+  const PADRON_CSV_URL = "./Padron.csv";
 
   const LOCALES_FALLBACK = [
-    'CASTELLI',
-    'CORRIENTES',
-    'PUEYRREDON',
-    'QUILMES',
-    'SARMIENTO',
-    'LAMARCA',
-    'NAZCA',
-    'AVELLANEDA',
-    'AVELLANEDA (WEB)'
+    "CASTELLI", "CORRIENTES", "PUEYRREDON", "QUILMES", "SARMIENTO",
+    "LAMARCA", "NAZCA", "AVELLANEDA", "AVELLANEDA (WEB)"
+  ];
+
+  const PASAN_POR_SARMIENTO = ["CASTELLI", "CORRIENTES", "PUEYRREDON", "QUILMES"];
+  const DIRECTO_AVELLANEDA = ["SARMIENTO", "LAMARCA", "NAZCA", "AVELLANEDA", "AVELLANEDA (WEB)"];
+
+  const ESTADOS = [
+    "CARGADO EN LOCAL",
+    "ENVIADO A SARMIENTO",
+    "RECIBIDO EN SARMIENTO",
+    "ENVIADO A AVELLANEDA",
+    "RECIBIDO EN AVELLANEDA",
+    "RECIBIDO EN LOGISTICA WEB",
+    "DESPACHADO POR SHIPNOW",
+    "DESPACHADO POR TRANSPORTE",
+    "CANCELADO",
+    "CON PROBLEMA"
   ];
 
   let locales = [];
@@ -25,35 +34,11 @@
   let cache = [];
   let ultimoEnvio = null;
 
-  const HUB_ONCE = ['CASTELLI', 'CORRIENTES', 'PUEYRREDON', 'QUILMES', 'SARMIENTO'];
-  const HUB_FLORES = ['LAMARCA', 'NAZCA', 'AVELLANEDA', 'AVELLANEDA (WEB)'];
-
-  const ESTADOS = [
-    'CARGADO EN LOCAL',
-    'EN CAMINO A HUB',
-    'RECIBIDO EN HUB',
-    'ENVIADO A AVELLANEDA',
-    'RECIBIDO EN LOGISTICA WEB',
-    'DESPACHADO POR SHIPNOW',
-    'DESPACHADO POR TRANSPORTE',
-    'CANCELADO',
-    'CON PROBLEMA'
-  ];
-
-  const ESTADO_FLOW = [
-    'CARGADO EN LOCAL',
-    'EN CAMINO A HUB',
-    'RECIBIDO EN HUB',
-    'ENVIADO A AVELLANEDA',
-    'RECIBIDO EN LOGISTICA WEB',
-    'DESPACHADO POR SHIPNOW'
-  ];
-
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const apiStatus = $('#apiStatus');
+  const apiStatus = $("#apiStatus");
 
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener("DOMContentLoaded", init);
 
   async function init() {
     try {
@@ -69,9 +54,9 @@
       setApiStatus();
       cargarPanel();
     } catch (err) {
-      console.error('Error al iniciar la app:', err);
-      setApiStatus('err', 'Error al iniciar');
-      alert('La app no pudo inicializarse correctamente. ' + (err.message || err));
+      console.error("Error al iniciar la app:", err);
+      setApiStatus("err", "Error al iniciar");
+      alert("La app no pudo inicializarse correctamente. " + (err.message || err));
     }
   }
 
@@ -84,37 +69,37 @@
       return;
     }
 
-    if (!API_URL || API_URL.includes('PEGAR_URL')) {
-      apiStatus.textContent = 'Configurar API_URL';
-      apiStatus.className = 'status-pill err';
+    if (!API_URL || API_URL.includes("PEGAR_URL")) {
+      apiStatus.textContent = "Configurar API_URL";
+      apiStatus.className = "status-pill err";
     } else {
-      apiStatus.textContent = 'API conectada';
-      apiStatus.className = 'status-pill ok';
+      apiStatus.textContent = "API conectada";
+      apiStatus.className = "status-pill ok";
     }
   }
 
   function normalizarTexto(v) {
-    return String(v || '')
+    return String(v || "")
       .trim()
       .toUpperCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
   }
 
   function parseCSV(text) {
-    const clean = String(text || '').replace(/^\uFEFF/, '');
-    const lines = clean.split(/\r?\n/).filter(l => l.trim() !== '');
+    const clean = String(text || "").replace(/^\uFEFF/, "");
+    const lines = clean.split(/\r?\n/).filter((l) => l.trim() !== "");
     if (!lines.length) return [];
 
     const delimiter = detectarSeparador(lines[0]);
-    const headers = splitCSVLine(lines[0], delimiter).map(h => normalizarTexto(h));
+    const headers = splitCSVLine(lines[0], delimiter).map((h) => normalizarTexto(h));
 
-    return lines.slice(1).map(line => {
+    return lines.slice(1).map((line) => {
       const values = splitCSVLine(line, delimiter);
       const obj = {};
 
       headers.forEach((h, i) => {
-        obj[h] = (values[i] || '').trim();
+        obj[h] = (values[i] || "").trim();
       });
 
       return obj;
@@ -124,28 +109,28 @@
   function detectarSeparador(line) {
     const coma = (line.match(/,/g) || []).length;
     const puntoComa = (line.match(/;/g) || []).length;
-    return puntoComa > coma ? ';' : ',';
+    return puntoComa > coma ? ";" : ",";
   }
 
   function splitCSVLine(line, sep) {
     const out = [];
-    let cur = '';
+    let cur = "";
     let q = false;
 
     for (let i = 0; i < line.length; i++) {
       const c = line[i];
       const n = line[i + 1];
 
-      if (c === '"') {
-        if (q && n === '"') {
-          cur += '"';
+      if (c === "\"") {
+        if (q && n === "\"") {
+          cur += "\"";
           i++;
         } else {
           q = !q;
         }
       } else if (c === sep && !q) {
         out.push(cur.trim());
-        cur = '';
+        cur = "";
       } else {
         cur += c;
       }
@@ -157,7 +142,7 @@
 
   async function loadLocalesCsv() {
     try {
-      const res = await fetch(LOCALES_CSV_URL, { cache: 'no-store' });
+      const res = await fetch(LOCALES_CSV_URL, { cache: "no-store" });
 
       if (!res.ok) {
         cargarLocalesFallback();
@@ -170,55 +155,80 @@
       LOCALES = {};
       locales = [];
 
-      rows.forEach(row => {
+      rows.forEach((row) => {
         const sucursal =
-          row['SUCURSAL'] ||
-          row['LOCAL'] ||
-          row['NOMBRE'] ||
+          row["SUCURSAL"] ||
+          row["LOCAL"] ||
+          row["NOMBRE"] ||
           row[Object.keys(row)[0]] ||
-          '';
+          "";
 
         const suc = normalizarTexto(sucursal);
         if (!suc) return;
 
         const calle =
-          row['DIRECCION'] ||
-          row['DIRECCIÓN'] ||
-          row['DOMICILIO'] ||
-          row['CALLE'] ||
-          '';
+          row["DIRECCION"] ||
+          row["DIRECCIÓN"] ||
+          row["DOMICILIO"] ||
+          row["CALLE"] ||
+          row["AVENIDA"] ||
+          "";
 
         const altura =
-          row['ALTURA'] ||
-          row['NUMERO'] ||
-          row['NÚMERO'] ||
-          row['NRO'] ||
-          '';
+          row["ALTURA"] ||
+          row["NUMERO"] ||
+          row["NÚMERO"] ||
+          row["NRO"] ||
+          row["NUM"] ||
+          "";
 
         const domicilio = `${calle} ${altura}`.trim();
 
         LOCALES[suc] = {
           sucursal: suc,
           domicilio,
-          localidad: row['LOCALIDAD'] || '',
-          provincia: row['PROVINCIA'] || '',
-          cp: row['CP'] || row['CODIGO POSTAL'] || row['CÓDIGO POSTAL'] || '',
-          telefono: row['TELEFONO'] || row['TELÉFONO'] || row['TEL'] || '',
-          pais: row['PAIS'] || row['PAÍS'] || 'AR',
-          hub: row['HUB'] || resolverHub(suc)
+          localidad:
+            row["LOCALIDAD"] ||
+            row["CIUDAD"] ||
+            row["PARTIDO"] ||
+            "",
+          provincia:
+            row["PROVINCIA"] ||
+            row["PROV"] ||
+            "",
+          cp:
+            row["CP"] ||
+            row["C.P."] ||
+            row["CODIGO POSTAL"] ||
+            row["CÓDIGO POSTAL"] ||
+            row["COD_POSTAL"] ||
+            "",
+          telefono:
+            row["TELEFONO"] ||
+            row["TELÉFONO"] ||
+            row["TEL"] ||
+            row["CELULAR"] ||
+            row["CONTACTO"] ||
+            "",
+          pais:
+            row["PAIS"] ||
+            row["PAÍS"] ||
+            "AR",
+          centro: resolverCentroInicial(suc)
         };
+        console.log("LOCAL CARGADO:", suc, LOCALES[suc], row);
 
         locales.push(suc);
       });
 
       asegurarLocalesMinimos();
-      locales = Array.from(new Set(locales)).sort((a, b) => a.localeCompare(b, 'es'));
+      locales = Array.from(new Set(locales)).sort((a, b) => a.localeCompare(b, "es"));
 
       if (!locales.length) cargarLocalesFallback();
 
-      console.log('LOCALES cargados:', LOCALES);
+      console.log("LOCALES cargados:", LOCALES);
     } catch (err) {
-      console.warn('No se pudo cargar locales.csv:', err);
+      console.warn("No se pudo cargar locales.csv:", err);
       cargarLocalesFallback();
     }
   }
@@ -227,36 +237,37 @@
     locales = [...LOCALES_FALLBACK];
 
     LOCALES = {};
-    locales.forEach(s => {
-      LOCALES[normalizarTexto(s)] = {
-        sucursal: s,
-        domicilio: '',
-        localidad: '',
-        provincia: '',
-        cp: '',
-        telefono: '',
-        pais: 'AR',
-        hub: resolverHub(s)
+    locales.forEach((s) => {
+      const key = normalizarTexto(s);
+      LOCALES[key] = {
+        sucursal: key,
+        domicilio: "",
+        localidad: "",
+        provincia: "",
+        cp: "",
+        telefono: "",
+        pais: "AR",
+        centro: resolverCentroInicial(key)
       };
     });
 
-    console.warn('Usando locales fallback:', LOCALES);
+    console.warn("Usando locales fallback:", LOCALES);
   }
 
   function asegurarLocalesMinimos() {
-    LOCALES_FALLBACK.forEach(sucursal => {
+    LOCALES_FALLBACK.forEach((sucursal) => {
       const key = normalizarTexto(sucursal);
 
       if (!LOCALES[key]) {
         LOCALES[key] = {
           sucursal: key,
-          domicilio: '',
-          localidad: '',
-          provincia: '',
-          cp: '',
-          telefono: '',
-          pais: 'AR',
-          hub: resolverHub(key)
+          domicilio: "",
+          localidad: "",
+          provincia: "",
+          cp: "",
+          telefono: "",
+          pais: "AR",
+          centro: resolverCentroInicial(key)
         };
       }
 
@@ -266,10 +277,10 @@
 
   async function cargarPadron() {
     try {
-      const res = await fetch(PADRON_CSV_URL, { cache: 'no-store' });
+      const res = await fetch(PADRON_CSV_URL, { cache: "no-store" });
 
       if (!res.ok) {
-        console.warn('No se pudo cargar Padron.csv');
+        console.warn("No se pudo cargar Padron.csv");
         PADRON = [];
         return;
       }
@@ -277,160 +288,190 @@
       const text = await res.text();
       const rows = parseCSV(text);
 
-      PADRON = rows.map(row => {
-        const id =
-          row['VENDEDOR_ID'] ||
-          row['ID'] ||
-          row['CODIGO'] ||
-          row['CÓDIGO'] ||
-          '';
+      PADRON = rows
+        .map((row) => {
+          const id =
+            row["VENDEDOR_ID"] ||
+            row["ID"] ||
+            row["CODIGO"] ||
+            row["CÓDIGO"] ||
+            row["LEGAJO"] ||
+            "";
 
-        let nombre =
-          row['APELLIDO_NOMBRE'] ||
-          row['APELLIDO Y NOMBRE'] ||
-          row['NOMBRE Y APELLIDO'] ||
-          row['NOMBRE_APELLIDO'] ||
-          row['NOMBRE'] ||
-          '';
+          let nombre =
+            row["APELLIDO_NOMBRE"] ||
+            row["APELLIDO Y NOMBRE"] ||
+            row["NOMBRE Y APELLIDO"] ||
+            row["NOMBRE_APELLIDO"] ||
+            row["NOMBRE"] ||
+            "";
 
-        if (!nombre && row['APELLIDO']) {
-          nombre = `${row['APELLIDO']} ${row['NOMBRE'] || ''}`.trim();
-        }
+          if (!nombre && row["APELLIDO"]) {
+            nombre = `${row["APELLIDO"]} ${row["NOMBRE"] || ""}`.trim();
+          }
 
-        if (!nombre) {
-          const vals = Object.values(row).filter(Boolean);
-          nombre = vals[1] || vals[0] || '';
-        }
+          if (!nombre) {
+            const vals = Object.values(row).filter(Boolean);
+            nombre = vals[1] || vals[0] || "";
+          }
 
-        const telefono =
-          row['TELEFONO'] ||
-          row['TELÉFONO'] ||
-          row['TEL'] ||
-          row['CELULAR'] ||
-          '';
+          const telefono =
+            row["TELEFONO"] ||
+            row["TELÉFONO"] ||
+            row["TEL"] ||
+            row["CELULAR"] ||
+            "";
 
-        return {
-          id: String(id || '').trim(),
-          nombre: String(nombre || '').trim(),
-          telefono: String(telefono || '').trim()
-        };
-      }).filter(r => r.nombre);
+          return {
+            id: String(id || "").trim(),
+            nombre: String(nombre || "").trim(),
+            telefono: String(telefono || "").trim()
+          };
+        })
+        .filter((r) => r.id || r.nombre);
 
-      PADRON.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+      PADRON.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 
-      console.log('PADRON cargado:', PADRON);
+      console.log("PADRON cargado:", PADRON);
     } catch (err) {
-      console.warn('Error cargando Padron.csv:', err);
+      console.warn("Error cargando Padron.csv:", err);
       PADRON = [];
     }
   }
 
+  function buscarResponsable(codigo) {
+    const c = normalizarTexto(codigo);
+    if (!c) return null;
+
+    return PADRON.find(
+      (r) =>
+        normalizarTexto(r.id) === c ||
+        normalizarTexto(r.nombre) === c
+    ) || null;
+  }
+
   function fillSelects() {
-    const sucursalSelect = $('#sucursalOrigen');
+    const sucursalSelect = $("#sucursalOrigen");
     if (sucursalSelect) {
       sucursalSelect.innerHTML =
         '<option value="">Seleccionar...</option>' +
-        locales.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+        locales.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
     }
 
-    const responsableSelect = $('#responsableLocal');
-    if (responsableSelect) {
-      responsableSelect.innerHTML =
-        '<option value="">Seleccionar responsable...</option>' +
-        PADRON.map(r => {
-          const label = r.id ? `${r.id} - ${r.nombre}` : r.nombre;
-          return `<option value="${escapeHtml(r.nombre)}" data-id="${escapeHtml(r.id)}" data-telefono="${escapeHtml(r.telefono)}">${escapeHtml(label)}</option>`;
-        }).join('');
+    const responsable = $("#responsableLocal");
+    if (responsable) {
+      if (responsable.tagName === "SELECT") {
+        const input = document.createElement("input");
+        input.id = "responsableLocal";
+        input.name = "responsable";
+        input.required = true;
+        input.placeholder = "Código de responsable";
+        responsable.replaceWith(input);
+      } else {
+        responsable.placeholder = "Código de responsable";
+      }
     }
 
-    const filtroEstado = $('#filtroEstado');
+    const filtroEstado = $("#filtroEstado");
     if (filtroEstado) {
       filtroEstado.innerHTML =
         '<option value="TODOS">Todos los estados</option>' +
-        ESTADOS.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join('');
+        ESTADOS.map((e) => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join("");
+    }
+
+    const filtroHub = $("#filtroHub");
+    if (filtroHub) {
+      filtroHub.innerHTML = `
+        <option value="TODOS">Todos</option>
+        <option value="SARMIENTO">Sarmiento</option>
+        <option value="AVELLANEDA">Avellaneda</option>
+        <option value="WEB">Logística Web</option>
+      `;
     }
   }
 
   function bindTabs() {
-    $$('.tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        $$('.tab').forEach(b => b.classList.remove('active'));
-        $$('.view').forEach(v => v.classList.remove('active'));
+    $$(".tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        $$(".tab").forEach((b) => b.classList.remove("active"));
+        $$(".view").forEach((v) => v.classList.remove("active"));
 
-        btn.classList.add('active');
-        $(`#view-${btn.dataset.view}`).classList.add('active');
+        btn.classList.add("active");
+        $(`#view-${btn.dataset.view}`).classList.add("active");
 
-        if (btn.dataset.view === 'panel') cargarPanel();
-        if (btn.dataset.view === 'dashboard') cargarDashboard();
+        if (btn.dataset.view === "panel") cargarPanel();
+        if (btn.dataset.view === "dashboard") cargarDashboard();
       });
     });
   }
 
   function bindCarga() {
-    $('#tipoEnvio')?.addEventListener('change', toggleTipoEnvio);
+    $("#tipoEnvio")?.addEventListener("change", toggleTipoEnvio);
 
-    $('#btnLimpiar')?.addEventListener('click', () => {
-      $('#formEnvio').reset();
+    $("#btnLimpiar")?.addEventListener("click", () => {
+      $("#formEnvio").reset();
       toggleTipoEnvio();
-      $('#resultadoCard')?.classList.add('hidden');
+      $("#resultadoCard")?.classList.add("hidden");
       ultimoEnvio = null;
     });
 
-    $('#btnPDF')?.addEventListener('click', async () => {
+    $("#btnPDF")?.addEventListener("click", async () => {
       if (!ultimoEnvio) return;
 
       try {
         await generarPDFRotulo(ultimoEnvio);
       } catch (err) {
-        console.error('No se pudo generar el PDF manualmente:', err);
-        alert('No se pudo generar el rótulo PDF. ' + (err.message || err));
+        console.error("No se pudo generar el PDF manualmente:", err);
+        alert("No se pudo generar el rótulo PDF. " + (err.message || err));
       }
     });
 
-    $('#btnCopiarTracking')?.addEventListener('click', async () => {
+    $("#btnCopiarTracking")?.addEventListener("click", async () => {
       if (!ultimoEnvio) return;
 
       try {
         await copiarTexto(ultimoEnvio.idTracking);
-        alert('Tracking copiado.');
+        alert("Tracking copiado.");
       } catch (err) {
-        console.error('No se pudo copiar el tracking:', err);
-        alert('No se pudo copiar el tracking automáticamente. ' + (err.message || err));
+        console.error("No se pudo copiar el tracking:", err);
+        alert("No se pudo copiar el tracking automáticamente. " + (err.message || err));
       }
     });
 
-    $('#formEnvio')?.addEventListener('submit', async ev => {
+    $("#formEnvio")?.addEventListener("submit", async (ev) => {
       ev.preventDefault();
 
       const form = ev.target;
       const submitBtn = $('button[type="submit"]', form);
-      const originalText = submitBtn?.textContent || '';
+      const originalText = submitBtn?.textContent || "";
 
       try {
         if (submitBtn) {
           submitBtn.disabled = true;
-          submitBtn.textContent = 'Generando...';
+          submitBtn.textContent = "Generando...";
         }
 
         const data = Object.fromEntries(new FormData(form).entries());
 
         data.sucursalOrigen = normalizarTexto(data.sucursalOrigen);
-        data.hubAsignado = resolverHub(data.sucursalOrigen);
-        data.estado = 'CARGADO EN LOCAL';
-        data.accion = 'crearEnvio';
+        data.centroAsignado = resolverCentroInicial(data.sucursalOrigen);
+        data.hubAsignado = data.centroAsignado;
+        data.estado = "CARGADO EN LOCAL";
+        data.ultimaUbicacion = data.sucursalOrigen;
+        data.accion = "crearEnvio";
         data.urlSeguimientoBase = HOME_TRACKING_URL;
 
-        const responsableSelect = $('#responsableLocal');
-        const opt = responsableSelect?.selectedOptions?.[0];
+        data.responsableCodigo = String(data.responsable || "").trim();
+        data.responsable = data.responsableCodigo;
 
-        data.responsable = data.responsable || responsableSelect?.value || '';
-        data.responsableId = opt?.dataset?.id || '';
-        data.responsableTelefono = opt?.dataset?.telefono || '';
+        const respPadron = buscarResponsable(data.responsableCodigo);
+        data.responsableNombre = respPadron?.nombre || "";
+        data.responsableTelefono = respPadron?.telefono || "";
 
         const remitente = obtenerRemitente(data.sucursalOrigen);
 
         if (!remitente) {
-          alert('No se encontró el remitente para la sucursal: ' + data.sucursalOrigen);
+          alert("No se encontró el remitente para la sucursal: " + data.sucursalOrigen);
           return;
         }
 
@@ -443,14 +484,14 @@
 
         const faltan = validarPayload(data);
         if (faltan.length) {
-          alert('Faltan datos: ' + faltan.join(', '));
+          alert("Faltan datos: " + faltan.join(", "));
           return;
         }
 
         const res = await api(data);
 
         if (!res.ok) {
-          alert('Error: ' + (res.error || 'No se pudo crear el envío'));
+          alert("Error: " + (res.error || "No se pudo crear el envío"));
           return;
         }
 
@@ -462,22 +503,22 @@
 
         ultimoEnvio.remitente = remitente;
 
-        $('#trackingGenerado').textContent = ultimoEnvio.idTracking;
-        $('#hubGenerado').textContent = ultimoEnvio.hubAsignado || data.hubAsignado;
-        $('#estadoGenerado').textContent = ultimoEnvio.estado || data.estado;
-        $('#resultadoCard').classList.remove('hidden');
+        $("#trackingGenerado").textContent = ultimoEnvio.idTracking;
+        $("#hubGenerado").textContent = ultimoEnvio.centroAsignado || ultimoEnvio.hubAsignado || data.centroAsignado;
+        $("#estadoGenerado").textContent = ultimoEnvio.estado || data.estado;
+        $("#resultadoCard").classList.remove("hidden");
 
         try {
           await generarPDFRotulo(ultimoEnvio);
         } catch (pdfErr) {
-          console.error('No se pudo generar el rótulo PDF:', pdfErr);
+          console.error("No se pudo generar el rótulo PDF:", pdfErr);
           alert(`El tracking se generó, pero falló el PDF: ${pdfErr.message || pdfErr}`);
         }
 
         cargarPanel();
       } catch (err) {
-        console.error('Error al generar tracking:', err);
-        alert('No se pudo generar el tracking + rótulo. ' + (err.message || err));
+        console.error("Error al generar tracking:", err);
+        alert("No se pudo generar el tracking + rótulo. " + (err.message || err));
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -493,58 +534,98 @@
   }
 
   function toggleTipoEnvio() {
-    const tipo = $('#tipoEnvio')?.value || '';
+    const tipo = $("#tipoEnvio")?.value || "";
 
-    $$('.field-oca').forEach(e => e.classList.toggle('hidden', tipo !== 'SHIPNOW_OCA'));
-    $$('.field-transporte').forEach(e => e.classList.toggle('hidden', tipo !== 'TRANSPORTE'));
-    $$('.field-domicilio').forEach(e => e.classList.toggle('hidden', tipo === 'SHIPNOW_OCA'));
+    $$(".field-oca").forEach((e) => e.classList.toggle("hidden", tipo !== "SHIPNOW_OCA"));
+    $$(".field-transporte").forEach((e) => e.classList.toggle("hidden", tipo !== "TRANSPORTE"));
+    $$(".field-domicilio").forEach((e) => e.classList.toggle("hidden", tipo === "SHIPNOW_OCA"));
   }
 
   function validarPayload(d) {
     const base = [
-      'sucursalOrigen',
-      'tipoEnvio',
-      'responsable',
-      'cliente',
-      'mail',
-      'telefono',
-      'dniCuil',
-      'localidad',
-      'provincia',
-      'cp'
+      "sucursalOrigen",
+      "tipoEnvio",
+      "responsable",
+      "cliente",
+      "mail",
+      "telefono",
+      "dniCuil",
+      "localidad",
+      "provincia",
+      "cp"
     ];
 
-    if (d.tipoEnvio === 'SHIPNOW_OCA') base.push('sucursalOca');
-    else base.push('domicilio');
+    if (d.tipoEnvio === "SHIPNOW_OCA") {
+      base.push("sucursalOca");
+    } else {
+      base.push("domicilio");
+    }
 
-    if (d.tipoEnvio === 'TRANSPORTE') base.push('transporte');
+    if (d.tipoEnvio === "TRANSPORTE") base.push("transporte");
 
-    return base.filter(k => !String(d[k] || '').trim());
+    return base.filter((k) => !String(d[k] || "").trim());
   }
 
-  function resolverHub(suc) {
-    const s = normalizarTexto(suc);
+  function necesitaSarmiento(suc) {
+    return PASAN_POR_SARMIENTO.includes(normalizarTexto(suc));
+  }
 
-    if (HUB_ONCE.includes(s)) return 'SARMIENTO';
-    if (HUB_FLORES.includes(s)) return 'AVELLANEDA';
+  function resolverCentroInicial(suc) {
+    return necesitaSarmiento(suc) ? "SARMIENTO" : "AVELLANEDA";
+  }
 
-    return 'AVELLANEDA';
+  function resolverUltimaUbicacionPorEstado(envio) {
+    const estado = String(envio.estado || "").toUpperCase();
+
+    if (estado.includes("SARMIENTO")) return "SARMIENTO";
+    if (estado.includes("AVELLANEDA")) return "AVELLANEDA";
+    if (estado.includes("LOGISTICA WEB") || estado.includes("DESPACHADO")) return "LOGISTICA WEB";
+
+    return envio.sucursalOrigen || "";
+  }
+
+  function flujoPorEnvio(x) {
+    const tipo = x.tipoEnvio || "";
+
+    const final = tipo === "TRANSPORTE"
+      ? "DESPACHADO POR TRANSPORTE"
+      : "DESPACHADO POR SHIPNOW";
+
+    if (necesitaSarmiento(x.sucursalOrigen)) {
+      return [
+        "CARGADO EN LOCAL",
+        "ENVIADO A SARMIENTO",
+        "RECIBIDO EN SARMIENTO",
+        "ENVIADO A AVELLANEDA",
+        "RECIBIDO EN AVELLANEDA",
+        "RECIBIDO EN LOGISTICA WEB",
+        final
+      ];
+    }
+
+    return [
+      "CARGADO EN LOCAL",
+      "ENVIADO A AVELLANEDA",
+      "RECIBIDO EN AVELLANEDA",
+      "RECIBIDO EN LOGISTICA WEB",
+      final
+    ];
   }
 
   function bindPanel() {
-    $('#btnActualizarPanel')?.addEventListener('click', cargarPanel);
+    $("#btnActualizarPanel")?.addEventListener("click", cargarPanel);
 
-    ['filtroHub', 'filtroEstado', 'buscarPanel'].forEach(id => {
+    ["filtroHub", "filtroEstado", "buscarPanel"].forEach((id) => {
       const el = $(`#${id}`);
-      if (el) el.addEventListener('input', renderPanel);
+      if (el) el.addEventListener("input", renderPanel);
     });
   }
 
   async function cargarPanel() {
-    const res = await api({ accion: 'listarEnvios' });
+    const res = await api({ accion: "listarEnvios" });
 
     if (!res.ok) {
-      $('#panelLista').innerHTML = `<div class="op-card">Error: ${escapeHtml(res.error || 'No se pudo listar')}</div>`;
+      $("#panelLista").innerHTML = `<div class="op-card">Error: ${escapeHtml(res.error || "No se pudo listar")}</div>`;
       return;
     }
 
@@ -553,50 +634,57 @@
   }
 
   function renderPanel() {
-    const hub = $('#filtroHub')?.value || 'TODOS';
-    const estado = $('#filtroEstado')?.value || 'TODOS';
-    const q = ($('#buscarPanel')?.value || '').toLowerCase().trim();
+    const filtroCentro = $("#filtroHub")?.value || "TODOS";
+    const estado = $("#filtroEstado")?.value || "TODOS";
+    const q = ($("#buscarPanel")?.value || "").toLowerCase().trim();
 
     let rows = cache.slice();
 
-    if (hub !== 'TODOS') {
-      rows = rows.filter(x => {
-        if (hub === 'WEB') return /LOGISTICA WEB|DESPACHADO/.test(x.estado || '');
-        return String(x.hubAsignado || '') === hub;
+    rows.forEach((x) => {
+      x.ultimaUbicacion = x.ultimaUbicacion || resolverUltimaUbicacionPorEstado(x);
+      x.centroAsignado = x.centroAsignado || x.hubAsignado || resolverCentroInicial(x.sucursalOrigen);
+    });
+
+    if (filtroCentro !== "TODOS") {
+      rows = rows.filter((x) => {
+        if (filtroCentro === "WEB") return x.ultimaUbicacion === "LOGISTICA WEB";
+        return x.ultimaUbicacion === filtroCentro || x.centroAsignado === filtroCentro;
       });
     }
 
-    if (estado !== 'TODOS') {
-      rows = rows.filter(x => x.estado === estado);
+    if (estado !== "TODOS") {
+      rows = rows.filter((x) => x.estado === estado);
     }
 
     if (q) {
-      rows = rows.filter(x => JSON.stringify(x).toLowerCase().includes(q));
+      rows = rows.filter((x) => JSON.stringify(x).toLowerCase().includes(q));
     }
 
-    $('#panelLista').innerHTML = rows.length
-      ? rows.map(renderOpCard).join('')
+    $("#panelLista").innerHTML = rows.length
+      ? rows.map(renderOpCard).join("")
       : '<div class="op-card">Sin envíos para el filtro seleccionado.</div>';
 
-    $$('.op-action').forEach(btn => {
-      btn.addEventListener('click', async () => {
+    $$(".op-action").forEach((btn) => {
+      btn.addEventListener("click", async () => {
         const idTracking = btn.dataset.id;
         const nuevoEstado = btn.dataset.estado;
-        const responsable = prompt('Responsable que actualiza el estado:');
+        const responsable = prompt("Código de responsable que actualiza el estado:");
 
         if (!responsable) return;
 
         const res = await api({
-          accion: 'actualizarEstado',
+          accion: "actualizarEstado",
           idTracking,
           tracking: idTracking,
           nuevoEstado,
           estado: nuevoEstado,
-          responsable
+          responsableCodigo: responsable,
+          responsable,
+          ultimaUbicacion: resolverUltimaUbicacionPorEstado({ estado: nuevoEstado })
         });
 
         if (!res.ok) {
-          alert('Error: ' + (res.error || 'No se pudo actualizar'));
+          alert("Error: " + (res.error || "No se pudo actualizar"));
           return;
         }
 
@@ -608,88 +696,88 @@
   function renderOpCard(x) {
     const demora = calcularDemora(x);
     const next = siguientesEstados(x);
+    const ubicacion = x.ultimaUbicacion || resolverUltimaUbicacionPorEstado(x);
+    const centro = x.centroAsignado || x.hubAsignado || resolverCentroInicial(x.sucursalOrigen);
 
     return `<article class="op-card">
       <div class="op-top">
         <div>
           <strong>${escapeHtml(x.idTracking)}</strong>
-          <span class="badge ${demora ? 'warn' : 'ok'}">${demora ? 'DEMORA' : 'OK'}</span>
+          <span class="badge ${demora ? "warn" : "ok"}">${demora ? "DEMORA" : "OK"}</span>
         </div>
-        <span class="badge">${escapeHtml(x.estado || '')}</span>
+        <span class="badge">${escapeHtml(x.estado || "")}</span>
       </div>
 
       <div class="meta-grid">
-        <div><span>Cliente</span>${escapeHtml(x.cliente || '')}</div>
-        <div><span>Origen</span>${escapeHtml(x.sucursalOrigen || '')}</div>
-        <div><span>Hub</span>${escapeHtml(x.hubAsignado || '')}</div>
-        <div><span>Tipo</span>${escapeHtml(x.tipoEnvio || '')}</div>
+        <div><span>Cliente</span>${escapeHtml(x.cliente || "")}</div>
+        <div><span>Origen</span>${escapeHtml(x.sucursalOrigen || "")}</div>
+        <div><span>Centro</span>${escapeHtml(centro)}</div>
+        <div><span>Ubicación actual</span>${escapeHtml(ubicacion)}</div>
+        <div><span>Tipo</span>${escapeHtml(x.tipoEnvio || "")}</div>
+        <div><span>Responsable</span>${escapeHtml(x.responsableCodigo || x.responsable || "")}</div>
       </div>
 
       <div class="actions">
-        ${next.map(e => `<button class="btn op-action" data-id="${escapeHtml(x.idTracking)}" data-estado="${escapeHtml(e)}">${escapeHtml(e)}</button>`).join('')}
+        ${next.map((e) => `<button class="btn op-action" data-id="${escapeHtml(x.idTracking)}" data-estado="${escapeHtml(e)}">${escapeHtml(e)}</button>`).join("")}
       </div>
     </article>`;
   }
 
   function siguientesEstados(x) {
-    const estado = x.estado || 'CARGADO EN LOCAL';
-    const tipo = x.tipoEnvio || '';
-    const arr = [];
+    const estado = x.estado || "CARGADO EN LOCAL";
 
-    if (['CANCELADO', 'CON PROBLEMA', 'DESPACHADO POR SHIPNOW', 'DESPACHADO POR TRANSPORTE'].includes(estado)) {
+    if (["CANCELADO", "CON PROBLEMA", "DESPACHADO POR SHIPNOW", "DESPACHADO POR TRANSPORTE"].includes(estado)) {
       return [];
     }
 
-    if (estado === 'CARGADO EN LOCAL') arr.push('EN CAMINO A HUB');
+    const flujo = flujoPorEnvio(x);
+    const idx = flujo.indexOf(estado);
+    const next = [];
 
-    if (estado === 'EN CAMINO A HUB') arr.push('RECIBIDO EN HUB');
-
-    if (estado === 'RECIBIDO EN HUB') {
-      if (x.hubAsignado === 'SARMIENTO') arr.push('ENVIADO A AVELLANEDA');
-      else arr.push('RECIBIDO EN LOGISTICA WEB');
+    if (idx >= 0 && idx < flujo.length - 1) {
+      next.push(flujo[idx + 1]);
     }
 
-    if (estado === 'ENVIADO A AVELLANEDA') arr.push('RECIBIDO EN LOGISTICA WEB');
+    next.push("CON PROBLEMA", "CANCELADO");
 
-    if (estado === 'RECIBIDO EN LOGISTICA WEB') {
-      arr.push(tipo === 'TRANSPORTE' ? 'DESPACHADO POR TRANSPORTE' : 'DESPACHADO POR SHIPNOW');
-    }
-
-    arr.push('CON PROBLEMA', 'CANCELADO');
-
-    return arr;
+    return next;
   }
 
   function bindDashboard() {
-    $('#btnActualizarDashboard')?.addEventListener('click', cargarDashboard);
+    $("#btnActualizarDashboard")?.addEventListener("click", cargarDashboard);
   }
 
   async function cargarDashboard() {
-    const res = await api({ accion: 'listarEnvios' });
+    const res = await api({ accion: "listarEnvios" });
     if (!res.ok) return;
 
     cache = res.envios || [];
 
-    const activos = cache.filter(x => !/^DESPACHADO|CANCELADO/.test(x.estado || ''));
+    cache.forEach((x) => {
+      x.ultimaUbicacion = x.ultimaUbicacion || resolverUltimaUbicacionPorEstado(x);
+      x.centroAsignado = x.centroAsignado || x.hubAsignado || resolverCentroInicial(x.sucursalOrigen);
+    });
+
+    const activos = cache.filter((x) => !/^DESPACHADO|CANCELADO/.test(x.estado || ""));
     const demoras = activos.filter(calcularDemora);
 
-    $('#mTotal').textContent = activos.length;
-    $('#mPendientes').textContent = activos.filter(x => x.estado === 'CARGADO EN LOCAL').length;
-    $('#mHubs').textContent = activos.filter(x => ['EN CAMINO A HUB', 'RECIBIDO EN HUB', 'ENVIADO A AVELLANEDA'].includes(x.estado)).length;
-    $('#mWeb').textContent = activos.filter(x => x.estado === 'RECIBIDO EN LOGISTICA WEB').length;
-    $('#mDemora').textContent = demoras.length;
+    $("#mTotal").textContent = activos.length;
+    $("#mPendientes").textContent = activos.filter((x) => x.estado === "CARGADO EN LOCAL").length;
+    $("#mHubs").textContent = activos.filter((x) => ["SARMIENTO", "AVELLANEDA"].includes(x.ultimaUbicacion)).length;
+    $("#mWeb").textContent = activos.filter((x) => x.ultimaUbicacion === "LOGISTICA WEB").length;
+    $("#mDemora").textContent = demoras.length;
 
-    renderBars('#dashHub', groupCount(activos, 'hubAsignado'));
-    renderBars('#dashEstado', groupCount(activos, 'estado'));
+    renderBars("#dashHub", groupCount(activos, "ultimaUbicacion"));
+    renderBars("#dashEstado", groupCount(activos, "estado"));
 
-    $('#dashAlertas').innerHTML =
-      demoras.slice(0, 20).map(renderOpCard).join('') ||
+    $("#dashAlertas").innerHTML =
+      demoras.slice(0, 20).map(renderOpCard).join("") ||
       '<div class="op-card">Sin alertas.</div>';
   }
 
   function groupCount(rows, key) {
     return rows.reduce((a, x) => {
-      const k = x[key] || 'SIN DATO';
+      const k = x[key] || "SIN DATO";
       a[k] = (a[k] || 0) + 1;
       return a;
     }, {});
@@ -701,22 +789,31 @@
     $(sel).innerHTML = Object.entries(obj)
       .sort((a, b) => b[1] - a[1])
       .map(([k, v]) => `<div class="bar-row"><strong>${escapeHtml(k)}</strong> · ${v}<div class="line"><div class="fill" style="width:${(v / max) * 100}%"></div></div></div>`)
-      .join('') || '<div class="bar-row">Sin datos</div>';
+      .join("") || '<div class="bar-row">Sin datos</div>';
   }
 
   function calcularDemora(x) {
-    if (/DESPACHADO|CANCELADO/.test(x.estado || '')) return false;
+    if (/DESPACHADO|CANCELADO/.test(x.estado || "")) return false;
 
-    const raw = x.fechaEstado || x.fecha || '';
+    const raw = x.fechaEstado || x.fecha || "";
     const t = new Date(raw).getTime();
 
     if (!t) return false;
 
     const hs = (Date.now() - t) / 36e5;
 
-    if (x.estado === 'CARGADO EN LOCAL' && hs > 24) return true;
+    if (x.estado === "CARGADO EN LOCAL" && hs > 24) return true;
 
-    if (['EN CAMINO A HUB', 'RECIBIDO EN HUB', 'ENVIADO A AVELLANEDA', 'RECIBIDO EN LOGISTICA WEB'].includes(x.estado) && hs > 12) {
+    if (
+      [
+        "ENVIADO A SARMIENTO",
+        "RECIBIDO EN SARMIENTO",
+        "ENVIADO A AVELLANEDA",
+        "RECIBIDO EN AVELLANEDA",
+        "RECIBIDO EN LOGISTICA WEB"
+      ].includes(x.estado) &&
+      hs > 12
+    ) {
       return true;
     }
 
@@ -724,31 +821,33 @@
   }
 
   function bindTracking() {
-    $('#btnBuscarTracking')?.addEventListener('click', buscarTracking);
+    $("#btnBuscarTracking")?.addEventListener("click", buscarTracking);
 
-    $('#trackingInput')?.addEventListener('keydown', e => {
-      if (e.key === 'Enter') buscarTracking();
+    $("#trackingInput")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") buscarTracking();
     });
 
     const url = new URL(location.href);
-    const id = url.searchParams.get('t') || url.searchParams.get('tracking');
+    const id = url.searchParams.get("t") || url.searchParams.get("tracking");
 
     if (id) {
-      $$('.tab').find(b => b.dataset.view === 'seguimiento')?.click();
-      $('#trackingInput').value = id;
+      $$(".tab").find((b) => b.dataset.view === "seguimiento")?.click();
+      $("#trackingInput").value = id;
       buscarTracking();
     }
   }
 
   async function buscarTracking() {
-    const idTracking = $('#trackingInput').value.trim();
+    const input = $("#trackingInput");
+    const detalle = $("#trackingDetalle");
+    const idTracking = input?.value.trim() || "";
 
-    if (!idTracking) return;
+    if (!idTracking || !detalle) return;
 
-    const res = await api({ accion: 'obtenerEnvio', idTracking, tracking: idTracking });
+    const res = await api({ accion: "obtenerEnvio", idTracking, tracking: idTracking });
 
     if (!res.ok) {
-      $('#trackingDetalle').innerHTML = `<div class="op-card">${escapeHtml(res.error || 'No encontrado')}</div>`;
+      detalle.innerHTML = `<div class="op-card">${escapeHtml(res.error || "No encontrado")}</div>`;
       return;
     }
 
@@ -756,15 +855,10 @@
   }
 
   function renderTracking(x) {
-    const flow = x.tipoEnvio === 'TRANSPORTE'
-      ? ['CARGADO EN LOCAL', 'EN CAMINO A HUB', 'RECIBIDO EN HUB', 'RECIBIDO EN LOGISTICA WEB', 'DESPACHADO POR TRANSPORTE']
-      : (x.hubAsignado === 'SARMIENTO'
-          ? ESTADO_FLOW
-          : ['CARGADO EN LOCAL', 'EN CAMINO A HUB', 'RECIBIDO EN HUB', 'RECIBIDO EN LOGISTICA WEB', 'DESPACHADO POR SHIPNOW']);
-
+    const flow = flujoPorEnvio(x);
     const idx = flow.indexOf(x.estado);
 
-    $('#trackingDetalle').innerHTML = `<div class="op-card">
+    $("#trackingDetalle").innerHTML = `<div class="op-card">
       <div class="op-top">
         <strong>${escapeHtml(x.idTracking)}</strong>
         <span class="badge">${escapeHtml(x.estado)}</span>
@@ -773,71 +867,91 @@
       <div class="meta-grid">
         <div><span>Cliente</span>${escapeHtml(x.cliente)}</div>
         <div><span>Origen</span>${escapeHtml(x.sucursalOrigen)}</div>
-        <div><span>Hub</span>${escapeHtml(x.hubAsignado)}</div>
+        <div><span>Centro</span>${escapeHtml(x.centroAsignado || x.hubAsignado || resolverCentroInicial(x.sucursalOrigen))}</div>
+        <div><span>Ubicación actual</span>${escapeHtml(x.ultimaUbicacion || resolverUltimaUbicacionPorEstado(x))}</div>
         <div><span>Tipo</span>${escapeHtml(x.tipoEnvio)}</div>
       </div>
 
       <div class="timeline">
-        ${flow.map((e, i) => `<div class="step ${i < idx ? 'done' : i === idx ? 'current' : ''}">
-          <div class="dot">${i < idx ? '✓' : i + 1}</div>
+        ${flow.map((e, i) => `<div class="step ${i < idx ? "done" : i === idx ? "current" : ""}">
+          <div class="dot">${i < idx ? "✓" : i + 1}</div>
           <div><strong>${escapeHtml(e)}</strong></div>
-        </div>`).join('')}
+        </div>`).join("")}
       </div>
     </div>`;
   }
 
   async function generarPDFRotulo(e) {
     if (!window.jspdf?.jsPDF) {
-      throw new Error('No cargó la librería jsPDF');
+      throw new Error("No cargó la librería jsPDF");
     }
 
-    const branchName = normalizarTexto(e.sucursalOrigen || e.remitenteSucursal || '');
+    const branchName = normalizarTexto(e.sucursalOrigen || e.remitenteSucursal || "");
     const branchData = e.remitente || obtenerRemitente(branchName) || {};
+
+    const responsableTexto = e.responsableCodigo || e.responsable || "";
 
     const data = {
       tracking: e.idTracking,
       qrUrl: `${HOME_TRACKING_URL}?t=${encodeURIComponent(e.idTracking)}`,
       tipoEnvio: e.tipoEnvio,
-      hub: e.hubAsignado,
+      centro: e.centroAsignado || e.hubAsignado || resolverCentroInicial(e.sucursalOrigen),
 
       remitente: {
-        sucursal: branchData.sucursal || branchName || e.remitenteSucursal || '',
-        domicilio: branchData.domicilio || e.remitenteDomicilio || '',
-        localidad: branchData.localidad || e.remitenteLocalidad || '',
-        provincia: branchData.provincia || e.remitenteProvincia || '',
-        cp: branchData.cp || e.remitenteCp || '',
-        telefono: branchData.telefono || e.remitenteTelefono || ''
+        sucursal: branchData.sucursal || branchName || e.remitenteSucursal || "",
+        domicilio: branchData.domicilio || e.remitenteDomicilio || "",
+        localidad: branchData.localidad || e.remitenteLocalidad || "",
+        provincia: branchData.provincia || e.remitenteProvincia || "",
+        cp: branchData.cp || e.remitenteCp || "",
+        telefono: branchData.telefono || e.remitenteTelefono || ""
       },
 
       destinatario: {
-        nombre: e.cliente || '',
-        dni: e.dniCuil || '',
-        telefono: e.telefono || '',
-        domicilio: e.domicilio || '',
-        entrecalles: e.entrecalles || '',
-        localidad: e.localidad || '',
-        cp: e.cp || '',
-        provincia: e.provincia || ''
+        nombre: e.cliente || "",
+        dni: e.dniCuil || "",
+        telefono: e.telefono || "",
+        domicilio: e.domicilio || "",
+        entrecalles: e.entrecalles || "",
+        localidad: e.localidad || "",
+        cp: e.cp || "",
+        provincia: e.provincia || ""
       },
 
       transporte: {
-        nombre: e.transporte || (e.tipoEnvio === 'TRANSPORTE' ? '' : 'SHIPNOW'),
-        sucursalOca: e.sucursalOca || '',
-        guia: e.guia || e.numeroGuia || '',
-        observaciones: e.observaciones || ''
+        nombre: e.transporte || (e.tipoEnvio === "TRANSPORTE" ? "" : "SHIPNOW"),
+        sucursalOca: e.sucursalOca || "",
+        guia: e.guia || e.numeroGuia || "",
+        observaciones: e.observaciones || ""
       },
 
       fecha: e.fecha || fechaHoyAR(),
-      impresoPor: e.responsable || '',
-      etapas: e.etapas
+      impresoPor: responsableTexto,
+      etapas: e.etapas || etiquetasPDFPorEnvio(e)
     };
 
     await generarRotuloDespacho(data);
   }
 
+  function etiquetasPDFPorEnvio(e) {
+    if (necesitaSarmiento(e.sucursalOrigen)) {
+      return [
+        "CARGADO EN\nSUCURSAL",
+        "RECIBIDO EN\nSARMIENTO",
+        "RECIBIDO EN\nAVELLANEDA",
+        "RECIBIDO EN\nLOGÍSTICA WEB"
+      ];
+    }
+
+    return [
+      "CARGADO EN\nSUCURSAL",
+      "RECIBIDO EN\nAVELLANEDA",
+      "RECIBIDO EN\nLOGÍSTICA WEB"
+    ];
+  }
+
   async function generarRotuloDespacho(data) {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
+    const doc = new jsPDF("p", "mm", "a4");
 
     const W = 210;
     const H = 297;
@@ -847,7 +961,7 @@
     function rect(x, y, w, h, fill = false) {
       if (fill) {
         doc.setFillColor(...negro);
-        doc.rect(x, y, w, h, 'F');
+        doc.rect(x, y, w, h, "F");
       } else {
         doc.rect(x, y, w, h);
       }
@@ -856,7 +970,7 @@
     function tituloBarra(texto, x, y, w) {
       rect(x, y, w, 8, true);
       doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
       doc.text(texto, x + 3, y + 5.7);
       doc.setTextColor(0, 0, 0);
@@ -866,27 +980,27 @@
       rect(x, y, wLabel, h);
       rect(x + wLabel, y, wValue, h);
 
-      doc.setFont('helvetica', 'bold');
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(size);
       doc.text(label, x + 2, y + 5.3);
 
-      doc.setFont('helvetica', 'normal');
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(size);
-      const txt = String(value || '').toUpperCase();
+      const txt = String(value || "").toUpperCase();
       doc.text(txt, x + wLabel + 3, y + 5.3, { maxWidth: wValue - 5 });
     }
 
     async function qrDataUrl(text) {
-      if (window.QRCode && typeof window.QRCode.toDataURL === 'function') {
-        return await window.QRCode.toDataURL(text, {
+      if (window.QRCode && typeof window.QRCode.toDataURL === "function") {
+        return window.QRCode.toDataURL(text, {
           margin: 1,
           width: 300,
-          errorCorrectionLevel: 'M'
+          errorCorrectionLevel: "M"
         });
       }
 
       try {
-        const url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(text);
+        const url = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(text);
         const res = await fetch(url);
         const blob = await res.blob();
 
@@ -897,8 +1011,8 @@
           reader.readAsDataURL(blob);
         });
       } catch (err) {
-        console.warn('No se pudo generar QR. Se genera rótulo sin QR:', err);
-        return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=';
+        console.warn("No se pudo generar QR. Se genera rótulo sin QR:", err);
+        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
       }
     }
 
@@ -912,80 +1026,92 @@
     rect(M, M, 142, 60);
     rect(148, M, 56, 60);
 
-    doc.setFont('helvetica', 'bold');
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(27);
-    doc.text('DESPACHO DE PEDIDOS', 13, 22);
+    doc.text("DESPACHO DE PEDIDOS", 13, 22);
 
     doc.setFontSize(10);
-    doc.text('N° DE SEGUIMIENTO INTERNO:', 10, 37);
+    doc.text("N° DE SEGUIMIENTO INTERNO:", 10, 37);
 
     doc.setFillColor(0, 0, 0);
-    doc.rect(74, 31, 58, 9, 'F');
+    doc.rect(74, 31, 58, 9, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
     doc.text(tracking, 77, 37.2);
     doc.setTextColor(0, 0, 0);
 
     doc.setFontSize(10);
-    doc.text('TIPO DE ENVÍO:', 10, 47);
-    doc.setFont('helvetica', 'normal');
-    doc.text(String(data.tipoEnvio || '').toUpperCase(), 53, 47);
+    doc.text("TIPO DE ENVÍO:", 10, 47);
+    doc.setFont("helvetica", "normal");
+    doc.text(String(data.tipoEnvio || "").toUpperCase(), 53, 47);
 
-    doc.setFont('helvetica', 'bold');
-    doc.text('HUB ASIGNADO:', 10, 56);
-    doc.setFont('helvetica', 'normal');
-    doc.text(String(data.hub || '').toUpperCase(), 53, 56);
+    doc.setFont("helvetica", "bold");
+    doc.text("CENTRO ASIGNADO:", 10, 56);
+    doc.setFont("helvetica", "normal");
+    doc.text(String(data.centro || "").toUpperCase(), 53, 56);
 
-    doc.addImage(qr, 'PNG', 158, 10, 34, 34);
-    doc.setFont('helvetica', 'bold');
+    doc.addImage(qr, "PNG", 158, 10, 34, 34);
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    doc.text('ESCANEA PARA SEGUIMIENTO', 153, 51);
+    doc.text("ESCANEA PARA SEGUIMIENTO", 153, 51);
 
     let y = 66;
 
-    tituloBarra('REMITENTE', M, y, W - M * 2);
+    tituloBarra("REMITENTE", M, y, W - M * 2);
     y += 8;
 
-    campo('SUCURSAL:', data.remitente?.sucursal, M, y, 40, 158); y += 8;
-    campo('DOMICILIO:', data.remitente?.domicilio, M, y, 40, 158); y += 8;
-    campo('LOCALIDAD:', data.remitente?.localidad, M, y, 40, 65);
-    campo('CÓDIGO POSTAL:', data.remitente?.cp, 111, y, 42, 51); y += 8;
-    campo('TELÉFONO:', data.remitente?.telefono, M, y, 40, 158); y += 13;
+    campo("SUCURSAL:", data.remitente?.sucursal, M, y, 40, 158);
+    y += 8;
+    campo("DOMICILIO:", data.remitente?.domicilio, M, y, 40, 158);
+    y += 8;
+    campo("LOCALIDAD:", data.remitente?.localidad, M, y, 40, 65);
+    campo("CÓDIGO POSTAL:", data.remitente?.cp, 111, y, 42, 51);
+    y += 8;
+    campo("TELÉFONO:", data.remitente?.telefono, M, y, 40, 158);
+    y += 13;
 
-    tituloBarra('DESTINATARIO', M, y, W - M * 2);
+    tituloBarra("DESTINATARIO", M, y, W - M * 2);
     y += 8;
 
-    campo('NOMBRE Y APELLIDO:', data.destinatario?.nombre, M, y, 50, 148); y += 8;
-    campo('D.N.I. / C.U.I.L.:', data.destinatario?.dni, M, y, 50, 60);
-    campo('TELÉFONO:', data.destinatario?.telefono, 116, y, 37, 51); y += 8;
-    campo('DOMICILIO:', data.destinatario?.domicilio, M, y, 50, 148); y += 8;
-    campo('ENTRE CALLES:', data.destinatario?.entrecalles, M, y, 50, 148); y += 8;
-    campo('LOCALIDAD:', data.destinatario?.localidad, M, y, 50, 60);
-    campo('CÓDIGO POSTAL:', data.destinatario?.cp, 116, y, 37, 51); y += 8;
-    campo('PROVINCIA:', data.destinatario?.provincia, M, y, 50, 148); y += 13;
+    campo("NOMBRE Y APELLIDO:", data.destinatario?.nombre, M, y, 50, 148);
+    y += 8;
+    campo("D.N.I. / C.U.I.L.:", data.destinatario?.dni, M, y, 50, 60);
+    campo("TELÉFONO:", data.destinatario?.telefono, 116, y, 37, 51);
+    y += 8;
+    campo("DOMICILIO:", data.destinatario?.domicilio, M, y, 50, 148);
+    y += 8;
+    campo("ENTRE CALLES:", data.destinatario?.entrecalles, M, y, 50, 148);
+    y += 8;
+    campo("LOCALIDAD:", data.destinatario?.localidad, M, y, 50, 60);
+    campo("CÓDIGO POSTAL:", data.destinatario?.cp, 116, y, 37, 51);
+    y += 8;
+    campo("PROVINCIA:", data.destinatario?.provincia, M, y, 50, 148);
+    y += 13;
 
-    tituloBarra('TRANSPORTE DE ENVÍO', M, y, W - M * 2);
+    tituloBarra("TRANSPORTE DE ENVÍO", M, y, W - M * 2);
     y += 8;
 
-    campo('TRANSPORTE:', data.transporte?.nombre, M, y, 68, 130); y += 8;
+    campo("TRANSPORTE:", data.transporte?.nombre, M, y, 68, 130);
+    y += 8;
 
-    if (String(data.tipoEnvio || '').toUpperCase().includes('OCA')) {
-      campo('SUCURSAL OCA:', data.transporte?.sucursalOca, M, y, 68, 130); y += 8;
+    if (String(data.tipoEnvio || "").toUpperCase().includes("OCA")) {
+      campo("SUCURSAL OCA:", data.transporte?.sucursalOca, M, y, 68, 130);
+      y += 8;
     } else {
-      campo('N° DE GUÍA / CÓDIGO:', data.transporte?.guia || 'A DESIGNAR', M, y, 68, 130); y += 8;
+      campo("N° DE GUÍA / CÓDIGO:", data.transporte?.guia || "A DESIGNAR", M, y, 68, 130);
+      y += 8;
     }
 
-    campo('OBSERVACIONES:', data.transporte?.observaciones, M, y, 68, 130); y += 13;
+    campo("OBSERVACIONES:", data.transporte?.observaciones, M, y, 68, 130);
+    y += 13;
 
-    tituloBarra('CONTROL INTERNO (CIRCUITO RIO)', M, y, W - M * 2);
+    tituloBarra("CONTROL INTERNO (CIRCUITO RIO)", M, y, W - M * 2);
     y += 8;
 
     const etapas = data.etapas || [
-      'CARGADO EN\nSUCURSAL',
-      'ENVIADO A HUB',
-      'RECIBIDO EN HUB',
-      'ENVIADO A\nAVELLANEDA (WEB)',
-      'RECIBIDO EN\nLOGÍSTICA WEB'
+      "CARGADO EN\nSUCURSAL",
+      "RECIBIDO EN\nAVELLANEDA",
+      "RECIBIDO EN\nLOGÍSTICA WEB"
     ];
 
     const boxW = (W - M * 2) / etapas.length;
@@ -995,34 +1121,34 @@
       const x = M + i * boxW;
       rect(x, y, boxW, boxH);
 
-      doc.setFont('helvetica', 'bold');
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(7);
 
-      const lines = etapa.split('\n');
+      const lines = etapa.split("\n");
       lines.forEach((line, idx) => {
-        doc.text(line, x + boxW / 2, y + 8 + idx * 4, { align: 'center' });
+        doc.text(line, x + boxW / 2, y + 8 + idx * 4, { align: "center" });
       });
 
-      doc.setFont('helvetica', 'normal');
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
-      doc.text('□ FECHA: ___/___/___', x + 3, y + 29);
-      doc.text('FIRMA: __________', x + 3, y + 39);
+      doc.text("□ FECHA: ___/___/___", x + 3, y + 29);
+      doc.text("FIRMA: __________", x + 3, y + 39);
 
       if (i < etapas.length - 1) {
-        doc.setFont('helvetica', 'bold');
+        doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.text('→', x + boxW - 3, y + 25);
+        doc.text("→", x + boxW - 3, y + 25);
       }
     });
 
     y += boxH + 7;
 
-    campo('FECHA DE IMPRESIÓN:', data.fecha || fechaHoyAR(), M, y, 48, 55);
-    campo('IMPRESO POR:', data.impresoPor || '', 120, y, 35, 49);
+    campo("FECHA DE IMPRESIÓN:", data.fecha || fechaHoyAR(), M, y, 48, 55);
+    campo("IMPRESO POR:", data.impresoPor || "", 120, y, 35, 49);
 
-    doc.setFont('times', 'bold');
+    doc.setFont("times", "bold");
     doc.setFontSize(24);
-    doc.text('LENCERÍA RÍO', W / 2, 286, { align: 'center' });
+    doc.text("LENCERÍA RÍO", W / 2, 286, { align: "center" });
 
     doc.save(`${tracking}.pdf`);
   }
@@ -1030,47 +1156,47 @@
   function generarTrackingInterno() {
     const d = new Date();
     const yy = String(d.getFullYear()).slice(-2);
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const rnd = String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const rnd = String(Math.floor(Math.random() * 9999) + 1).padStart(4, "0");
 
     return `RIO-SN-${yy}${mm}${dd}-${rnd}`;
   }
 
   function fechaHoyAR() {
-    return new Date().toLocaleDateString('es-AR');
+    return new Date().toLocaleDateString("es-AR");
   }
 
   async function copiarTexto(texto) {
-    const value = String(texto || '');
+    const value = String(texto || "");
 
     if (navigator.clipboard?.writeText && window.isSecureContext) {
       await navigator.clipboard.writeText(value);
       return;
     }
 
-    const input = document.createElement('input');
+    const input = document.createElement("input");
     input.value = value;
-    input.setAttribute('readonly', '');
-    input.style.position = 'absolute';
-    input.style.left = '-9999px';
+    input.setAttribute("readonly", "");
+    input.style.position = "absolute";
+    input.style.left = "-9999px";
     document.body.appendChild(input);
     input.select();
 
-    const ok = document.execCommand('copy');
+    const ok = document.execCommand("copy");
     document.body.removeChild(input);
 
     if (!ok) {
-      throw new Error('El navegador bloqueó el copiado');
+      throw new Error("El navegador bloqueó el copiado");
     }
   }
 
   async function api(payload) {
-    if (!API_URL || API_URL.includes('PEGAR_URL')) return mockApi(payload);
+    if (!API_URL || API_URL.includes("PEGAR_URL")) return mockApi(payload);
 
     try {
       const res = await fetch(API_URL, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(payload)
       });
 
@@ -1079,28 +1205,29 @@
       try {
         return JSON.parse(text);
       } catch (e) {
-        console.error('Apps Script no devolvió JSON:', text);
+        console.error("Apps Script no devolvió JSON:", text);
         return mockApi(payload);
       }
-
     } catch (err) {
-      console.warn('Apps Script falló. Genero rótulo local:', err);
+      console.warn("Apps Script falló. Genero rótulo local:", err);
       return mockApi(payload);
     }
   }
 
   async function mockApi(payload) {
-    const k = 'rio_shipnow_mock';
-    const db = JSON.parse(localStorage.getItem(k) || '[]');
+    const k = "rio_shipnow_mock";
+    const db = JSON.parse(localStorage.getItem(k) || "[]");
 
-    if (payload.accion === 'crearEnvio') {
+    if (payload.accion === "crearEnvio") {
       const idTracking = payload.idTracking || generarTrackingInterno();
 
       const envio = {
         ...payload,
         idTracking,
         fecha: new Date().toISOString(),
-        fechaEstado: new Date().toISOString()
+        fechaEstado: new Date().toISOString(),
+        ultimaUbicacion: payload.ultimaUbicacion || payload.sucursalOrigen || "",
+        centroAsignado: payload.centroAsignado || payload.hubAsignado || resolverCentroInicial(payload.sucursalOrigen)
       };
 
       delete envio.accion;
@@ -1114,27 +1241,28 @@
       };
     }
 
-    if (payload.accion === 'listarEnvios') {
+    if (payload.accion === "listarEnvios") {
       return {
         ok: true,
         envios: db
       };
     }
 
-    if (payload.accion === 'actualizarEstado') {
+    if (payload.accion === "actualizarEstado") {
       const id = payload.idTracking || payload.tracking;
-      const x = db.find(e => e.idTracking === id);
+      const x = db.find((e) => e.idTracking === id);
 
       if (!x) {
         return {
           ok: false,
-          error: 'No encontrado'
+          error: "No encontrado"
         };
       }
 
       x.estado = payload.nuevoEstado || payload.estado;
       x.fechaEstado = new Date().toISOString();
-      x.responsableUltimoEstado = payload.responsable;
+      x.responsableUltimoEstado = payload.responsableCodigo || payload.responsable;
+      x.ultimaUbicacion = payload.ultimaUbicacion || resolverUltimaUbicacionPorEstado(x);
 
       localStorage.setItem(k, JSON.stringify(db));
 
@@ -1144,28 +1272,28 @@
       };
     }
 
-    if (payload.accion === 'obtenerEnvio') {
+    if (payload.accion === "obtenerEnvio") {
       const id = payload.idTracking || payload.tracking;
-      const x = db.find(e => e.idTracking === id);
+      const x = db.find((e) => e.idTracking === id);
 
       return x
         ? { ok: true, envio: x }
-        : { ok: false, error: 'Tracking no encontrado' };
+        : { ok: false, error: "Tracking no encontrado" };
     }
 
     return {
       ok: false,
-      error: 'Acción no válida'
+      error: "Acción no válida"
     };
   }
 
   function escapeHtml(s) {
-    return String(s ?? '').replace(/[&<>'"]/g, c => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      "'": '&#39;',
-      '"': '&quot;'
+    return String(s ?? "").replace(/[&<>'"]/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "'": "&#39;",
+      "\"": "&quot;"
     }[c]));
   }
 })();
