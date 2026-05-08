@@ -1,4 +1,4 @@
-;(() => {
+﻿;(() => {
   "use strict";
 
   const API_URL = "https://script.google.com/macros/s/AKfycbwPy8eu3WeKB4tqiu238bnFMtb-diMKvXru2INUIMpYjw139bVk7VY2nzXKC5ovfw/exec";
@@ -360,16 +360,7 @@
 
     const responsable = $("#responsableLocal");
     if (responsable) {
-      if (responsable.tagName === "SELECT") {
-        const input = document.createElement("input");
-        input.id = "responsableLocal";
-        input.name = "responsable";
-        input.required = true;
-        input.placeholder = "Código de responsable";
-        responsable.replaceWith(input);
-      } else {
-        responsable.placeholder = "Código de responsable";
-      }
+      responsable.placeholder = "Código de responsable";
     }
 
     const filtroEstado = $("#filtroEstado");
