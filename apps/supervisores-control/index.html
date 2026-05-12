@@ -12,6 +12,7 @@
     content="Panel de supervisión para tareas por local y tareas globales."
   />
   <link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="../../assets/rio-theme.css" />
 </head>
 <body>
   <div class="app-shell">
@@ -36,21 +37,20 @@
         </button>
       </nav>
 
-      <div class="sidebar__section">
-        <a class="back-btn" href="../index.html">← Volver al menú principal</a>
-      </div>
     </aside>
 
     <main class="main">
-      <header class="topbar">
-        <div>
+      <header class="topbar module-topbar">
+        <a class="back-btn" href="../../index.html">← Volver</a>
+
+        <div class="module-topbar__title">
           <h2 id="screenTitle">Tareas por local</h2>
           <p id="screenSubtitle">
             Creación, seguimiento y control de tareas por sucursal.
           </p>
         </div>
 
-        <div class="topbar__actions">
+        <div class="topbar__actions module-topbar__actions">
           <button class="ghost-btn" id="refreshBtn" type="button">Actualizar</button>
         </div>
       </header>
@@ -488,6 +488,7 @@
     </div>
   </template>
 
+  <script src="../../assets/rio-access.js" data-require-supervision="true"></script>
   <script src="app.js"></script>
 </body>
 </html>

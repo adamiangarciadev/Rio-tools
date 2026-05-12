@@ -23,7 +23,6 @@
     "CO2",
     "CASTELLI",
     "QUILMES",
-    "MORENO",
     "SARMIENTO",
     "DEPOSITO",
     "PUEYRREDON",
@@ -360,7 +359,6 @@
     if (s === "lamarca") return "LAMARCA";
     if (s === "castelli") return "CASTELLI";
     if (s === "quilmes") return "QUILMES";
-    if (s === "moreno") return "MORENO";
     if (s === "web") return "WEB";
 
     return String(value || "").trim().toUpperCase();

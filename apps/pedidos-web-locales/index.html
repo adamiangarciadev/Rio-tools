@@ -14,21 +14,14 @@
   <title>Pedidos Web - RIO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="../../assets/rio-theme.css" />
 </head>
 
 <body>
-  <header class="topbar">
-  <div class="brand">
-    <strong>RIO Tools</strong>
-  </div>
-  <nav>
-    <a href="/Rio-tools/" class="btn ghost">Inicio</a>
-
-  </nav>
-</header>
-  <header>
-    <h1>Pedidos Web - RIO</h1>
-    <div class="top-bar">
+  <header class="topbar module-topbar">
+    <a href="../../index.html" class="btn ghost">← Volver</a>
+    <div class="module-topbar__title"><h1>Pedidos Web Locales</h1></div>
+    <div class="module-topbar__actions"><div class="top-bar">
       <label for="sucursalSelect">Sucursal:</label>
       <select id="sucursalSelect">
         <option value="">Elegí sucursal</option>
@@ -36,8 +29,9 @@
         <option value="QUILMES">QUILMES</option>
         <option value="AVELLANEDA">AVELLANEDA</option>
       </select>
+      <input id="buscarPedido" class="search-input" type="search" placeholder="Buscar pedido, cliente, DNI o estado" autocomplete="off" />
       <span id="estadoCarga"></span>
-    </div>
+    </div></div>
   </header>
 
   <main>
@@ -59,7 +53,7 @@
     </table>
   </main>
 <footer>
-    RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® - 
+    RIO Tools Suite | Plataforma operativa interna 
   </footer>
   <script src="app_.js"></script>
 </body>

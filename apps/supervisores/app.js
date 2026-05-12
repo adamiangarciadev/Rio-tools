@@ -15,7 +15,7 @@
 
   const LOCALES = [
     "AVELLANEDA", "WEB", "NAZCA", "LAMARCA", "SARMIENTO",
-    "DEPOSITO", "CORRIENTES", "CASTELLI", "PUEYRREDON", "MORENO", "QUILMES"
+    "DEPOSITO", "CORRIENTES", "CASTELLI", "PUEYRREDON", "QUILMES"
   ];
 
   const API_ALIAS = {
@@ -28,9 +28,10 @@
     "CORRIENTES": "CORRIENTES",
     "CASTELLI": "CASTELLI",
     "PUEYRREDON": "PUEYRREDON",
-    "MORENO": "MORENO",
     "QUILMES": "QUILMES",
   };
+
+  const HIDDEN_SUCURSALES = new Set(["MORENO"]);
 
   const AUTO_REFRESH_MS = 15000;
 
@@ -261,7 +262,7 @@
         ""
       ).trim().toUpperCase();
 
-      if (!suc) continue;
+      if (!suc || HIDDEN_SUCURSALES.has(suc)) continue;
       if (!out[suc]) out[suc] = [];
       out[suc].push(row);
     }

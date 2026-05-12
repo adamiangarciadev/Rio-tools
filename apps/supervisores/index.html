@@ -15,17 +15,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SUPERVISORES · ASISTENCIA HOY</title>
   <link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="../../assets/rio-theme.css" />
 </head>
 
 <body>
 
-<header class="container header-row">
-  <div class="head-left">
+<header class="container header-row module-topbar">
+  <a class="btn ghost" href="../../index.html">← Volver</a>
+  <div class="head-left module-topbar__title">
     <h1>SUPERVISORES · ASISTENCIA HOY</h1>
     <div class="muted small">Se actualiza por día automáticamente. Muestra EVENTOS de hoy.</div>
   </div>
 
-  <div class="head-right">
+  <div class="head-right module-topbar__actions">
     <div class="search">
       <input id="q" class="input" type="text" placeholder="Buscar vendedor…" autocomplete="off" />
     </div>
@@ -60,6 +62,7 @@
 
 <footer class="container foot muted">RIO Tools Suite · Supervisores</footer>
 
+<script src="../../assets/rio-access.js" data-require-supervision="true"></script>
 <script src="./app.js"></script>
 </body>
 </html>

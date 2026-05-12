@@ -266,3 +266,106 @@ p{margin:0 0 12px 0}
 }
 
 .art-variant small{ color: var(--muted); }
+
+/* ===== Uso principal en lector Android: mobile first operativo ===== */
+@media (max-width: 760px) {
+  body {
+    font-size: 16px;
+    touch-action: manipulation;
+  }
+
+  .topbar,
+  .header-row {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .container {
+    width: 100%;
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .card {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .field-inline {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .field-inline input,
+  .input,
+  select,
+  .btn,
+  .btn-guardar-inline {
+    width: 100%;
+    min-height: 48px;
+    font-size: 17px;
+  }
+
+  .scan-input {
+    min-height: 64px;
+    padding: 16px;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 1px;
+  }
+
+  .scan-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .pick-list {
+    max-height: 46vh;
+  }
+
+  .pick-row {
+    grid-template-columns: 34px 1fr;
+    gap: 8px;
+    padding: 12px 10px;
+    font-size: 15px;
+  }
+
+  .pick-del {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    min-height: 42px;
+  }
+
+  .art-item summary {
+    align-items: flex-start;
+  }
+
+  .art-sum-left {
+    align-items: flex-start;
+  }
+
+  .art-code {
+    white-space: normal;
+    max-width: none;
+  }
+
+  .art-variants {
+    margin-left: 0;
+  }
+}

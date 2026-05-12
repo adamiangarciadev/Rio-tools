@@ -1,137 +1,225 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-CDPZFHV1BV"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-CDPZFHV1BV');
-</script>
-  
   <meta charset="UTF-8" />
-  <title>RIO Tools Suite</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RIO Tools Suite</title>
+  <meta name="description" content="Suite operativa para digitalizar procesos de retail, deposito, ecommerce y administracion." />
 
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CDPZFHV1BV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-CDPZFHV1BV");
+  </script>
+
+  <link rel="stylesheet" href="./assets/rio-theme.css" />
   <style>
-    :root {
-      --bg: #0f1115;
-      --panel: #171a21;
-      --card: #1f2430;
-      --text: #e6e8ee;
-      --muted: #9aa3b2;
-      --accent: #4da3ff;
-      --border: #2a2f3a;
-      --radius: 14px;
-      --shadow: 0 10px 30px rgba(0,0,0,.25);
-    }
-
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, sans-serif;
-    }
-
     body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
+      min-width: 320px;
+      background:
+        linear-gradient(180deg, rgba(34, 199, 184, .035), transparent 260px),
+        var(--rio-bg);
     }
 
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: var(--panel);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
+    .suite-shell {
+      width: min(1280px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 36px 0 40px;
+    }
+
+    .suite-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 18px;
+      padding: 0;
+      margin-bottom: 34px;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
     }
 
-    header h1 {
-      font-size: 18px;
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 9px;
+      background: var(--rio-primary);
+      color: #061017;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .brand-copy h1 {
       margin: 0;
-      font-weight: 600;
-      letter-spacing: 0.3px;
+      font-size: 18px;
+      font-weight: 750;
     }
 
-    header span {
-      color: var(--muted);
+    .brand-copy p {
+      margin: 3px 0 0;
       font-size: 13px;
-      margin-left: 8px;
+      color: var(--rio-muted) !important;
     }
 
-    main {
-      padding: 22px 24px 36px;
-      max-width: 1500px;
-      margin: 0 auto;
+    .suite-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      font-size: 12px;
     }
 
-    /* ===== Layout PC: 4 columnas fijas ===== */
+    .suite-hero {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    .hero-copy {
+      padding: 24px;
+      border: 1px solid var(--rio-border);
+      border-radius: var(--rio-radius);
+      background: rgba(17, 24, 33, .76);
+      box-shadow: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--rio-primary) !important;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .hero-copy h2 {
+      max-width: 760px;
+      margin: 0;
+      font-size: clamp(1.85rem, 3vw, 2.75rem);
+      line-height: 1.08;
+      font-weight: 680;
+      letter-spacing: 0 !important;
+    }
+
+    .hero-copy .lead {
+      max-width: 760px;
+      margin: 14px 0 0;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
     .board {
       display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr 1fr; /* Operaciones un poco más ancha */
-      gap: 16px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
       align-items: start;
     }
 
     .col {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+      min-height: 100%;
+      background: rgba(17, 24, 33, .72) !important;
     }
 
     .col-head {
       padding: 14px 16px;
-      background: rgba(0,0,0,.12);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 10px;
+      border-bottom: 1px solid var(--rio-border);
+      background: rgba(9, 13, 18, .18);
     }
 
     .col-head h2 {
       margin: 0;
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 650;
-      letter-spacing: 0.9px;
+      font-size: 12px;
       text-transform: uppercase;
+      letter-spacing: .08em !important;
+      font-weight: 760;
     }
 
-    .col-head .hint {
+    .col-head p {
+      margin: 4px 0 0;
       font-size: 12px;
-      color: var(--muted);
-      opacity: .8;
-      white-space: nowrap;
     }
 
     .links {
-      display: flex;
-      flex-direction: column;
+      display: grid;
     }
 
     .item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
+      display: grid;
+      gap: 6px;
+      padding: 15px 16px 14px;
+      border-bottom: 1px solid var(--rio-border);
       text-decoration: none;
-      color: var(--text);
-      transition: background .12s ease, transform .12s ease;
+      transition: background .16s ease, border-color .16s ease;
     }
 
-    .item:last-child { border-bottom: 0; }
+    .item:last-child {
+      border-bottom: 0;
+    }
 
     .item:hover {
-      background: rgba(77,163,255,0.07);
+      background: rgba(45, 212, 191, .08);
+    }
+
+    .supervision-access {
+      display: grid;
+      gap: 10px;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--rio-border);
+      background: rgba(34, 199, 184, .045);
+    }
+
+    .supervision-access__title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--rio-text);
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .supervision-access__form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .supervision-access__form input {
+      min-width: 0;
+      height: 40px;
+    }
+
+    .supervision-access__message {
+      min-height: 18px;
+      color: var(--rio-muted);
+      font-size: 12px;
+    }
+
+    body:not(.supervision-unlocked) [data-supervision-access] {
+      display: none;
+    }
+
+    body.supervision-unlocked .supervision-access__form {
+      display: none;
+    }
+
+    body:not(.supervision-unlocked) #supervisionLockButton {
+      display: none;
     }
 
     .item-title {
@@ -139,163 +227,308 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      font-weight: 650;
-      font-size: 15px;
-      line-height: 1.2;
+      font-size: 14px;
+      font-weight: 720;
     }
 
-    .item-title .arrow {
-      color: var(--accent);
+    .arrow {
+      color: var(--rio-muted);
       font-weight: 700;
-      flex: 0 0 auto;
     }
 
     .item-desc {
       margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    .item-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 3px;
+    }
+
+    .state {
+      width: fit-content;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--rio-border);
+      color: var(--rio-muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .state.ready {
+      color: var(--rio-ok);
+      border-color: rgba(52, 211, 153, .28);
+      background: rgba(52, 211, 153, .06);
+    }
+
+    .state.beta {
+      color: var(--rio-warn);
+      border-color: rgba(245, 158, 11, .36);
+      background: rgba(245, 158, 11, .08);
     }
 
     footer {
-      text-align: center;
-      padding: 18px 24px;
-      color: var(--muted);
+      margin-top: 18px;
+      padding: 18px;
+      color: var(--rio-muted);
       font-size: 12px;
-      border-top: 1px solid var(--border);
+      text-align: center;
     }
 
-    /* Opcional: si en algún momento lo abrís en pantallas chicas */
-    @media (max-width: 1100px) {
-      .board { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 1180px) {
+      .board {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .suite-hero {
+        grid-template-columns: 1fr;
+      }
     }
+
     @media (max-width: 720px) {
-      .board { grid-template-columns: 1fr; }
+      .suite-shell {
+        width: min(100% - 24px, 1480px);
+        padding-top: 12px;
+      }
+      .suite-header {
+        position: static;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .suite-status {
+        justify-content: flex-start;
+      }
+      .board {
+        grid-template-columns: 1fr;
+      }
+      .supervision-access__form {
+        grid-template-columns: 1fr;
+      }
+      .hero-copy {
+        padding: 18px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <div>
-      <h1>RIO Tools Suite</h1>
-      <span>Operaciones · Depósito · E-commerce</span>
-    </div>
-  </header>
-
-  <main>
-    <section class="board">
-
-      <!-- COLUMNA 1: OPERACIONES -->
-      <div class="col">
-        <div class="col-head">
-          <h2>Operaciones</h2>
-          <span class="hint">Flujo diario</span>
-        </div>
-        <div class="links">
-          
-
-          <a class="item" href="./apps/entrada-mercaderia/">
-            <div class="item-title">Entrada de Mercadería <span class="arrow">→</span></div>
-            <p class="item-desc">Ingreso de productos por escaneo, control contra equivalencias y CSV.</p>
-          </a>
-          <a class="item" href="./apps/mercaderia-transito/">
-            <div class="item-title">Mercadería en Transito<span class="arrow">→</span></div>
-            <p class="item-desc">Ingreso de remitos en sucursal para control.</p>
-          </a>
-          <a class="item" href="./apps/etiquetas/">
-            <div class="item-title">Generador de Etiquetas <span class="arrow">→</span></div>
-            <p class="item-desc">Generación de etiquetas a partir de equivalencias y datos de producto.</p>
-          </a>
-          <a class="item" href="./apps/asistencia/">
-            <div class="item-title">Asistencia Personal <span class="arrow">→</span></div>
-            <p class="item-desc">Asistencia, Faltas, Permisos, Vacaciones. </p>
-          </a>
-          <a class="item" href="./apps/control-remitos-clientes/">
-            <div class="item-title">Control de Remitos de Clientes <span class="arrow">→</span></div>
-            <p class="item-desc">Control de remitos/J que hacen para los clientes. </p>
-          <a class="item" href="./apps/rio-shipnow-interno/">
-            <div class="item-title">RIO ShipNow Interno <span class="arrow">→</span></div>
-            <p class="item-desc">Crea rotulos para shipnow y seguimiento de los mismos. </p>
-          </a>
-          </a>
+  <div class="suite-shell">
+    <header class="suite-header">
+      <div class="brand-lockup">
+        <div class="logo-mark">RIO</div>
+        <div class="brand-copy">
+          <h1>RIO Tools Suite</h1>
+          <p>Operacion, deposito, ecommerce y administracion en una sola plataforma.</p>
         </div>
       </div>
-
-      <!-- COLUMNA 2: E-COMMERCE -->
-      <div class="col">
-        <div class="col-head">
-          <h2>E-commerce</h2>
-          <span class="hint">Tiendanube</span>
-        </div>
-        <div class="links">
-          <a class="item" href="./apps/categorizador/">
-            <div class="item-title">Categorizador <span class="arrow">→</span></div>
-            <p class="item-desc">Normalización y categorización de productos para Tiendanube.</p>
-          </a>
-
-          <a class="item" href="./apps/pedidos-web/">
-            <div class="item-title">Pedidos Web <span class="arrow">→</span></div>
-            <p class="item-desc">Gestión y armado de pedidos desde listados web.</p>
-          </a>
-
-          <a class="item" href="./apps/pedidos-web-locales/">
-            <div class="item-title">Pedidos Web Locales <span class="arrow">→</span></div>
-            <p class="item-desc">Entrada y retiro de pedidos web en sucursales, control de estado y entrega.</p>
-          </a>
-          <a class="item" href="./apps/banco-medios/">
-            <div class="item-title">Contenido/Videos para estados/pantallas<span class="arrow">→</span></div>
-            <p class="item-desc">Videos oficiales de productos para descargar. Material para locales y mayoristas.</p>
-          </a>
-
-        </div>
+      <div class="suite-status">
+        <span class="state ready">Uso interno</span>
+        <span class="state ready">Web app</span>
+        <span class="state beta">Android-ready</span>
       </div>
+    </header>
 
-      <!-- COLUMNA 3: DEPÓSITO -->
-      <div class="col">
-        <div class="col-head">
-          <h2>Depósito</h2>
-          <span class="hint">Planificación</span>
-        </div>
-        <div class="links">
-          <a class="item" href="./apps/picking-salida/">
-            <div class="item-title">Picking Salida <span class="arrow">→</span></div>
-            <p class="item-desc">Preparación de pedidos por código de barras, validación y control de salida.</p>
-          </a>
-          <a class="item" href="./apps/pedido-semanal/">
-            <div class="item-title">Pedido Semanal <span class="arrow">→</span></div>
-            <p class="item-desc">Armado de pedidos por curva, históricos y promociones.</p>
-          </a>
-        </div>
+    <section class="suite-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Suite operativa para retail</p>
+        <h2>Gestion operativa centralizada para equipos de retail.</h2>
+        <p class="lead">RIO Tools ordena procesos diarios de deposito, locales, ecommerce y administracion en una plataforma web modular, simple de operar y preparada para evolucionar a mobile.</p>
       </div>
-
-      <!-- COLUMNA 4: ADMINISTRACIÓN -->
-      <div class="col">
-        <div class="col-head">
-          <h2>Administración</h2>
-          <span class="hint">Soporte</span>
-        </div>
-        <div class="links">
-          <a class="item" href="./apps/pedido-carteleria/">
-            <div class="item-title">Pedido de Cartelería (PROXIMAMENTE) <span class="arrow">→</span></div>
-            <p class="item-desc">Solicitud y seguimiento de cartelería para locales, promos y campañas.</p>
-          </a>
-          <a class="item" href="./apps/archivos-administrativos/">
-            <div class="item-title">Planillas, cuentas, etc.. <span class="arrow">→</span></div>
-            <p class="item-desc">Planillas diarias, Rotulos, Manuales, Cuentas para depositos. </p>
-          </a>
-          <a class="item" href="./apps/confirmacion-depositos/">
-            <div class="item-title">Depositos para confirmar<span class="arrow">→</span></div>
-            <p class="item-desc">Solicitud de confirmación de depositos/transferencias. </p>
-          </a>
-        </div>
-      </div>
-
     </section>
-  </main>
 
-  <footer>
-    RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® - 
-  </footer>
+    <main>
+      <section class="board" aria-label="Herramientas disponibles">
+        <div class="col">
+          <div class="col-head">
+            <h2>Operaciones</h2>
+            <p>Flujo diario de locales y deposito.</p>
+          </div>
+          <div class="links">
+            <a class="item" href="./apps/entrada-mercaderia/">
+              <div class="item-title">Entrada de Mercaderia <span class="arrow">-></span></div>
+              <p class="item-desc">Ingreso por escaneo, equivalencias y control contra CSV.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/mercaderia-transito/">
+              <div class="item-title">Mercaderia en Transito <span class="arrow">-></span></div>
+              <p class="item-desc">Seguimiento de remitos, archivos asociados y picking de transito.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/etiquetas/">
+              <div class="item-title">Generador de Etiquetas <span class="arrow">-></span></div>
+              <p class="item-desc">Generacion de archivos para altas, bajas y etiquetas por producto.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/asistencia/">
+              <div class="item-title">Asistencia Personal <span class="arrow">-></span></div>
+              <p class="item-desc">Registro de asistencia, faltas, permisos y novedades del personal.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/control-remitos-clientes/">
+              <div class="item-title">Control de Remitos <span class="arrow">-></span></div>
+              <p class="item-desc">Control y confirmacion de remitos emitidos a clientes.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/rio-shipnow-interno/">
+              <div class="item-title">RIO ShipNow Interno <span class="arrow">-></span></div>
+              <p class="item-desc">Rotulos, seguimiento interno y control operativo de envios.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="col-head">
+            <h2>E-commerce</h2>
+            <p>Tiendanube, pedidos y contenido comercial.</p>
+          </div>
+          <div class="links">
+            <a class="item" href="./apps/categorizador/">
+              <div class="item-title">Categorizador <span class="arrow">-></span></div>
+              <p class="item-desc">Normalizacion y categorizacion de productos para publicacion.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/pedidos-web/">
+              <div class="item-title">Pedidos Web <span class="arrow">-></span></div>
+              <p class="item-desc">Gestion y armado de pedidos desde el canal online.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/pedidos-web-locales/">
+              <div class="item-title">Pedidos Web Locales <span class="arrow">-></span></div>
+              <p class="item-desc">Entrada, retiro y seguimiento de pedidos web en sucursales.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/banco-medios/">
+              <div class="item-title">Banco de Medios <span class="arrow">-></span></div>
+              <p class="item-desc">Videos oficiales para redes, pantallas, locales y mayoristas.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="col-head">
+            <h2>Deposito</h2>
+            <p>Preparacion, planificacion y control.</p>
+          </div>
+          <div class="links">
+            <a class="item" href="./apps/picking-salida/">
+              <div class="item-title">Picking Salida <span class="arrow">-></span></div>
+              <p class="item-desc">Preparacion por codigo de barras, validacion y guardado de salida.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/pedido-semanal/">
+              <div class="item-title">Pedido Semanal <span class="arrow">-></span></div>
+              <p class="item-desc">Armado de pedidos por curva, historicos, talles y promociones.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="col-head">
+            <h2>Administracion</h2>
+            <p>Soporte, supervision y backoffice.</p>
+          </div>
+          <div class="links">
+            <a class="item" href="./apps/archivos-administrativos/">
+              <div class="item-title">Archivos Administrativos <span class="arrow">-></span></div>
+              <p class="item-desc">Planillas, rotulos, manuales y recursos internos.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/confirmacion-depositos/">
+              <div class="item-title">Depositos a Confirmar <span class="arrow">-></span></div>
+              <p class="item-desc">Carga y consulta de depositos o transferencias bancarias.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <div class="supervision-access" id="supervisionAccess">
+              <div class="supervision-access__title">
+                <span>Acceso supervision</span>
+                <span class="state beta" id="supervisionAccessState">Bloqueado</span>
+              </div>
+              <p class="item-desc">Herramientas reservadas para usuarios autorizados.</p>
+              <form class="supervision-access__form" id="supervisionAccessForm">
+                <input id="supervisionAccessPass" type="password" autocomplete="current-password" placeholder="Clave de acceso" />
+                <button class="btn" type="submit">Desbloquear</button>
+              </form>
+              <button class="btn" id="supervisionLockButton" type="button">Bloquear acceso</button>
+              <div class="supervision-access__message" id="supervisionAccessMessage"></div>
+            </div>
+            <a class="item" href="./apps/supervisores/" data-supervision-access>
+              <div class="item-title">Supervisores <span class="arrow">-></span></div>
+              <p class="item-desc">Vista diaria de asistencia para control de supervision.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/supervisores-control/" data-supervision-access>
+              <div class="item-title">Control de Supervision <span class="arrow">-></span></div>
+              <p class="item-desc">Tareas por local, tareas globales y seguimiento documental.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/sistemas/" data-supervision-access>
+              <div class="item-title">Sistemas <span class="arrow">-></span></div>
+              <p class="item-desc">Control de remitos con diferencias y resolucion operativa.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/apercibimientos/" data-supervision-access>
+              <div class="item-title">Apercibimientos <span class="arrow">-></span></div>
+              <p class="item-desc">Gestion disciplinaria, consulta de remitos y generacion de PDF.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+            <a class="item" href="./apps/pedido-carteleria/">
+              <div class="item-title">Pedido de Carteleria <span class="arrow">-></span></div>
+              <p class="item-desc">Solicitud y seguimiento de carteleria para locales y campanas.</p>
+              <div class="item-meta"><span class="state beta">Preparado</span></div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      RIO Tools Suite | Plataforma modular para operaciones internas | Presentacion comercial
+    </footer>
+  </div>
+  <script src="./assets/rio-access.js"></script>
+  <script>
+    (() => {
+      const form = document.getElementById("supervisionAccessForm");
+      const input = document.getElementById("supervisionAccessPass");
+      const message = document.getElementById("supervisionAccessMessage");
+      const state = document.getElementById("supervisionAccessState");
+      const lockButton = document.getElementById("supervisionLockButton");
+
+      function renderAccessState() {
+        const unlocked = window.RioAccess?.isUnlocked();
+        document.body.classList.toggle("supervision-unlocked", !!unlocked);
+        if(state) {
+          state.textContent = unlocked ? "Desbloqueado" : "Bloqueado";
+          state.className = unlocked ? "state ready" : "state beta";
+        }
+        if(message) {
+          message.textContent = unlocked
+            ? "Acceso habilitado para herramientas de supervision."
+            : "Ingresar clave para mostrar herramientas reservadas.";
+        }
+      }
+
+      form?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const ok = window.RioAccess?.unlock(input?.value || "");
+        if(input) input.value = "";
+        renderAccessState();
+        if(message && !ok) message.textContent = "Clave incorrecta.";
+      });
+
+      lockButton?.addEventListener("click", () => {
+        window.RioAccess?.lock();
+        renderAccessState();
+      });
+
+      renderAccessState();
+    })();
+  </script>
 </body>
 </html>

@@ -27,7 +27,7 @@
     "https://script.google.com/macros/s/AKfycbyD-x7geshhGxx2xXeX0k07QoFTRm7fm1BfmLl-H7afQ2c_9YdUBQiyvk23oeywepQ/exec";
 
   const SUCURSALES = [
-    "NAZCA","AVELLANEDA 2","LAMARCA","SARMIENTO","CORRIENTES","CORRIENTES2","CASTELLI","QUILMES","MORENO","PUEYRREDON"
+    "NAZCA","AVELLANEDA 2","LAMARCA","SARMIENTO","CORRIENTES","CORRIENTES2","CASTELLI","QUILMES","PUEYRREDON"
   ];
 
   const LS_KEY_PEDIDO = "pedido_v1";
@@ -40,6 +40,7 @@
   let PROMOS = [];
   let promoActual = null;
   let pedido = [];
+  let undoStack = [];
 
   // Extras
   let addCinta = false;
@@ -94,6 +95,45 @@
   // =========================
   function guardarLS(){
     try{ localStorage.setItem(LS_KEY_PEDIDO, JSON.stringify(pedido)); }catch{}
+  }
+
+  function clonePedido(){
+    return pedido.map(p => ({ ...p }));
+  }
+
+  function pushUndo(){
+    undoStack.push(clonePedido());
+    if(undoStack.length > 20) undoStack.shift();
+    updateUndoButton();
+  }
+
+  function updateUndoButton(){
+    const btn = $("#deshacer");
+    if(btn) btn.disabled = undoStack.length === 0;
+  }
+
+  function deshacerUltimaAccion(){
+    const prev = undoStack.pop();
+    if(!prev) return alerta("No hay acciones para deshacer.");
+    pedido = prev;
+    renderPedido();
+    updateUndoButton();
+    alerta("Última acción deshecha.");
+  }
+
+  function removePedidoItem(codigo, talle){
+    const keyCodigo = String(codigo || "").trim().toLowerCase();
+    const keyTalle = String(talle || "").trim().toLowerCase();
+    const next = pedido.filter(p => {
+      const sameCodigo = String(p.codigo || "").trim().toLowerCase() === keyCodigo;
+      const sameTalle = String(p.talle || "").trim().toLowerCase() === keyTalle;
+      return !(sameCodigo && sameTalle);
+    });
+    if(next.length === pedido.length) return alerta("No se encontró el ítem para eliminar.");
+    pushUndo();
+    pedido = next;
+    renderPedido();
+    alerta("Ítem eliminado.");
   }
   function cargarLS(){
     try{
@@ -172,26 +212,42 @@
       wrap.innerHTML=`<div class="empty">Sin ítems en el pedido.</div>`;
       setText("count","0");
       guardarLS();
+      updateUndoButton();
       return;
     }
 
     const rows=agrupado.map(p=>`
       <tr>
         <td>${escapeHtml(p.codigo)}</td>
-        <td>${escapeHtml(p.desc||"")}</td>
         <td class="talle">${escapeHtml(String(p.talle))}</td>
         <td class="num">${escapeHtml(String(p.cantidad))}</td>
+        <td class="actions">
+          <button
+            class="btn ghost btn-row-delete"
+            type="button"
+            data-codigo="${escapeHtml(p.codigo)}"
+            data-talle="${escapeHtml(String(p.talle))}"
+            title="Eliminar este ítem"
+            aria-label="Eliminar este ítem"
+          >×</button>
+        </td>
       </tr>
     `).join("");
 
     wrap.innerHTML=`
       <table class="table">
-        <thead><tr><th>ART</th><th>DESCRIPCIÓN</th><th>TALLE</th><th>CANT.</th></tr></thead>
+        <thead><tr><th>ART</th><th>TALLE</th><th>CANT.</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
+
+    $$(".btn-row-delete", wrap).forEach(btn => {
+      btn.addEventListener("click", () => removePedidoItem(btn.dataset.codigo, btn.dataset.talle));
+    });
+
     setText("count", String(agrupado.length));
     guardarLS();
+    updateUndoButton();
   }
 
   async function copiarPedido(){
@@ -411,7 +467,7 @@
           <div class="row gap" style="margin-top:10px">
             <label style="min-width:160px">
               Cantidad total / por talle
-              <input type="number" class="cantidad" inputmode="numeric" min="1" placeholder="Ej: 12" />
+              <input type="text" class="cantidad" inputmode="numeric" pattern="[0-9]*" placeholder="Ej: 12" />
             </label>
             <button class="btn success btn-add">Agregar</button>
             <button class="btn btn-surtido">Agregar surtido</button>
@@ -535,6 +591,7 @@
 
     if(modo === "normal"){
       // MISMA cantidad para cada talle
+      pushUndo();
       for(const a of arts){
         for(const t of talles){
           pedido.push({
@@ -563,6 +620,7 @@
       return alerta("Cantidad insuficiente para repartir en talles.");
     }
 
+    pushUndo();
     for(const a of arts){
       for(const r of reparto){
         pedido.push({
@@ -623,14 +681,12 @@
     return ($("#obsInput")?.value || "").toString().trim();
   }
 
-  function renderObservacionesFooter(doc){
+  function renderObservacionesInicio(doc, startY){
     const obs = getObservaciones();
-    if(!obs) return;
+    if(!obs) return startY;
 
     const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
     const marginX = 40;
-    const marginBottom = 40;
 
     doc.setFontSize(10);
     const title = "OBSERVACIONES:";
@@ -639,19 +695,13 @@
     const lines = doc.splitTextToSize(obs, maxW);
 
     const lineH = 12;
-    const blockH = (1 + lines.length) * lineH;
-
-    const yStart = pageH - marginBottom - blockH;
-    if(yStart < 80){
-      doc.addPage();
-    }
-
-    const pageH2 = doc.internal.pageSize.getHeight();
-    const y2 = pageH2 - marginBottom - blockH;
+    const y = startY;
 
     doc.setFontSize(10);
-    doc.text(title, marginX, y2);
-    doc.text(lines, marginX, y2 + lineH);
+    doc.text(title, marginX, y);
+    doc.text(lines, marginX, y + lineH);
+
+    return y + ((1 + lines.length) * lineH) + 14;
   }
 
   // =========================
@@ -678,14 +728,14 @@
       doc.text(extrasTxt, pageW-40, 40, { align: "right" });
     }
 
+    const tableStartY = renderObservacionesInicio(doc, 80);
+
     doc.autoTable({
       head:[["ART","DESCRIPCIÓN","TALLE","CANT."]],
       body: agrupado.map(p=>[p.codigo,p.desc||"",String(p.talle),String(p.cantidad)]),
-      startY:80,
+      startY: tableStartY,
       styles: { fontSize: 10 }
     });
-
-    renderObservacionesFooter(doc);
 
     return doc;
   }
@@ -765,9 +815,12 @@
 
     $("#copiar")?.addEventListener("click", copiarPedido);
     $("#vaciar")?.addEventListener("click", ()=>{
+      if(!pedido.length) return alerta("El pedido ya está vacío.");
+      pushUndo();
       pedido=[];
       renderPedido();
     });
+    $("#deshacer")?.addEventListener("click", deshacerUltimaAccion);
 
     $("#btnPDF")?.addEventListener("click", async ()=>{
       const doc = generarPDFDoc();
@@ -802,6 +855,7 @@
     });
 
     updateExtrasUI();
+    updateUndoButton();
   });
 
 })();

@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RIO Tools Suite - Presentacion comercial</title>
+  <style>
+    @page { size: 13.333in 7.5in; margin: 0; }
+    :root {
+      --bg: #090d12;
+      --panel: #111821;
+      --panel-2: #151e29;
+      --line: rgba(148, 163, 184, .22);
+      --text: #edf3fa;
+      --muted: #9fb0c3;
+      --primary: #22c7b8;
+      --blue: #5aa7ff;
+      --ok: #34d399;
+      --warn: #f59e0b;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+    }
+
+    .slide {
+      position: relative;
+      width: 13.333in;
+      height: 7.5in;
+      padding: .58in .7in;
+      overflow: hidden;
+      page-break-after: always;
+      background:
+        linear-gradient(180deg, rgba(34, 199, 184, .055), transparent 2.8in),
+        var(--bg);
+    }
+
+    .slide:last-child { page-break-after: auto; }
+    .kicker {
+      margin: 0 0 .14in;
+      color: var(--primary);
+      font-size: .13in;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 {
+      max-width: 8.6in;
+      font-size: .64in;
+      line-height: 1.04;
+      letter-spacing: 0;
+      font-weight: 780;
+    }
+
+    h2 {
+      font-size: .38in;
+      line-height: 1.1;
+      font-weight: 760;
+    }
+
+    h3 {
+      font-size: .18in;
+      font-weight: 760;
+    }
+
+    .lead {
+      max-width: 7.3in;
+      margin-top: .2in;
+      color: var(--muted);
+      font-size: .18in;
+      line-height: 1.55;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .14in;
+      margin-bottom: .74in;
+    }
+
+    .logo {
+      width: .46in;
+      height: .46in;
+      display: grid;
+      place-items: center;
+      border-radius: .1in;
+      background: var(--primary);
+      color: #061017;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .brand strong { display: block; font-size: .19in; }
+    .brand span { display: block; margin-top: .03in; color: var(--muted); font-size: .12in; }
+
+    .chips {
+      display: flex;
+      gap: .09in;
+      flex-wrap: wrap;
+      margin-top: .36in;
+    }
+
+    .chip {
+      padding: .07in .12in;
+      border: 1px solid rgba(34, 199, 184, .36);
+      border-radius: 999px;
+      background: rgba(34, 199, 184, .08);
+      color: #bff9ef;
+      font-size: .12in;
+      font-weight: 800;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .22in;
+      margin-top: .38in;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .18in;
+      margin-top: .34in;
+    }
+
+    .card {
+      min-height: 1.15in;
+      padding: .2in;
+      border: 1px solid var(--line);
+      border-radius: .09in;
+      background: rgba(17, 24, 33, .78);
+    }
+
+    .card p {
+      margin-top: .08in;
+      color: var(--muted);
+      font-size: .13in;
+      line-height: 1.42;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .16in;
+      margin-top: .42in;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: .42in;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: .08in;
+      color: var(--muted);
+      font-size: .12in;
+    }
+
+    .screen-layout {
+      display: grid;
+      grid-template-columns: 4.1in 1fr;
+      gap: .36in;
+      align-items: center;
+      margin-top: .36in;
+    }
+
+    .screen {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, .3);
+      border-radius: .12in;
+      background: #05080c;
+      box-shadow: 0 .16in .52in rgba(0,0,0,.34);
+    }
+
+    .screen.mobile {
+      width: 2.25in;
+      max-height: 5.15in;
+      object-fit: cover;
+      object-position: top center;
+      border-radius: .22in;
+      justify-self: center;
+    }
+
+    .bullets {
+      display: grid;
+      gap: .12in;
+      margin-top: .18in;
+    }
+
+    .bullet {
+      display: grid;
+      grid-template-columns: .18in 1fr;
+      gap: .1in;
+      color: var(--muted);
+      font-size: .15in;
+      line-height: 1.42;
+    }
+
+    .dot {
+      width: .08in;
+      height: .08in;
+      margin-top: .07in;
+      border-radius: 999px;
+      background: var(--primary);
+    }
+
+    .module-map {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .14in;
+      margin-top: .3in;
+    }
+
+    .module-col {
+      border: 1px solid var(--line);
+      border-radius: .08in;
+      overflow: hidden;
+      background: rgba(17, 24, 33, .7);
+    }
+
+    .module-col h3 {
+      padding: .14in .16in;
+      border-bottom: 1px solid var(--line);
+      color: #ffffff;
+      font-size: .14in;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .module-col p {
+      padding: .1in .16in;
+      border-bottom: 1px solid rgba(148, 163, 184, .14);
+      color: var(--muted);
+      font-size: .115in;
+      line-height: 1.25;
+    }
+
+    .module-col p:last-child { border-bottom: 0; }
+
+    .footer {
+      position: absolute;
+      left: .7in;
+      right: .7in;
+      bottom: .28in;
+      display: flex;
+      justify-content: space-between;
+      color: rgba(159, 176, 195, .65);
+      font-size: .105in;
+    }
+
+    .accent-line {
+      position: absolute;
+      left: .7in;
+      right: .7in;
+      bottom: .52in;
+      height: 1px;
+      background: linear-gradient(90deg, var(--primary), transparent);
+      opacity: .48;
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .18in;
+      margin-top: .42in;
+    }
+
+    .step {
+      min-height: 2.1in;
+      padding: .22in;
+      border: 1px solid var(--line);
+      border-radius: .1in;
+      background: rgba(17, 24, 33, .82);
+    }
+
+    .step .num {
+      display: inline-grid;
+      place-items: center;
+      width: .34in;
+      height: .34in;
+      margin-bottom: .18in;
+      border-radius: 999px;
+      background: rgba(34, 199, 184, .14);
+      color: var(--primary);
+      font-weight: 900;
+    }
+
+    .value-band {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: .3in;
+      margin-top: .38in;
+      align-items: stretch;
+    }
+
+    .big-panel {
+      padding: .32in;
+      border: 1px solid var(--line);
+      border-radius: .12in;
+      background: rgba(17, 24, 33, .82);
+    }
+
+    .big-panel p {
+      color: var(--muted);
+      font-size: .16in;
+      line-height: 1.52;
+    }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <div class="brand">
+      <div class="logo">RIO</div>
+      <div>
+        <strong>RIO Tools Suite</strong>
+        <span>Suite operativa para retail, deposito, ecommerce y administracion</span>
+      </div>
+    </div>
+    <p class="kicker">Presentacion comercial</p>
+    <h1>Herramientas internas listas para operar, medir y escalar.</h1>
+    <p class="lead">Una plataforma web modular que digitaliza tareas diarias de sucursales, deposito y backoffice con una identidad visual unificada, flujos simples y foco en uso real operativo.</p>
+    <div class="chips">
+      <span class="chip">19 modulos activos</span>
+      <span class="chip">4 areas operativas</span>
+      <span class="chip">Mobile-ready</span>
+      <span class="chip">Roadmap Android</span>
+    </div>
+    <div class="accent-line"></div>
+    <div class="footer"><span>RIO Tools Suite</span><span>2026</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Vision general</p>
+    <h2>Una sola entrada para procesos que antes estaban dispersos.</h2>
+    <div class="screen-layout">
+      <img class="screen" src="presentation-assets/01-dashboard.png" alt="Dashboard RIO Tools" />
+      <div>
+        <h3>Dashboard ejecutivo y operativo</h3>
+        <div class="bullets">
+          <div class="bullet"><span class="dot"></span><span>Menu central dividido por operaciones, ecommerce, deposito y administracion.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Identidad visual consistente para que cada modulo parezca parte del mismo producto.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Accesos preparados para uso interno, web app y evolucion mobile.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Vision general</span><span>01</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Mapa funcional</p>
+    <h2>Cobertura completa por area de trabajo.</h2>
+    <div class="module-map">
+      <div class="module-col">
+        <h3>Operaciones</h3>
+        <p>Entrada de Mercaderia</p>
+        <p>Mercaderia en Transito</p>
+        <p>Generador de Etiquetas</p>
+        <p>Asistencia Personal</p>
+        <p>Control de Remitos</p>
+        <p>RIO ShipNow Interno</p>
+      </div>
+      <div class="module-col">
+        <h3>Ecommerce</h3>
+        <p>Categorizador</p>
+        <p>Pedidos Web</p>
+        <p>Pedidos Web Locales</p>
+        <p>Banco de Medios</p>
+      </div>
+      <div class="module-col">
+        <h3>Deposito</h3>
+        <p>Picking Salida</p>
+        <p>Pedido Semanal</p>
+      </div>
+      <div class="module-col">
+        <h3>Administracion</h3>
+        <p>Archivos Administrativos</p>
+        <p>Depositos a Confirmar</p>
+        <p>Supervisores</p>
+        <p>Control de Supervision</p>
+        <p>Sistemas</p>
+        <p>Apercibimientos</p>
+        <p>Pedido de Carteleria</p>
+      </div>
+    </div>
+    <div class="metric-row">
+      <div class="card metric"><strong>19</strong><span>modulos operativos</span></div>
+      <div class="card metric"><strong>1</strong><span>identidad visual</span></div>
+      <div class="card metric"><strong>4</strong><span>areas integradas</span></div>
+      <div class="card metric"><strong>0</strong><span>modulos descartados visibles</span></div>
+    </div>
+    <div class="footer"><span>Mapa funcional</span><span>02</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Operaciones</p>
+    <h2>Recepcion, control y trazabilidad de mercaderia.</h2>
+    <div class="screen-layout">
+      <img class="screen" src="presentation-assets/02-entrada.png" alt="Entrada de mercaderia" />
+      <div>
+        <h3>Flujo diario de deposito y sucursales</h3>
+        <div class="bullets">
+          <div class="bullet"><span class="dot"></span><span>Ingreso por escaneo y control contra archivos CSV.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Validacion de equivalencias y registro operativo.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Base para reducir errores manuales y mejorar trazabilidad.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Operaciones</span><span>03</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Deposito mobile</p>
+    <h2>Picking de salida optimizado para lector Android.</h2>
+    <div class="screen-layout">
+      <img class="screen mobile" src="presentation-assets/03-picking-mobile.png" alt="Picking mobile" />
+      <div>
+        <h3>Uso operativo en mano</h3>
+        <div class="bullets">
+          <div class="bullet"><span class="dot"></span><span>Interfaz pensada para escaneo con lector de codigo de barras.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Controles grandes, contraste alto y flujo rapido de carga.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Preparado para evolucionar a aplicacion Android dedicada.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Deposito mobile</span><span>04</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Planificacion comercial</p>
+    <h2>Pedido semanal para deposito con promos, talles y control de items.</h2>
+    <div class="screen-layout">
+      <img class="screen" src="presentation-assets/04-pedido-semanal.png" alt="Pedido semanal" />
+      <div>
+        <h3>Armado de pedidos con informacion estructurada</h3>
+        <div class="bullets">
+          <div class="bullet"><span class="dot"></span><span>Busqueda de promociones y seleccion de cantidades por producto.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Fichas oscuras de alto contraste para lectura clara.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Exportacion y observaciones para salida operativa.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Planificacion comercial</span><span>05</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Ecommerce</p>
+    <h2>Gestion de pedidos web y busqueda para locales.</h2>
+    <div class="screen-layout">
+      <img class="screen" src="presentation-assets/05-pedidos-locales.png" alt="Pedidos web locales" />
+      <div>
+        <h3>Atencion online conectada con la operacion</h3>
+        <div class="bullets">
+          <div class="bullet"><span class="dot"></span><span>Seguimiento de pedidos por local y estado.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Buscador incorporado para encontrar pedidos con rapidez.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Complementa categorizacion, pedidos web y banco de medios.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Ecommerce</span><span>06</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Supervision</p>
+    <h2>Control diario, asistencia y tareas con sucursales depuradas.</h2>
+    <div class="screen-layout">
+      <img class="screen" src="presentation-assets/06-supervision.png" alt="Supervisores" />
+      <div>
+        <h3>Seguimiento para mandos operativos</h3>
+        <div class="bullets">
+          <div class="bullet"><span class="dot"></span><span>Vista diaria para asistencia y control de supervision.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Sucursal Moreno oculta donde no corresponde al flujo actual.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Gestion de tareas por local, globales y documentos.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Supervision</span><span>07</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Administracion</p>
+    <h2>Backoffice organizado para documentos, depositos y sistemas.</h2>
+    <div class="screen-layout">
+      <img class="screen" src="presentation-assets/07-admin.png" alt="Archivos administrativos" />
+      <div>
+        <h3>Recursos internos en una sola plataforma</h3>
+        <div class="bullets">
+          <div class="bullet"><span class="dot"></span><span>Acceso centralizado a planillas, rotulos, manuales y recursos.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Confirmacion de depositos y transferencias bancarias.</span></div>
+          <div class="bullet"><span class="dot"></span><span>Soporte para sistemas, apercibimientos y carteleria.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Administracion</span><span>08</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Valor para comprador</p>
+    <h2>Un producto interno presentable, mantenible y escalable.</h2>
+    <div class="value-band">
+      <div class="big-panel">
+        <h3>Beneficio operativo</h3>
+        <p>RIO Tools reduce dispersion de planillas, unifica flujos repetitivos y permite que cada area trabaje con pantallas especificas para su tarea diaria. La suite ya separa modulos por area, mantiene una identidad visual coherente y elimina procesos descartados del acceso principal.</p>
+      </div>
+      <div class="big-panel">
+        <h3>Beneficio comercial</h3>
+        <p>El proyecto puede presentarse como plataforma lista para adopcion interna: modular, web, adaptable a mobile y con roadmap claro hacia app Android para deposito y escaneo.</p>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="card"><h3>Menos error manual</h3><p>Escaneo, busqueda, validacion y exportacion reducen tareas repetitivas.</p></div>
+      <div class="card"><h3>Mas control</h3><p>Estados, remitos, asistencia, depositos y supervision quedan visibles.</p></div>
+      <div class="card"><h3>Mas adopcion</h3><p>Diseño minimalista y consistente para que el equipo lo use sin friccion.</p></div>
+    </div>
+    <div class="footer"><span>Valor para comprador</span><span>09</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Proximos pasos</p>
+    <h2>Roadmap recomendado hacia producto final y Android.</h2>
+    <div class="roadmap">
+      <div class="step"><span class="num">1</span><h3>Cierre visual</h3><p class="lead" style="font-size:.13in;margin-top:.12in">Auditoria final de responsive, iconografia y microcopys por modulo.</p></div>
+      <div class="step"><span class="num">2</span><h3>Datos y usuarios</h3><p class="lead" style="font-size:.13in;margin-top:.12in">Definir permisos, almacenamiento, backups y trazabilidad por usuario.</p></div>
+      <div class="step"><span class="num">3</span><h3>Web app instalable</h3><p class="lead" style="font-size:.13in;margin-top:.12in">Convertir la suite en PWA para uso desde dispositivos internos.</p></div>
+      <div class="step"><span class="num">4</span><h3>Android dedicada</h3><p class="lead" style="font-size:.13in;margin-top:.12in">Empaquetar Picking Salida y flujos mobile para lector Android.</p></div>
+    </div>
+    <div class="footer"><span>Roadmap</span><span>10</span></div>
+  </section>
+
+  <section class="slide">
+    <div class="brand">
+      <div class="logo">RIO</div>
+      <div>
+        <strong>RIO Tools Suite</strong>
+        <span>Operacion digital, modular y escalable</span>
+      </div>
+    </div>
+    <p class="kicker">Cierre</p>
+    <h1>Una plataforma interna con identidad de producto.</h1>
+    <p class="lead">La suite ya muestra una base clara para operar, presentar y evolucionar: web unificada, modulos activos, experiencia mobile en deposito y una ruta directa hacia aplicacion Android.</p>
+    <div class="chips">
+      <span class="chip">Lista para demo</span>
+      <span class="chip">Escalable por modulos</span>
+      <span class="chip">Preparada para venta interna</span>
+    </div>
+    <div class="accent-line"></div>
+    <div class="footer"><span>RIO Tools Suite</span><span>Fin</span></div>
+  </section>
+</body>
+</html>

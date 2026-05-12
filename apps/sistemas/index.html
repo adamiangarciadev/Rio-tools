@@ -248,18 +248,19 @@
       }
     }
   </style>
+<link rel="stylesheet" href="../../assets/rio-theme.css" />
 </head>
 <body>
   <div class="wrap">
-    <header class="topbar">
-      <a class="back-btn" href="https://adamiangarciadev.github.io/Rio-tools/">← Volver</a>
+    <header class="topbar module-topbar">
+      <a class="back-btn" href="../../index.html">← Volver</a>
 
-      <div class="title-box">
+      <div class="title-box module-topbar__title">
         <h1>REMITOS CON DIFERENCIAS</h1>
         <p class="sub">Control de remitos pendientes de confirmación</p>
       </div>
 
-      <div class="toolbar">
+      <div class="toolbar module-topbar__actions">
         <input id="searchInput" class="input" type="text" placeholder="Buscar remito, sucursal u observación..." />
         <button id="refreshBtn" class="btn">Actualizar</button>
       </div>
@@ -293,7 +294,7 @@
   </div>
 
   <footer>
-    RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® -
+    RIO Tools Suite | Plataforma operativa interna
   </footer>
 
   <script>
@@ -451,5 +452,6 @@
       }
     }, 180000);
   </script>
+  <script src="../../assets/rio-access.js" data-require-supervision="true"></script>
 </body>
 </html>

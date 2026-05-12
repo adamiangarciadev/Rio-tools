@@ -42,6 +42,19 @@ tr.alerta {
   color: #ccc;
 }
 
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.whatsapp-btn {
+  background: rgba(34, 197, 94, .14) !important;
+  border-color: rgba(34, 197, 94, .32) !important;
+}
+
 /* =========================
    BOTONES
    ========================= */
@@ -87,7 +100,9 @@ button.cancelado:hover {
    ========================= */
 
 button.st-armando-pedido { background: #1565c0; color: #fff; }              /* azul */
+button.st-armandose { background: #1565c0; color: #fff; }              /* azul */
 button.st-pickeado-armado { background: #6a1b9a; color: #fff; }        /* violeta */
+button.st-pickeado { background: #6a1b9a; color: #fff; }        /* violeta */
 button.st-esperando-mercaderia { background: #ef6c00; color: #fff; }   /* naranja */
 button.st-controlado { background: #2e7d32; color: #fff; }             /* verde */
 button.st-esperando-pago { background: #546e7a; color: #fff; }         /* gris azulado */
@@ -152,11 +167,11 @@ td:first-child:contains("MINORISTA") {
   top: 100%;
   left: 0;
   min-width: 210px;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--rio-surface-2);
+  border: 1px solid var(--rio-border-strong);
   border-radius: 8px;
   padding: 6px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.10);
+  box-shadow: 0 12px 28px rgba(0,0,0,.34);
   display: none;
   z-index: 1000;
 }
@@ -170,12 +185,15 @@ td:first-child:contains("MINORISTA") {
   text-align: left;
   padding: 8px 10px;
   border-radius: 6px;
-  background: transparent;
-  color: #111;
+  border: 1px solid rgba(148, 163, 184, .16) !important;
+  background: rgba(15, 23, 34, .98) !important;
+  color: var(--rio-text) !important;
+  font-weight: 800;
 }
 
 .dd-item:hover {
-  background: #f3f3f3;
+  background: rgba(34, 199, 184, .16) !important;
+  border-color: rgba(45, 212, 191, .48) !important;
 }
 
 /* Cancelado destacado */
@@ -208,9 +226,11 @@ td.acciones .dd {
   padding: 8px 10px;
   border-radius: 6px;
 
-  background: #e9e9e9;
+  background: rgba(34, 199, 184, .10) !important;
+  color: var(--rio-text) !important;
+  border: 1px solid var(--rio-border-strong) !important;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 800;
 }
 
 /* Menú desplegable alineado al ancho del botón */
@@ -219,7 +239,7 @@ td.acciones .dd {
   left: 0;
 }
 .dd-toggle:hover {
-  background: #dedede;
+  background: rgba(34, 199, 184, .16) !important;
 }
 footer {
       text-align: center;
@@ -228,3 +248,114 @@ footer {
       font-size: 12px;
       border-top: 1px solid var(--border);
     }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(4, 8, 13, .72);
+  backdrop-filter: blur(8px);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.whatsapp-modal {
+  width: min(560px, 100%);
+  max-height: min(720px, calc(100vh - 36px));
+  overflow: auto;
+  border: 1px solid var(--rio-border);
+  border-radius: 8px;
+  background: var(--rio-surface);
+  color: var(--rio-text);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, .38);
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px;
+  border-bottom: 1px solid var(--rio-border);
+}
+
+.modal-kicker {
+  margin: 0 0 4px;
+  color: var(--rio-primary) !important;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.modal-head h2 {
+  margin: 0;
+}
+
+.modal-close {
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.whatsapp-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+}
+
+.whatsapp-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.optional {
+  color: var(--rio-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.whatsapp-form input,
+.whatsapp-form select {
+  width: 100%;
+  border: 1px solid var(--rio-border-strong);
+  border-radius: 6px;
+  background: #0b1017;
+  color: var(--rio-text);
+  padding: 10px 12px;
+  outline: none;
+}
+
+.field-full,
+.modal-actions {
+  grid-column: 1 / -1;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+@media (max-width: 680px) {
+  .whatsapp-form {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

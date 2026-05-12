@@ -51,16 +51,63 @@
     }
     .obs-hint{ font-size:.85rem; margin-top:4px; color: var(--muted); }
   </style>
+<link rel="stylesheet" href="../../assets/rio-theme.css" />
+<style>
+  :root {
+    --bg: #0b0f14;
+    --surface: #101721;
+    --elev: #151d28;
+    --text: #eef4fb;
+    --muted: #9fb0c3;
+    --border: rgba(148, 163, 184, .24);
+  }
+  .promo-card,
+  .promo-expand .inner,
+  .artList .item,
+  .price-chip,
+  .tag,
+  .chip,
+  .talles-drawer {
+    background: rgba(15, 23, 34, .96) !important;
+    color: #eef4fb !important;
+    border-color: rgba(148, 163, 184, .28) !important;
+  }
+  .promo-title,
+  .promo-card strong,
+  .artList .item,
+  .table th,
+  .table td {
+    color: #eef4fb !important;
+  }
+  .promo-sub,
+  .promo-card small,
+  .price-chip,
+  .tag,
+  .chip {
+    color: #b8c7d9 !important;
+  }
+  .btn.primary,
+  .btn.success,
+  .btn-expand,
+  .btn-add {
+    color: #eef4fb !important;
+    font-weight: 800;
+  }
+</style>
 </head>
 
 <body>
 
-  <header class="topbar">
-    <div class="brand">
-      <strong>PEDIDO SEMANAL PARA DEPOSITO</strong>
-      <span class="muted">· Gestión de promos</span>
+  <header class="topbar module-topbar">
+    <a href="../../index.html" class="btn ghost">← Volver</a>
+    <div class="brand module-topbar__title">
+      <h1>PEDIDO SEMANAL PARA DEPOSITO</h1>
+      <p>Gestión de promos</p>
     </div>
+    <div class="module-topbar__spacer"></div>
+  </header>
 
+  <section class="container module-control-panel">
     <div class="meta">
       <label>
         Sucursal
@@ -101,7 +148,7 @@
 
       <button id="btnPDF" class="btn primary">Exportar PDF</button>
     </div>
-  </header>
+  </section>
 
   <main class="container two-cols">
     <!-- Columna IZQUIERDA -->
@@ -130,6 +177,7 @@
         <div class="row space-between center">
           <h2>Pedido</h2>
           <div class="row gap">
+            <button id="deshacer" class="btn ghost" disabled>Deshacer</button>
             <button id="copiar" class="btn ghost">Copiar</button>
             <button id="vaciar" class="btn danger ghost">Vaciar</button>
           </div>
@@ -155,7 +203,7 @@
   </aside>
 
   <footer>
-    RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® - 
+    RIO Tools Suite | Plataforma operativa interna 
   </footer>
 
   <script defer src="app.js"></script>

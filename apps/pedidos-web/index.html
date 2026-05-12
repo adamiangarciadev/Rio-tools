@@ -14,23 +14,17 @@
   <title>Pedidos Web - RIO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="../../assets/rio-theme.css" />
 </head>
 
 <body>
-  <header class="topbar">
-  <div class="brand">
-    <strong>RIO Tools</strong>
-  </div>
-  <nav>
-    <a href="/Rio-tools/" class="btn ghost">Inicio</a>
-
-  </nav>
-</header>
-  <header>
-    <h1>Pedidos Web - RIO</h1>
-    <div class="top-bar">
+  <header class="topbar module-topbar">
+    <a href="../../index.html" class="btn ghost">← Volver</a>
+    <div class="module-topbar__title"><h1>Pedidos Web - RIO</h1></div>
+    <div class="module-topbar__actions"><div class="top-bar">
+      <button id="btnWhatsapp" class="btn whatsapp-btn" type="button">Cargar WhatsApp</button>
       <span id="estadoCarga"></span>
-    </div>
+    </div></div>
   </header>
 
   <main>
@@ -63,9 +57,57 @@
     </table>
   </main>
 
+  <div class="modal-backdrop" id="whatsappModal" hidden>
+    <section class="whatsapp-modal" role="dialog" aria-modal="true" aria-labelledby="whatsappModalTitle">
+      <div class="modal-head">
+        <div>
+          <p class="modal-kicker">Carga manual</p>
+          <h2 id="whatsappModalTitle">Pedido de WhatsApp</h2>
+        </div>
+        <button id="btnCerrarWhatsapp" class="modal-close" type="button" aria-label="Cerrar">×</button>
+      </div>
+
+      <form id="whatsappForm" class="whatsapp-form">
+        <label>
+          Cliente
+          <input id="wspCliente" name="cliente" type="text" autocomplete="name" required />
+        </label>
+
+        <label>
+          DNI
+          <input id="wspDni" name="dni" type="text" inputmode="numeric" />
+        </label>
+
+        <label>
+          Envío / retiro
+          <select id="wspTipoEnvio" name="tipo_envio">
+            <option value="RETIRO">Retiro</option>
+            <option value="ENVÍO">Envío</option>
+            <option value="SHIPNOW">Shipnow</option>
+          </select>
+        </label>
+
+        <label>
+          Número de remito <span class="optional">(si tiene)</span>
+          <input id="wspRemito" name="remito" type="text" inputmode="numeric" />
+        </label>
+
+        <label>
+          Usuario
+          <input id="wspUsuario" name="usuario" type="text" placeholder="Quién carga" required />
+        </label>
+
+        <div class="modal-actions">
+          <button class="btn ghost" id="btnCancelarWhatsapp" type="button">Cancelar</button>
+          <button class="btn primary" type="submit">Guardar pedido</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
   <script src="app.js"></script>
   <footer>
-    RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® - 
+    RIO Tools Suite | Plataforma operativa interna 
   </footer>
 </body>
 </html>

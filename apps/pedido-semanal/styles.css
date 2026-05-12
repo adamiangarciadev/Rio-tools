@@ -22,13 +22,13 @@
 
 @media (prefers-color-scheme: light) {
   :root{
-    --bg: #f7f8fb;
-    --surface: #ffffff;
-    --elev: #ffffff;
-    --text: #0e1020;
-    --muted: #5a667c;
-    --border: #e7e9f0;
-    --shadow: 0 8px 26px rgba(8,15,52,.06);
+    --bg: #0b0f14;
+    --surface: #101721;
+    --elev: #151d28;
+    --text: #eef4fb;
+    --muted: #9fb0c3;
+    --border: rgba(148, 163, 184, .22);
+    --shadow: 0 18px 50px rgba(0,0,0,.28);
   }
 }
 
@@ -66,6 +66,59 @@ small{ font-size:.85rem }
 
 .brand{ display:flex; align-items:baseline; gap:8px }
 .meta{ display:flex; align-items:center; gap:12px }
+
+.module-control-panel{
+  margin: 18px auto 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(17, 24, 33, .94);
+}
+
+.module-control-panel .meta{
+  display: grid;
+  grid-template-columns: minmax(170px, 220px) auto minmax(220px, 1fr) minmax(220px, auto) auto;
+  align-items: end;
+  gap: 14px;
+}
+
+.module-control-panel .extras{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.module-control-panel .kpi{
+  align-self: center;
+}
+
+.module-control-panel #btnPDF{
+  align-self: end;
+}
+
+@media (max-width: 1100px){
+  .module-control-panel .meta{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px){
+  .module-control-panel{
+    margin-top: 12px;
+    padding: 12px;
+  }
+
+  .module-control-panel .meta{
+    grid-template-columns: 1fr;
+  }
+
+  .module-control-panel .btn,
+  .module-control-panel select,
+  .module-control-panel textarea{
+    width: 100%;
+  }
+}
 
 .footer{
   border-top:1px solid var(--border);
@@ -131,6 +184,34 @@ input:focus, select:focus{ border-color: var(--ring); box-shadow: 0 0 0 3px colo
 .btn.success{ background: var(--success); color:#03160f; border-color: transparent }
 .btn.danger{ background: var(--danger); color:#280b0b; border-color: transparent }
 .btn.ghost{ background: transparent }
+.btn:disabled{
+  cursor: not-allowed;
+  opacity: .48;
+  transform: none;
+}
+.btn-row-delete{
+  width: 30px;
+  min-height: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #fecdd3 !important;
+  border-color: rgba(248, 113, 113, .32) !important;
+  background: rgba(248, 113, 113, .08) !important;
+}
+.btn-row-delete:hover{
+  color: #fff !important;
+  border-color: rgba(248, 113, 113, .72) !important;
+  background: rgba(248, 113, 113, .18) !important;
+}
+.table th.actions,
+.table td.actions{
+  width: 38px;
+  min-width: 38px;
+  white-space: nowrap;
+  text-align: right;
+}
 
 /* ======= Two columns ======= */
 .two-cols{
@@ -236,6 +317,55 @@ input:focus, select:focus{ border-color: var(--ring); box-shadow: 0 0 0 3px colo
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring), transparent 70%);
 }
 .promo-expand .row.gap button { min-height: 32px; padding: 0 10px; }
+
+/* ===== Ajuste comercial RIO: contraste fuerte en fichas ===== */
+.promo-card,
+.artList .item,
+.promo-expand .inner,
+.price-chip,
+.tag,
+.chip,
+.drawer-panel,
+.talles-drawer {
+  background: rgba(15, 23, 34, .96) !important;
+  color: #eef4fb !important;
+  border-color: rgba(148, 163, 184, .26) !important;
+}
+
+.promo-card {
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .28) !important;
+}
+
+.promo-title,
+.promo-card strong,
+.artList .item,
+.table th,
+.table td {
+  color: #eef4fb !important;
+}
+
+.promo-sub,
+.promo-card small,
+.price-chip,
+.tag,
+.chip {
+  color: #b8c7d9 !important;
+}
+
+.promo-card input,
+.promo-card select,
+.promo-card button,
+.talles-drawer input,
+.talles-drawer select,
+.talles-drawer button {
+  color: #eef4fb !important;
+}
+
+.btn.primary,
+.btn.success {
+  color: #eef4fb !important;
+  font-weight: 800;
+}
 
 /* ===========================
    Drawer lateral de Talles
@@ -362,6 +492,20 @@ footer {
   .promo-expand .row.gap[style*="margin-top:10px"] > button{
     width: 100%;
     min-width: 0;
+  }
+
+  #pedidoPanel > .row{
+    align-items: stretch;
+  }
+
+  #pedidoPanel > .row,
+  #pedidoPanel > .row > .row{
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  #pedidoPanel .btn{
+    width: 100%;
   }
 }
 

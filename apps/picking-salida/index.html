@@ -15,24 +15,18 @@
   <title>Pickeo SALIDA - RIO</title>
   <meta name="description" content="App 100% front-end para pickeo con escáner (Zebra/HID) y descarga de TXT." />
   <link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="../../assets/rio-theme.css" />
 </head>
 <body>
-  <header class="topbar">
-  <div class="brand">
-    <strong>RIO Tools</strong>
-  </div>
-  <nav>
-    <a href="/Rio-tools/" class="btn ghost">Inicio</a>
-
-  </nav>
-</header>
-  <header class="container header-row">
-    <div>
+  <header class="container header-row module-topbar">
+    <a href="../../index.html" class="btn ghost">← Volver</a>
+    <div class="module-topbar__title">
       <h1>SALIDA DE MERCADERIA</h1>
-    
     </div>
-    <div id="readyPill" class="pill hidden" aria-live="polite" title="Estado">
+    <div class="module-topbar__actions">
+      <div id="readyPill" class="pill hidden" aria-live="polite" title="Estado">
       <span class="dot"></span><span id="pillText">Cargando…</span>
+    </div>
     </div>
   </header>
 
@@ -74,7 +68,7 @@
       <h2>Pickeo</h2>
       <p class="muted small">La app carga automáticamente <code>equivalencia.csv</code> y <code>equivalencias2.csv</code> si existen en la carpeta.</p>
       <div class="scan-wrap">
-        <input id="scanInput" class="scan-input" type="text" placeholder="Escaneá el código…" autocomplete="off" autofocus />
+        <input id="scanInput" class="scan-input" type="text" placeholder="Escaneá el código…" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus />
         <div class="scan-meta">
           <span id="scanCount" class="badge">0 escaneados</span>
           <span id="noti" class="muted"></span>
@@ -98,7 +92,7 @@
 
 
   <footer class="container foot muted">
-        RIO Tools Suite · GitHub Pages · Uso interno   by   - ADAMIANGARCIADEV® - 
+        RIO Tools Suite | Plataforma operativa interna 
   </footer>
 
   <script src="./app.js"></script>

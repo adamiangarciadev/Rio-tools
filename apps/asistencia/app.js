@@ -5,6 +5,7 @@
   const SCRIPT_URL =
     "https://script.google.com/macros/s/AKfycbwqAzCaD5HXVSWRoag2LbzBrDA1FJJD1VcOkw7-HkY9Do3NXKpKPuEjEZwcdT-6cla74Q/exec";
 
+  const HIDDEN_SUCURSALES = new Set(["MORENO"]);
   const LS_SUCURSAL = "asistencia_sucursal_v1";
   const LS_DEVICE   = "asistencia_device_id_v1";
 
@@ -451,7 +452,9 @@
       if (!sel) throw new Error("No existe #sucursalSelect");
       sel.innerHTML = "";
 
-      const list = (res.data && res.data.sucursales) ? res.data.sucursales : [];
+      const list = ((res.data && res.data.sucursales) ? res.data.sucursales : [])
+        .map(s => String(s || "").trim().toUpperCase())
+        .filter(s => s && !HIDDEN_SUCURSALES.has(s));
       for (const s of list) {
         const opt = document.createElement("option");
         opt.value = s;
@@ -460,7 +463,11 @@
       }
 
       const saved = localStorage.getItem(LS_SUCURSAL);
-      if (saved && list.includes(saved)) sel.value = saved;
+      if (saved && HIDDEN_SUCURSALES.has(String(saved).trim().toUpperCase())) {
+        localStorage.removeItem(LS_SUCURSAL);
+      } else if (saved && list.includes(saved)) {
+        sel.value = saved;
+      }
 
       saveSucursalAuto();
       setPill("ok", "Listo");

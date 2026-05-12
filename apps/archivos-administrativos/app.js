@@ -6,7 +6,6 @@
     { name: "AVELLANEDA", url: "https://drive.google.com/file/d/1pfqmq60mbPy37SHdiKWW8RHU0o2aLHmb/view?usp=drive_link" },
     { name: "NAZCA",      url: "https://drive.google.com/file/d/1XnBvJNyTqtggqDR33QAhp3D40a_OF0yl/view?usp=drive_link" },
     { name: "LAMARCA",    url: "https://drive.google.com/file/d/1H-GYiVwOdNxBCC4eozdIFKE6kR550UYz/view?usp=drive_link" },
-    { name: "MORENO",     url: "https://drive.google.com/file/d/1VhNchkPWeF3J47Z0VoPTqI4OW3oZpVJ1/view?usp=drive_link" },
     { name: "QUILMES",    url: "https://drive.google.com/file/d/1OPNWe5RaFbgNb9_BfC2eQV0j-yMVNOzb/view?usp=drive_link" },
     { name: "CORRIENTES", url: "https://drive.google.com/file/d/1QD2f-MXv-jQV7h66wPixstFAQQUAsWc3/view?usp=drive_link" },
     { name: "SARMIENTO",  url: "https://drive.google.com/file/d/1IXMQvd-zQdqum8vwUCULcuHVzDRoVLCh/view?usp=drive_link" },

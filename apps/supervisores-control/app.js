@@ -22,7 +22,6 @@
     "CORRIENTES",
     "CASTELLI",
     "QUILMES",
-    "MORENO",
     "SARMIENTO",
     "DEPOSITO",
     "PUEYRREDON"

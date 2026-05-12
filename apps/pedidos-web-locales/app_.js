@@ -18,6 +18,9 @@
   const sucursalSelect = document.getElementById("sucursalSelect");
   const tablaPedidos = document.getElementById("tablaPedidos");
   const estadoCarga = document.getElementById("estadoCarga");
+  const buscarPedido = document.getElementById("buscarPedido");
+  let pedidosActuales = [];
+  let filtroActual = "";
 
   if (!sucursalSelect || !tablaPedidos || !estadoCarga) {
     console.error(
@@ -86,7 +89,8 @@
       }
 
       const pedidos = Array.isArray(data.pedidos) ? data.pedidos : [];
-      renderTabla(pedidos);
+      pedidosActuales = pedidos;
+      renderTabla(pedidosActuales);
       estadoCarga.textContent = `Actualizado: ${new Date().toLocaleTimeString()}`;
     } catch (err) {
       console.error("[RIO] Error de red listar:", err);
@@ -245,11 +249,23 @@
     // Ordenar: primero los que tienen botones
     list = ordenarPedidos(list);
 
+    const q = normalizeText(filtroActual);
+    if (q) {
+      list = list.filter((p) => normalizeText([
+        p.id_pedido,
+        p.cliente,
+        p.dni,
+        p.monto,
+        p.estado,
+        p.alerta_36hs
+      ].join(" ")).includes(q));
+    }
+
     if (!list.length) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
       td.colSpan = 7;
-      td.textContent = "No hay pedidos pendientes para esta sucursal.";
+      td.textContent = q ? "No hay pedidos que coincidan con la busqueda." : "No hay pedidos pendientes para esta sucursal.";
       tr.appendChild(td);
       tablaPedidos.appendChild(tr);
       return;
@@ -294,6 +310,21 @@
       }
 
       tablaPedidos.appendChild(tr);
+    });
+  }
+
+  function normalizeText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase()
+      .trim();
+  }
+
+  if (buscarPedido) {
+    buscarPedido.addEventListener("input", () => {
+      filtroActual = buscarPedido.value.trim();
+      renderTabla(pedidosActuales);
     });
   }
 

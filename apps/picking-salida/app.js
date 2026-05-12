@@ -1,16 +1,16 @@
-/* app.js — 2 CSV, match normalizado, UN SOLO TXT con TODOS los códigos
+/* app.js � 2 CSV, match normalizado, UN SOLO TXT con TODOS los c�digos
    Flujo correcto:
    1) La app pide remito al script del cuadernillo
    2) El cuadernillo registra la fila y devuelve remito
    3) La app arma el nombre final del TXT
-   4) La app envía el TXT al script del origen
+   4) La app env�a el TXT al script del origen
 */
 ;(() => {
   "use strict";
 
   // ====== Config ======
   const RESPONSABLES = ["DAVID","DIEGO","JOEL","MARTIN","MIGUEL","NAHUEL","RODRIGO","RAMON","ROBERTO","SERGIO","PATO","FRANCO"];
-  const SUCURSALES  = ["AV2","NAZCA","LAMARCA","CORRIENTES","CASTELLI","QUILMES","MORENO","SARMIENTO","DEPOSITO","PUEYRREDON"];
+  const SUCURSALES  = ["AV2","NAZCA","LAMARCA","CORRIENTES","CASTELLI","QUILMES","SARMIENTO","DEPOSITO","PUEYRREDON"];
   const CSV_FILES   = ["../../data/equivalencia.csv", "../../data/equivalencia2.csv"];
 
   const LS_META  = "pickeo_meta_v1";
@@ -26,7 +26,6 @@
   const SCRIPT_URL_AV2        = "https://script.google.com/macros/s/AKfycbwPNl9zyKtgun43MijeiFL3BtGTyM79_a4pocTYlYOr9Q5KllWra6s2HjbGIr11XFGy9w/exec";
   const SCRIPT_URL_PUEYRREDON = "https://script.google.com/macros/s/AKfycbxKRHA79kv30UEjOU_eeehr8evuVPhqDFfSaanJgeJPgUSEZao5eLqsTyO73CdLvgZE/exec";
   const SCRIPT_URL_DEPOSITO   = "https://script.google.com/macros/s/AKfycbxidW-8kYw_w6Wsym4UU6euKDBLbZV-n2NapYarZvtx3tifPWPv22Ck4-y4F27xRqjx/exec";
-  const SCRIPT_URL_MORENO     = "https://script.google.com/macros/s/AKfycbz29YHxH7c85ReyLtaiDoodbCwDYZSvELtBYB35qMMdIwSxtVUIZk1ffQg8TJoqeLQs9A/exec";
 
   // ====== Estado ======
   let rows = [];
@@ -275,7 +274,7 @@
 
   function signalSaved(remito, fileName) {
     const remText = remito ? `REM${remito}` : "Remito generado";
-    note(fileName ? `${remText} guardado · ${fileName}` : `${remText} guardado en Google Drive`);
+    note(fileName ? `${remText} guardado � ${fileName}` : `${remText} guardado en Google Drive`);
     showPill("ok", `${remText} guardado`);
     beepOk();
 
@@ -332,15 +331,15 @@
     const okCount = results.filter(r => r.ok).length;
 
     if (okCount === 0) {
-      showPill("danger", "No se encontró ningún CSV");
-      note("No se cargaron CSV. Revisá nombres y mayúsculas/minúsculas.");
+      showPill("danger", "No se encontr� ning�n CSV");
+      note("No se cargaron CSV. Revis� nombres y may�sculas/min�sculas.");
     } else if (okCount === list.length) {
       showPill("ok", `Listo (${okCount}/${list.length} CSV)`);
-      note(results.map(r => `OK ${r.name} (${r.rows})`).join(" · "));
+      note(results.map(r => `OK ${r.name} (${r.rows})`).join(" � "));
     } else {
       const misses = results.filter(r => !r.ok).map(r => r.name).join(", ");
       showPill("warn", `Listo con ${okCount}/${list.length} CSV`);
-      note(`Faltó: ${misses}. Verificá que estén en la misma carpeta y con ese nombre exacto.`);
+      note(`Falt�: ${misses}. Verific� que est�n en la misma carpeta y con ese nombre exacto.`);
     }
 
     renderArticleCounter();
@@ -392,7 +391,7 @@
   function guessCodeColumn(keys) {
     const forced = pickKey(keys, [
       "codigo_barras",
-      "código","codigo","c�digo","cÃ³digo",
+      "c�digo","codigo","c?digo","código",
       "barcode","ean",
       "lectura","scan"
     ]);
@@ -404,7 +403,7 @@
     if (!row) return "";
 
     const keys = Object.keys(row);
-    const artKey = pickKey(keys, ["articulo","artículo","art�culo","artÃ­culo"]);
+    const artKey = pickKey(keys, ["articulo","art�culo","art?culo","artículo"]);
 
     return artKey ? String(row[artKey] ?? "").trim() : "";
   }
@@ -413,8 +412,8 @@
     if (!row) return { color: "", talle: "" };
 
     const keys = Object.keys(row);
-    const desc1 = pickKey(keys, ["descripcion","descripción","descripci�n","descripciÃ³n"]);
-    const desc2 = pickKey(keys, ["descripcion_2","descripción_2","descripci�n_2","descripciÃ³n_2"]);
+    const desc1 = pickKey(keys, ["descripcion","descripci�n","descripci?n","descripción"]);
+    const desc2 = pickKey(keys, ["descripcion_2","descripci�n_2","descripci?n_2","descripción_2"]);
 
     const color = desc1 ? String(row[desc1] ?? "").trim() : "";
     const talle = desc2 ? String(row[desc2] ?? "").trim() : "";
@@ -426,8 +425,8 @@
     );
 
     const talle2 = talle || (
-      pickKey(keys, ["talle","tamaño","tamano","size"])
-        ? String(row[pickKey(keys, ["talle","tamaño","tamano","size"])] ?? "").trim()
+      pickKey(keys, ["talle","tama�o","tamano","size"])
+        ? String(row[pickKey(keys, ["talle","tama�o","tamano","size"])] ?? "").trim()
         : ""
     );
 
@@ -494,8 +493,8 @@
       renderLast();
       renderPickList();
       renderArticleCounter();
-      note("Ítem eliminado.");
-      showPill("ok", "Ítem eliminado");
+      note("�tem eliminado.");
+      showPill("ok", "�tem eliminado");
     }
   }
 
@@ -509,7 +508,7 @@
 
     el.pickList.innerHTML = scans.map(s => `
       <div class="pick-row">
-        <span class="pick-badge ${s.ok ? "ok" : "err"}" title="${s.ok ? "OK" : "NO"}">${s.ok ? "✓" : "✗"}</span>
+        <span class="pick-badge ${s.ok ? "ok" : "err"}" title="${s.ok ? "OK" : "NO"}">${s.ok ? "?" : "?"}</span>
         <span class="pick-code">${escapeHtml(s.code)}</span>
         <button class="pick-del" type="button" data-del-id="${s.id}">Eliminar</button>
       </div>
@@ -548,7 +547,7 @@
       const { color, talle } = getColorTalleFromRow(row);
 
       const artLabel = [articulo, color, talle].filter(Boolean).join(" ").trim() || articulo;
-      const variantLabel = [color, talle].filter(Boolean).join(" · ") || "SIN VARIANTE";
+      const variantLabel = [color, talle].filter(Boolean).join(" � ") || "SIN VARIANTE";
 
       if (!map.has(artLabel)) {
         map.set(artLabel, { total: 0, variants: new Map() });
@@ -576,7 +575,7 @@
         <details class="art-item">
           <summary>
             <div class="art-sum-left">
-              <span class="art-arrow">›</span>
+              <span class="art-arrow">�</span>
               <span class="art-code">${escapeHtml(artLabel)}</span>
             </div>
             <span class="art-total">${info.total}</span>
@@ -608,8 +607,8 @@
     if (el.scanCount) el.scanCount.textContent = `${total} escaneados`;
 
     const recent = scans.slice(0, 10)
-      .map(s => `<span class="${s.ok ? "ok" : "err"}">${s.ok ? "✓" : "✗"} ${escapeHtml(s.code)}</span>`)
-      .join(" · ");
+      .map(s => `<span class="${s.ok ? "ok" : "err"}">${s.ok ? "?" : "?"} ${escapeHtml(s.code)}</span>`)
+      .join(" � ");
 
     el.lastScans.innerHTML = recent || "";
   }
@@ -669,12 +668,12 @@
     const destino = (el.destinoSelect?.value || "").toUpperCase().trim();
 
     if (!origen) {
-      signalError("Seleccioná un ORIGEN.");
+      signalError("Seleccion� un ORIGEN.");
       return;
     }
 
     if (!destino) {
-      signalError("Seleccioná un DESTINO.");
+      signalError("Seleccion� un DESTINO.");
       return;
     }
 
@@ -698,7 +697,7 @@
       const remito = remitoData?.remito;
 
       if (!remito) {
-        throw new Error("El cuadernillo no devolvió número de remito.");
+        throw new Error("El cuadernillo no devolvi� n�mero de remito.");
       }
 
       updateRemitoUI(remito);
@@ -835,7 +834,6 @@
     if (o === "AV2")        return SCRIPT_URL_AV2;
     if (o === "PUEYRREDON") return SCRIPT_URL_PUEYRREDON;
     if (o === "DEPOSITO")   return SCRIPT_URL_DEPOSITO;
-    if (o === "MORENO")   return SCRIPT_URL_MORENO;
     return "";
   }
 

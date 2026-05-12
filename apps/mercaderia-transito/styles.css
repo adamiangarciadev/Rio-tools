@@ -26,10 +26,15 @@ body{
 .topbar{
   padding:18px;
   border-bottom:1px solid var(--border);
-  display:flex;
-  justify-content:space-between;
-  flex-wrap:wrap;
+  display:grid;
+  grid-template-columns:auto minmax(260px, 1fr) auto;
+  align-items:center;
   gap:12px;
+}
+
+.page-title{
+  text-align:center;
+  justify-self:center;
 }
 
 .topbar h1{
@@ -48,6 +53,20 @@ body{
   align-items:end;
   gap:10px;
   flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+@media (max-width: 860px){
+  .topbar{
+    grid-template-columns:1fr;
+  }
+  .page-title{
+    text-align:left;
+    justify-self:stretch;
+  }
+  .top-actions{
+    justify-content:stretch;
+  }
 }
 
 /* CONTENEDOR */

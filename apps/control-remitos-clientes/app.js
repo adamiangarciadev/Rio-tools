@@ -9,7 +9,6 @@
     "AV2",
     "AV1",
     "QUILMES",
-    "MORENO",
     "CASTELLI",
     "CORRIENTES",
     "LAMARCA",
