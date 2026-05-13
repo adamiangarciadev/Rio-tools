@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Asistencia - RIO</title>
+  <meta name="description" content="Dashboard mensual de asistencia, faltas y llegadas tarde por local y empleado." />
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CDPZFHV1BV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-CDPZFHV1BV");
+  </script>
+
+  <link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="container module-topbar">
+    <a href="../../index.html" class="btn back-btn">Volver</a>
+    <div class="module-topbar__title">
+      <h1>Dashboard Asistencia</h1>
+      <p>Mes en curso, faltas, llegadas tarde y ultimos 30 dias por empleado</p>
+    </div>
+    <div class="module-topbar__actions">
+      <button id="refreshBtn" class="btn" type="button">Actualizar</button>
+    </div>
+  </header>
+
+  <main class="container dash-shell">
+    <section class="filters-panel">
+      <label>
+        Periodo
+        <select id="periodFilter">
+          <option value="last30">Ultimos 30 dias</option>
+          <option value="month">Mes seleccionado</option>
+        </select>
+      </label>
+      <label>
+        Mes
+        <input id="monthInput" type="month" />
+      </label>
+      <label>
+        Local
+        <select id="branchFilter"><option value="">Todos</option></select>
+      </label>
+      <label>
+        Empleado
+        <select id="employeeFilter"><option value="">Todos</option></select>
+      </label>
+      <label>
+        Buscar
+        <input id="searchInput" type="search" placeholder="Nombre, codigo, local o estado" />
+      </label>
+    </section>
+
+    <section class="kpi-grid">
+      <article class="kpi-card">
+        <span>Dias trabajables</span>
+        <strong id="eventsCount">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Faltas</span>
+        <strong id="absencesCount">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Llegadas tarde</span>
+        <strong id="lateCount">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Sin registro</span>
+        <strong id="missingCount">0</strong>
+      </article>
+    </section>
+
+    <section class="dash-grid">
+      <article class="panel span-2">
+        <div class="panel-head">
+          <div>
+            <h2>Locales por asistencia</h2>
+            <p id="branchHint">Comparacion mensual por faltas, tardes y cargas faltantes</p>
+          </div>
+        </div>
+        <div id="branchScoreList" class="branch-score-list"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Locales con mas faltas</h2>
+        </div>
+        <div id="branchAbsencesList" class="rank-list"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Locales con mas llegadas tarde</h2>
+        </div>
+        <div id="branchLateList" class="rank-list"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Empleados con mas faltas</h2>
+        </div>
+        <div id="employeeAbsencesList" class="rank-list"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Empleados con mas llegadas tarde</h2>
+        </div>
+        <div id="employeeLateList" class="rank-list"></div>
+      </article>
+
+      <article class="panel span-2">
+        <div class="panel-head">
+          <div>
+            <h2>Ultimos 30 dias por empleado</h2>
+            <p id="employeeHistoryHint">Selecciona un empleado o revisa el resumen general.</p>
+          </div>
+        </div>
+        <div id="employeeHistory" class="history-grid"></div>
+      </article>
+
+      <article class="panel span-2">
+        <div class="panel-head">
+          <div>
+            <h2>Jornadas</h2>
+            <p id="tableHint">Jornadas esperadas filtradas.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Local</th>
+                <th>Codigo</th>
+                <th>Empleado</th>
+                <th>Estado</th>
+                <th>Hora</th>
+                <th>Esperado</th>
+                <th>Obs</th>
+              </tr>
+            </thead>
+            <tbody id="eventsTable"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="api-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

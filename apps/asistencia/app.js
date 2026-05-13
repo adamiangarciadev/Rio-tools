@@ -98,6 +98,19 @@
     return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
   }
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function escapeAttr(value) {
+    return escapeHtml(value);
+  }
+
   // Sanitiza para nombre de archivo (sin tildes raras / caracteres prohibidos)
   function safeNamePart(s) {
     return String(s || "")
@@ -279,6 +292,72 @@
 
     if (hit.activo === false) return { ok: false, nombre: hit.nombre || "", message: "Vendedor inactivo" };
     return { ok: true, nombre: hit.nombre || "" };
+  }
+
+  function normalizeSearch(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function isNumericSearch(value) {
+    return /^\d+$/.test(String(value || "").trim());
+  }
+
+  function findPadronByName(query) {
+    const q = normalizeSearch(query);
+    if (!q) return [];
+
+    return Array.from(padronMap.entries())
+      .map(([id, data]) => ({
+        id,
+        nombre: data?.nombre || "",
+        activo: data?.activo
+      }))
+      .filter((item) => item.activo !== false && normalizeSearch(item.nombre).includes(q))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+      .slice(0, 8);
+  }
+
+  function clearVendedorMatches() {
+    const box = $("vendedorMatches");
+    if (box) box.innerHTML = "";
+  }
+
+  function selectVendedor(id, nombre, originText = "OK (cache)") {
+    const input = $("vendedorId");
+    if (input) input.value = id;
+    clearVendedorMatches();
+    _setVendedorUI_OK(nombre, originText);
+    return { nombre };
+  }
+
+  function renderVendedorMatches(matches) {
+    const box = $("vendedorMatches");
+    if (!box) return;
+
+    if (!matches.length) {
+      box.innerHTML = "";
+      return;
+    }
+
+    box.innerHTML = matches.map((item) => `
+      <button class="vendedor-match" type="button" data-vendedor-id="${escapeAttr(item.id)}">
+        <strong>${escapeHtml(item.nombre || "SIN NOMBRE")}</strong>
+        <small>${escapeHtml(item.id)}</small>
+      </button>
+    `).join("");
+
+    box.querySelectorAll("[data-vendedor-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const id = button.dataset.vendedorId || "";
+        const match = matches.find((item) => item.id === id);
+        if (match) selectVendedor(match.id, match.nombre);
+      });
+    });
   }
 
   // ===================== EVENTOS HOY + ANTI DUPLICADO =====================
@@ -494,6 +573,8 @@
     const obs = $("observacion");
     if (obs) obs.value = "";
 
+    setTipoEvento("ENTRADA");
+    clearVendedorMatches();
     clearSelectedFile();
 
     lastLookupOk = false;
@@ -501,6 +582,20 @@
     if (vendedorId) vendedorId.focus();
 
     refreshBloqueoDuplicado();
+  }
+
+  function setTipoEvento(value) {
+    const tipo = String(value || "ENTRADA").trim().toUpperCase();
+    const input = $("tipoEvento");
+    if (input) input.value = tipo;
+
+    document.querySelectorAll("[data-event-type]").forEach((button) => {
+      const selected = button.dataset.eventType === tipo;
+      button.classList.toggle("is-selected", selected);
+      button.setAttribute("aria-checked", selected ? "true" : "false");
+    });
+
+    input?.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
   function _setVendedorUI_OK(nombre, originText = "OK en padrón") {
@@ -520,7 +615,31 @@
   }
 
   async function buscarVendedor() {
-    const id = ($("vendedorId")?.value || "").trim();
+    const raw = ($("vendedorId")?.value || "").trim();
+    if (!raw) return (toast("Ingresa codigo o nombre."), null);
+
+    if (!isNumericSearch(raw)) {
+      if (!padronMap.size) await refreshPadronFromBackend();
+
+      const matches = findPadronByName(raw);
+      if (matches.length === 1) {
+        return selectVendedor(matches[0].id, matches[0].nombre);
+      }
+
+      renderVendedorMatches(matches);
+
+      if (matches.length > 1) {
+        _setVendedorUI_ERR("Elegir una coincidencia");
+        toast("Selecciona el vendedor de la lista.");
+      } else {
+        _setVendedorUI_ERR("No encontrado por nombre");
+        toast("No encontre vendedores con ese nombre.");
+      }
+      return null;
+    }
+
+    const id = raw;
+    clearVendedorMatches();
     if (!id) return (toast("Ingresá N° vendedor."), null);
 
     const local = lookupPadronLocal(id);
@@ -665,7 +784,14 @@
 
     // Anti-dup en vivo
     $("vendedorId")?.addEventListener("input", refreshBloqueoDuplicado);
+    $("vendedorId")?.addEventListener("input", () => {
+      const value = ($("vendedorId")?.value || "").trim();
+      if (!value || isNumericSearch(value)) clearVendedorMatches();
+    });
     $("tipoEvento")?.addEventListener("change", refreshBloqueoDuplicado);
+    document.querySelectorAll("[data-event-type]").forEach((button) => {
+      button.addEventListener("click", () => setTipoEvento(button.dataset.eventType));
+    });
 
     // Autocompleta al salir si está en cache
     $("vendedorId")?.addEventListener("blur", () => {

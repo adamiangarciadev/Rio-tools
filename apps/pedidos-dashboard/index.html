@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Pedidos - RIO</title>
+  <meta name="description" content="Dashboard interactivo de manejo de pedidos sobre Pedidos_LOG." />
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CDPZFHV1BV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-CDPZFHV1BV");
+  </script>
+
+  <link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="container module-topbar">
+    <a href="../../index.html" class="btn back-btn">Volver</a>
+    <div class="module-topbar__title">
+      <h1>Dashboard Pedidos</h1>
+      <p>Lectura interactiva de Pedidos_LOG</p>
+    </div>
+    <div class="module-topbar__actions">
+      <button id="refreshBtn" class="btn" type="button">Actualizar</button>
+    </div>
+  </header>
+
+  <main class="container dashboard-shell">
+    <section class="filters-panel">
+      <label>
+        Desde
+        <input id="fromDate" type="date" />
+      </label>
+      <label>
+        Hasta
+        <input id="toDate" type="date" />
+      </label>
+      <label>
+        Sucursal
+        <select id="branchFilter"><option value="">Todas</option></select>
+      </label>
+      <label>
+        Estado actual
+        <select id="stateFilter"><option value="">Todos</option></select>
+      </label>
+      <label>
+        Tipo envio
+        <select id="shippingFilter"><option value="">Todos</option></select>
+      </label>
+      <label>
+        Web
+        <select id="webFilter"><option value="">Todas</option></select>
+      </label>
+      <label>
+        Usuario
+        <select id="userFilter"><option value="">Todos</option></select>
+      </label>
+      <label class="search-field">
+        Buscar
+        <input id="searchInput" type="search" placeholder="ID, usuario, estado o detalle" />
+      </label>
+    </section>
+
+    <section class="kpi-grid" aria-label="Indicadores principales">
+      <article class="kpi-card">
+        <span>Movimientos</span>
+        <strong id="totalEvents">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Pedidos unicos</span>
+        <strong id="uniqueOrders">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Tiempo promedio armado</span>
+        <strong id="avgBuildTime">-</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Pedidos medidos</span>
+        <strong id="measuredOrders">0</strong>
+      </article>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel span-2">
+        <div class="panel-head">
+          <div>
+            <h2>Tiempo en armado</h2>
+            <p id="cycleHint">Desde primer ingreso hasta primer estado armado/pickeado</p>
+          </div>
+        </div>
+        <div id="cycleChart" class="cycle-grid"></div>
+      </article>
+
+      <article class="panel span-2">
+        <div class="panel-head">
+          <div>
+            <h2>Actividad diaria</h2>
+            <p id="activityHint">Cambios registrados por dia</p>
+          </div>
+        </div>
+        <div id="dailyChart" class="bar-chart"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Estados actuales</h2>
+        </div>
+        <div id="stateChart" class="stack-list"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Sucursales</h2>
+        </div>
+        <div id="branchChart" class="stack-list"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Tipo de envio</h2>
+        </div>
+        <div id="shippingChart" class="stack-list"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Web</h2>
+        </div>
+        <div id="webChart" class="stack-list"></div>
+      </article>
+
+      <article class="panel span-2">
+        <div class="panel-head">
+          <div>
+            <h2>Pedidos medidos</h2>
+            <p id="cycleTableHint">Ordenados por mayor tiempo de armado</p>
+          </div>
+        </div>
+        <div class="table-wrap cycle-table">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Sucursal</th>
+                <th>Ingreso</th>
+                <th>Armado/Pickeado</th>
+                <th>Tiempo</th>
+                <th>Estado armado</th>
+              </tr>
+            </thead>
+            <tbody id="cycleTable"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel span-2">
+        <div class="panel-head">
+          <div>
+            <h2>Ultimos movimientos</h2>
+            <p id="tableHint">Ordenados del mas reciente al mas antiguo</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>ID</th>
+                <th>Sucursal</th>
+                <th>Estado previo</th>
+                <th>Estado actual</th>
+                <th>Envio</th>
+                <th>Web</th>
+                <th>Modifico</th>
+              </tr>
+            </thead>
+            <tbody id="logTable"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="api-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

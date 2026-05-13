@@ -52,8 +52,9 @@
         <!-- Vendedor -->
         <div class="field">
           <label for="vendedorId">N° vendedor</label>
-          <input id="vendedorId" class="input" inputmode="numeric" autocomplete="off" placeholder="Ej: 1023" />
-          <div class="help">Enter para buscar.</div>
+          <input id="vendedorId" class="input" autocomplete="off" placeholder="Ej: 1023 o Romina" />
+          <div class="help">Enter para buscar por codigo o nombre.</div>
+          <div class="vendedor-matches" id="vendedorMatches"></div>
         </div>
 
         <!-- Nombre -->
@@ -73,13 +74,14 @@
         <!-- Tipo -->
         <div class="field">
           <label for="tipoEvento">Tipo</label>
-          <select id="tipoEvento" class="input">
-            <option value="ENTRADA">ENTRADA</option>
-            <option value="SALIDA">SALIDA</option>
-            <option value="PERMISO">PERMISO</option>
-            <option value="FALTA">FALTA</option>
-            <option value="VACACIONES">VACACIONES</option>
-          </select>
+          <input id="tipoEvento" type="hidden" value="ENTRADA" />
+          <div class="event-options" id="tipoEventoOptions" role="radiogroup" aria-label="Tipo de asistencia">
+            <button class="event-option is-selected" type="button" data-event-type="ENTRADA" role="radio" aria-checked="true">ENTRADA</button>
+            <button class="event-option" type="button" data-event-type="FALTA" role="radio" aria-checked="false">FALTA</button>
+            <button class="event-option" type="button" data-event-type="FALTA JUSTIFICADA" role="radio" aria-checked="false">FALTA JUSTIFICADA</button>
+            <button class="event-option" type="button" data-event-type="PERMISO" role="radio" aria-checked="false">PERMISO</button>
+            <button class="event-option" type="button" data-event-type="VACACIONES" role="radio" aria-checked="false">VACACIONES</button>
+          </div>
           <div class="help">Podés dejar solo ENTRADA si querés simplificar.</div>
         </div>
 
