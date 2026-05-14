@@ -2,6 +2,7 @@
   "use strict";
 
   const SCRIPT_URL = window.CHECK_DEPOSITOS_API_URL || "";
+  const EDIT_SCRIPT_URL = window.CHECK_DEPOSITOS_EDIT_API_URL || SCRIPT_URL;
   const LOCALS = ["AV2", "NAZCA", "LAMARCA", "CORRIENTES", "CASTELLI", "QUILMES", "SARMIENTO", "PUEYRREDON", "WEB"];
   const ACCOUNTS = [
     "Santander - Lucia Catera",
@@ -341,7 +342,7 @@
       el.editSaveBtn.disabled = true;
       el.editStatus.textContent = "Guardando...";
 
-      const data = await fetchJson(SCRIPT_URL, {
+      const data = await fetchJson(EDIT_SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify({
           accion: "actualizar_deposito",
