@@ -107,7 +107,7 @@ input {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -169,7 +169,7 @@ input {
 
 .view-actions {
   display: inline-grid;
-  grid-template-columns: repeat(3, minmax(82px, 1fr));
+  grid-template-columns: repeat(4, minmax(76px, 1fr));
   gap: 5px;
   padding: 4px;
   border: 1px solid var(--sales-line);
@@ -196,7 +196,7 @@ input {
 
 table {
   width: 100%;
-  min-width: 880px;
+  min-width: 980px;
   border-collapse: collapse;
   background: var(--sales-panel-2) !important;
 }
@@ -246,6 +246,20 @@ tbody tr.active {
   border: 0 !important;
   background: transparent !important;
   text-align: left;
+}
+
+.client-check {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  accent-color: var(--sales-primary);
+}
+
+.selection-text {
+  margin-top: 6px !important;
+  color: var(--sales-primary) !important;
+  font-size: 12px !important;
+  font-weight: 760;
 }
 
 .client-button strong {

@@ -15,6 +15,8 @@
   const el = {
     pingBtn: $("#pingBtn"),
     importBtn: $("#importBtn"),
+    exportBtn: $("#exportBtn"),
+    deselectAllBtn: $("#deselectAllBtn"),
     refreshBtn: $("#refreshBtn"),
     periodFilter: $("#periodFilter"),
     branchFilter: $("#branchFilter"),
@@ -23,12 +25,12 @@
     apiBadge: $("#apiBadge"),
     sourceBadge: $("#sourceBadge"),
     statusText: $("#statusText"),
-    totalSales: $("#totalSales"),
     totalClients: $("#totalClients"),
-    avgClient: $("#avgClient"),
     newClients: $("#newClients"),
     rankingTitle: $("#rankingTitle"),
     rankingSubtitle: $("#rankingSubtitle"),
+    selectionText: $("#selectionText"),
+    clearSelectionBtn: $("#clearSelectionBtn"),
     clientRows: $("#clientRows"),
     clientDetail: $("#clientDetail"),
     detailHint: $("#detailHint"),
@@ -40,6 +42,7 @@
     apiOk: false,
     sort: "periodTotal",
     selectedClientId: "",
+    selectedClients: new Set(),
     dashboard: {
       meta: {},
       clientes: [],
@@ -57,23 +60,32 @@
   }
 
   function bindEvents() {
-    el.pingBtn.addEventListener("click", checkApi);
+    el.pingBtn?.addEventListener("click", checkApi);
     el.refreshBtn.addEventListener("click", loadDashboard);
-    el.importBtn.addEventListener("click", importDriveFiles);
+    el.importBtn?.addEventListener("click", importDriveFiles);
+    el.exportBtn.addEventListener("click", exportSelectedClients);
+    el.deselectAllBtn.addEventListener("click", clearSelection);
+    el.clearSelectionBtn.addEventListener("click", clearSelection);
     el.periodFilter.addEventListener("change", render);
     el.branchFilter.addEventListener("change", render);
     el.segmentFilter.addEventListener("change", render);
     el.searchInput.addEventListener("input", render);
 
-    $$(".mini-tab").forEach((button) => {
+    $$("[data-sort]").forEach((button) => {
       button.addEventListener("click", () => {
         state.sort = button.dataset.sort || "periodTotal";
-        $$(".mini-tab").forEach((item) => item.classList.toggle("active", item === button));
+        $$("[data-sort]").forEach((item) => item.classList.toggle("active", item === button));
         renderClients();
       });
     });
 
     el.clientRows.addEventListener("click", (event) => {
+      const check = event.target.closest("[data-action='toggle-client']");
+      if (check) {
+        toggleClientSelection(check.dataset.clientId, check.checked);
+        return;
+      }
+
       const button = event.target.closest("[data-action='select-client']");
       if (!button) return;
       selectClient(button.dataset.clientId);
@@ -172,6 +184,23 @@
     await loadClientDetail(clientId);
   }
 
+  function toggleClientSelection(clientId, checked) {
+    if (!clientId) return;
+    if (checked) {
+      state.selectedClients.add(clientId);
+    } else {
+      state.selectedClients.delete(clientId);
+    }
+    renderClients();
+    renderSelection();
+  }
+
+  function clearSelection() {
+    state.selectedClients.clear();
+    renderClients();
+    renderSelection();
+  }
+
   async function loadClientDetail(clientId) {
     try {
       el.detailHint.textContent = "Cargando historial...";
@@ -215,16 +244,13 @@
     renderSummary(visible);
     renderClients(visible);
     renderDetail();
+    renderSelection();
   }
 
   function renderSummary(visible) {
-    const total = visible.reduce((sum, client) => sum + getPeriodTotal(client), 0);
     const newClients = visible.filter((client) => client.segmento === "Cliente nuevo").length;
-    const avg = visible.length ? total / visible.length : 0;
 
-    el.totalSales.textContent = formatMoney(total);
     el.totalClients.textContent = formatNumber(visible.length);
-    el.avgClient.textContent = formatMoney(avg);
     el.newClients.textContent = formatNumber(newClients);
 
     const meta = state.dashboard.meta || {};
@@ -253,7 +279,7 @@
     el.clientRows.innerHTML = "";
 
     if (!sorted.length) {
-      el.clientRows.innerHTML = `<tr><td colspan="6" class="empty-cell">No hay clientes para estos filtros.</td></tr>`;
+      el.clientRows.innerHTML = `<tr><td colspan="8" class="empty-cell">No hay clientes para estos filtros.</td></tr>`;
       return;
     }
 
@@ -262,10 +288,14 @@
       const row = el.rowTemplate.content.firstElementChild.cloneNode(true);
       row.classList.toggle("active", client.clienteId === state.selectedClientId);
       row.dataset.clientId = client.clienteId;
+      const checkbox = row.querySelector("[data-action='toggle-client']");
+      checkbox.dataset.clientId = client.clienteId;
+      checkbox.checked = state.selectedClients.has(client.clienteId);
       row.querySelector("[data-action='select-client']").dataset.clientId = client.clienteId;
       row.querySelector("[data-field='name']").textContent = client.nombre || "Sin nombre";
       row.querySelector("[data-field='code']").textContent = `Cliente ${client.clienteId || "-"}`;
-      row.querySelector("[data-field='phone']").textContent = formatPhone(client) || "-";
+      row.querySelector("[data-field='phone']").textContent = cleanPhone(client.telefono) || "-";
+      row.querySelector("[data-field='mobile']").textContent = cleanPhone(client.telefonoMovil) || "-";
       row.querySelector("[data-field='branch']").textContent = client.sucursalPrincipal || "-";
       const segment = row.querySelector("[data-field='segment']");
       segment.textContent = client.segmento || "-";
@@ -276,6 +306,15 @@
     });
 
     el.clientRows.appendChild(fragment);
+    renderSelection();
+  }
+
+  function renderSelection() {
+    const count = state.selectedClients.size;
+    el.selectionText.textContent = `${formatNumber(count)} cliente${count === 1 ? "" : "s"} seleccionado${count === 1 ? "" : "s"}.`;
+    el.exportBtn.disabled = state.loading || count === 0;
+    el.deselectAllBtn.disabled = state.loading || count === 0;
+    el.clearSelectionBtn.disabled = count === 0;
   }
 
   function renderDetail() {
@@ -306,7 +345,8 @@
         <div class="metric-grid">
           <div class="metric"><span>Historico</span><strong>${formatMoney(Number(client.totalHistorico || 0))}</strong></div>
           <div class="metric"><span>Periodo</span><strong>${formatMoney(getPeriodTotal(client))}</strong></div>
-          <div class="metric"><span>Telefono</span><strong>${escapeHtml(formatPhone(client) || "-")}</strong></div>
+          <div class="metric"><span>Telefono</span><strong>${escapeHtml(cleanPhone(client.telefono) || "-")}</strong></div>
+          <div class="metric"><span>Telefono movil</span><strong>${escapeHtml(cleanPhone(client.telefonoMovil) || "-")}</strong></div>
           <div class="metric"><span>Email</span><strong>${escapeHtml(client.email || "-")}</strong></div>
           <div class="metric"><span>Dias compra</span><strong>${formatNumber(client.diasCompra || 0)}</strong></div>
           <div class="metric"><span>Frecuencia</span><strong>${escapeHtml(client.frecuenciaTexto || "-")}</strong></div>
@@ -388,18 +428,162 @@
   }
 
   function renderEmpty(message) {
-    el.clientRows.innerHTML = `<tr><td colspan="6" class="empty-cell">${escapeHtml(message)}</td></tr>`;
+    el.clientRows.innerHTML = `<tr><td colspan="8" class="empty-cell">${escapeHtml(message)}</td></tr>`;
     el.clientDetail.innerHTML = `<div class="empty-state">Cuando haya datos, aca aparece el seguimiento del cliente.</div>`;
-    el.totalSales.textContent = "$0";
     el.totalClients.textContent = "0";
-    el.avgClient.textContent = "$0";
     el.newClients.textContent = "0";
   }
 
   function setBusy(isBusy) {
-    el.pingBtn.disabled = isBusy;
+    if (el.pingBtn) el.pingBtn.disabled = isBusy;
     el.refreshBtn.disabled = isBusy;
-    el.importBtn.disabled = isBusy;
+    if (el.importBtn) el.importBtn.disabled = isBusy;
+    el.exportBtn.disabled = isBusy || state.selectedClients.size === 0;
+    el.deselectAllBtn.disabled = isBusy || state.selectedClients.size === 0;
+  }
+
+  async function exportSelectedClients() {
+    const selectedIds = Array.from(state.selectedClients);
+    if (!selectedIds.length) {
+      window.alert("Selecciona al menos un cliente para exportar.");
+      return;
+    }
+
+    try {
+      setBusy(true);
+      el.statusText.textContent = `Preparando export de ${selectedIds.length} clientes...`;
+
+      const clients = selectedIds
+        .map((id) => state.dashboard.clientes.find((client) => client.clienteId === id))
+        .filter(Boolean);
+
+      const detailRows = [];
+      for (const client of clients) {
+        const data = await apiGet("cliente", { cliente: client.clienteId });
+        const purchases = Array.isArray(data.compras) ? data.compras : [];
+        purchases.forEach((purchase) => {
+          detailRows.push({
+            clienteId: client.clienteId,
+            nombre: client.nombre || "",
+            telefono: formatPhone(client),
+            email: client.email || "",
+            segmento: client.segmento || "",
+            fecha: purchase.fecha || "",
+            sucursal: purchase.sucursal || "",
+            listaPrecio: purchase.listaPrecio || "",
+            total: Number(purchase.total || 0)
+          });
+        });
+      }
+
+      downloadExcelFile(clients, detailRows);
+      el.statusText.textContent = `Export listo: ${clients.length} clientes seleccionados.`;
+    } catch (error) {
+      console.error(error);
+      window.alert(error.message || "No se pudo exportar la seleccion.");
+    } finally {
+      setBusy(false);
+      renderSelection();
+    }
+  }
+
+  function downloadExcelFile(clients, purchases) {
+    if (!window.XLSX) {
+      throw new Error("No se cargo la libreria para generar XLSX. Revisa la conexion a internet y volve a intentar.");
+    }
+
+    const summaryHeaders = [
+      "Cliente ID", "Nombre", "Telefono", "Telefono movil", "Telefono principal", "Email", "Segmento", "Sucursales",
+      "Listas", "Total historico", "Total periodo", "Ultimos 3 meses",
+      "Anio base", "Primera compra", "Ultima compra", "Dias compra", "Frecuencia"
+    ];
+    const purchaseHeaders = [
+      "Cliente ID", "Nombre", "Telefono", "Telefono movil", "Telefono principal", "Email", "Segmento", "Fecha",
+      "Sucursal", "Lista precio", "Total"
+    ];
+
+    const summaryRows = clients.map((client) => [
+      textCell(client.clienteId),
+      textCell(client.nombre),
+      textCell(cleanPhone(client.telefono)),
+      textCell(cleanPhone(client.telefonoMovil)),
+      textCell(formatPhone(client)),
+      textCell(client.email),
+      textCell(client.segmento),
+      textCell(client.sucursalesTexto),
+      textCell(client.listasTexto),
+      moneyText(client.totalHistorico),
+      moneyText(getPeriodTotal(client)),
+      moneyText(client.totalUltimos3Meses),
+      moneyText(client.totalAnioBase),
+      textCell(client.primeraCompra),
+      textCell(client.ultimaCompra),
+      textCell(client.diasCompra),
+      textCell(client.frecuenciaTexto)
+    ]);
+
+    const purchaseRows = purchases.map((row) => [
+      textCell(row.clienteId),
+      textCell(row.nombre),
+      textCell(cleanPhone(row.telefono)),
+      textCell(cleanPhone(row.telefonoMovil)),
+      textCell(formatPhone(row)),
+      textCell(row.email),
+      textCell(row.segmento),
+      textCell(row.fecha),
+      textCell(row.sucursal),
+      textCell(row.listaPrecio),
+      moneyText(row.total)
+    ]);
+
+    const wb = XLSX.utils.book_new();
+    const summarySheet = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
+    const purchasesSheet = XLSX.utils.aoa_to_sheet([purchaseHeaders, ...purchaseRows]);
+
+    forceSheetText(summarySheet);
+    forceSheetText(purchasesSheet);
+    setColumnWidths(summarySheet, summaryHeaders, summaryRows);
+    setColumnWidths(purchasesSheet, purchaseHeaders, purchaseRows);
+
+    XLSX.utils.book_append_sheet(wb, summarySheet, "Clientes");
+    XLSX.utils.book_append_sheet(wb, purchasesSheet, "Compras");
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `ventas_clientes_seleccion_${stamp}.xlsx`, {
+      bookType: "xlsx",
+      compression: true,
+      cellDates: false
+    });
+  }
+
+  function forceSheetText(sheet) {
+    Object.keys(sheet).forEach((key) => {
+      if (key[0] === "!") return;
+      sheet[key].t = "s";
+      sheet[key].v = textCell(sheet[key].v);
+      delete sheet[key].w;
+      delete sheet[key].z;
+    });
+  }
+
+  function setColumnWidths(sheet, headers, rows) {
+    const widths = headers.map((header, index) => {
+      const values = rows.map((row) => textCell(row[index]));
+      const max = [header, ...values].reduce((acc, value) => Math.max(acc, textCell(value).length), 0);
+      return { wch: Math.min(Math.max(max + 2, 12), 42) };
+    });
+    sheet["!cols"] = widths;
+  }
+
+  function textCell(value) {
+    return String(value == null ? "" : value);
+  }
+
+  function moneyText(value) {
+    return `$ ${new Intl.NumberFormat("es-AR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Number(value || 0))}`;
   }
 
   function formatMoney(value) {
@@ -432,7 +616,11 @@
   }
 
   function formatPhone(client) {
-    const phone = String(client.telefonoMovil || client.telefono || "").trim();
+    return cleanPhone(client.telefonoMovil) || cleanPhone(client.telefono) || "";
+  }
+
+  function cleanPhone(value) {
+    const phone = String(value || "").trim();
     if (!phone || phone === "0") return "";
     return phone;
   }

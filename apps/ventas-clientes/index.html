@@ -25,8 +25,8 @@
       <p>Ranking, seguimiento y comportamiento de compra por cliente</p>
     </div>
     <div class="module-topbar__actions">
-      <button id="pingBtn" class="btn" type="button">Probar API</button>
-      <button id="importBtn" class="btn" type="button">Importar Drive</button>
+      <button id="exportBtn" class="btn" type="button" disabled>Exportar seleccion</button>
+      <button id="deselectAllBtn" class="btn" type="button" disabled>Deseleccionar todo</button>
       <button id="refreshBtn" class="btn" type="button">Actualizar</button>
     </div>
   </header>
@@ -69,16 +69,8 @@
 
     <section class="summary-grid" aria-label="Resumen de ventas">
       <article class="summary-card">
-        <span>Total vendido</span>
-        <strong id="totalSales">$0</strong>
-      </article>
-      <article class="summary-card">
-        <span>Clientes</span>
+        <span>Total de clientes</span>
         <strong id="totalClients">0</strong>
-      </article>
-      <article class="summary-card">
-        <span>Ticket prom.</span>
-        <strong id="avgClient">$0</strong>
       </article>
       <article class="summary-card">
         <span>Clientes nuevos</span>
@@ -92,8 +84,10 @@
           <div>
             <h2 id="rankingTitle">Mejores clientes</h2>
             <p id="rankingSubtitle">Ordenados por venta del periodo seleccionado.</p>
+            <p id="selectionText" class="selection-text">0 clientes seleccionados.</p>
           </div>
           <div class="view-actions" role="tablist" aria-label="Vista de ranking">
+            <button class="mini-tab" type="button" id="clearSelectionBtn">Limpiar</button>
             <button class="mini-tab active" type="button" data-sort="periodTotal">Ventas</button>
             <button class="mini-tab" type="button" data-sort="frequencyScore">Frecuencia</button>
             <button class="mini-tab" type="button" data-sort="lastPurchaseTs">Recientes</button>
@@ -104,8 +98,10 @@
           <table>
             <thead>
               <tr>
+                <th>Sel.</th>
                 <th>Cliente</th>
                 <th>Telefono</th>
+                <th>Telefono movil</th>
                 <th>Sucursal</th>
                 <th>Segmento</th>
                 <th>Total periodo</th>
@@ -113,7 +109,7 @@
               </tr>
             </thead>
             <tbody id="clientRows">
-              <tr><td colspan="6" class="empty-cell">Cargando clientes...</td></tr>
+              <tr><td colspan="8" class="empty-cell">Cargando clientes...</td></tr>
             </tbody>
           </table>
         </div>
@@ -137,12 +133,16 @@
   <template id="clientRowTemplate">
     <tr class="client-row">
       <td>
+        <input class="client-check" type="checkbox" data-action="toggle-client" />
+      </td>
+      <td>
         <button class="client-button" type="button" data-action="select-client">
           <strong data-field="name"></strong>
           <span data-field="code"></span>
         </button>
       </td>
       <td data-field="phone"></td>
+      <td data-field="mobile"></td>
       <td data-field="branch"></td>
       <td><span class="segment-pill" data-field="segment"></span></td>
       <td data-field="periodTotal"></td>
@@ -151,6 +151,7 @@
   </template>
 
   <script src="../../assets/rio-access.js" data-require-supervision="true"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="api-config.js"></script>
   <script src="app.js"></script>
 </body>
