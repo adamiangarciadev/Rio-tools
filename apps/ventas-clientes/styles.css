@@ -196,7 +196,7 @@ input {
 
 table {
   width: 100%;
-  min-width: 760px;
+  min-width: 880px;
   border-collapse: collapse;
   background: var(--sales-panel-2) !important;
 }
@@ -325,6 +325,7 @@ tbody tr.active {
   margin-top: 5px;
   color: var(--sales-text);
   font-size: 16px;
+  overflow-wrap: anywhere;
 }
 
 .detail-list {

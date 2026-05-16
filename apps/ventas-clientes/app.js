@@ -253,7 +253,7 @@
     el.clientRows.innerHTML = "";
 
     if (!sorted.length) {
-      el.clientRows.innerHTML = `<tr><td colspan="5" class="empty-cell">No hay clientes para estos filtros.</td></tr>`;
+      el.clientRows.innerHTML = `<tr><td colspan="6" class="empty-cell">No hay clientes para estos filtros.</td></tr>`;
       return;
     }
 
@@ -265,6 +265,7 @@
       row.querySelector("[data-action='select-client']").dataset.clientId = client.clienteId;
       row.querySelector("[data-field='name']").textContent = client.nombre || "Sin nombre";
       row.querySelector("[data-field='code']").textContent = `Cliente ${client.clienteId || "-"}`;
+      row.querySelector("[data-field='phone']").textContent = formatPhone(client) || "-";
       row.querySelector("[data-field='branch']").textContent = client.sucursalPrincipal || "-";
       const segment = row.querySelector("[data-field='segment']");
       segment.textContent = client.segmento || "-";
@@ -299,12 +300,14 @@
       <article class="client-card">
         <div class="client-card__title">
           <h3>${escapeHtml(client.nombre || "Sin nombre")}</h3>
-          <p>${escapeHtml(client.clienteId || "-")} · ${escapeHtml(client.email || "Sin email")}</p>
+          <p>${escapeHtml(client.clienteId || "-")} · ${escapeHtml(formatPhone(client) || "Sin telefono")} · ${escapeHtml(client.email || "Sin email")}</p>
         </div>
         <span class="segment-pill" data-segment="${segmentKey(client.segmento)}">${escapeHtml(client.segmento || "-")}</span>
         <div class="metric-grid">
           <div class="metric"><span>Historico</span><strong>${formatMoney(Number(client.totalHistorico || 0))}</strong></div>
           <div class="metric"><span>Periodo</span><strong>${formatMoney(getPeriodTotal(client))}</strong></div>
+          <div class="metric"><span>Telefono</span><strong>${escapeHtml(formatPhone(client) || "-")}</strong></div>
+          <div class="metric"><span>Email</span><strong>${escapeHtml(client.email || "-")}</strong></div>
           <div class="metric"><span>Dias compra</span><strong>${formatNumber(client.diasCompra || 0)}</strong></div>
           <div class="metric"><span>Frecuencia</span><strong>${escapeHtml(client.frecuenciaTexto || "-")}</strong></div>
           <div class="metric"><span>Primera</span><strong>${escapeHtml(formatDateShort(client.primeraCompra))}</strong></div>
@@ -385,7 +388,7 @@
   }
 
   function renderEmpty(message) {
-    el.clientRows.innerHTML = `<tr><td colspan="5" class="empty-cell">${escapeHtml(message)}</td></tr>`;
+    el.clientRows.innerHTML = `<tr><td colspan="6" class="empty-cell">${escapeHtml(message)}</td></tr>`;
     el.clientDetail.innerHTML = `<div class="empty-state">Cuando haya datos, aca aparece el seguimiento del cliente.</div>`;
     el.totalSales.textContent = "$0";
     el.totalClients.textContent = "0";
@@ -426,6 +429,12 @@
       dateStyle: "short",
       timeStyle: "short"
     }).format(date);
+  }
+
+  function formatPhone(client) {
+    const phone = String(client.telefonoMovil || client.telefono || "").trim();
+    if (!phone || phone === "0") return "";
+    return phone;
   }
 
   function formatMonth(value) {
