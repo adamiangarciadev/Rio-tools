@@ -14,6 +14,7 @@
  * - GET ?accion=dashboard
  * - GET ?accion=cliente&cliente=CODIGO
  * - GET ?accion=exportar_datos&desde=YYYY-MM-DD&hasta=YYYY-MM-DD&sucursal=WEB
+ * - GET ?accion=exportar_seleccion&clientes=COD1,COD2
  *
  * Funciones manuales:
  * - importarCsvsManual()
@@ -52,6 +53,10 @@ function doGet(e) {
 
     if (accion === "exportar_datos") {
       return exportarDatos_(e);
+    }
+
+    if (accion === "exportar_seleccion") {
+      return exportarSeleccion_(e);
     }
 
     return jsonOut({ ok: true, app: "ventas-clientes-json", msg: "API ventas por cliente activa" });
@@ -293,6 +298,75 @@ function exportarDatos_(e) {
     },
     meta: {
       clientesBase: clientesBase,
+      comprasExportadas: compras.length,
+      totalExportado: round2_(totalExportado)
+    },
+    clientes: clientes,
+    compras: compras
+  });
+}
+
+function exportarSeleccion_(e) {
+  assertConfigured_();
+
+  const rawClientes = cleanStr(e && e.parameter && e.parameter.clientes);
+  if (!rawClientes) return jsonOut({ ok: false, error: "Faltan clientes" });
+
+  const ids = rawClientes.split(",")
+    .map(function(id) { return cleanStr(id); })
+    .filter(Boolean);
+
+  if (!ids.length) return jsonOut({ ok: false, error: "Faltan clientes validos" });
+
+  const folder = DriveApp.getFolderById(CSV_FOLDER_ID);
+  const store = readStore_(folder);
+  const maxDate = parseDate_(store.meta.fechaMax);
+  const baseMonth = store.meta.fechaMax ? store.meta.fechaMax.slice(0, 7) : "";
+  const baseYear = store.meta.fechaMax ? store.meta.fechaMax.slice(0, 4) : "";
+  const last3Months = getLastMonths_(baseMonth, 3);
+
+  const clientes = [];
+  const compras = [];
+  let totalExportado = 0;
+
+  ids.forEach(function(clienteId) {
+    const client = store.clients[clienteId];
+    if (!client) return;
+
+    const finalized = finalizeClient_(client, maxDate, baseMonth, baseYear, last3Months);
+    clientes.push(finalized);
+
+    buildClientPurchases_(client).forEach(function(item) {
+      totalExportado += Number(item.total || 0);
+      compras.push({
+        clienteId: finalized.clienteId,
+        nombre: finalized.nombre,
+        telefono: finalized.telefono,
+        telefonoMovil: finalized.telefonoMovil,
+        email: finalized.email,
+        segmento: finalized.segmento,
+        fecha: item.fecha,
+        sucursal: item.sucursal,
+        listaPrecio: item.listaPrecio,
+        total: item.total
+      });
+    });
+  });
+
+  clientes.sort(function(a, b) {
+    return ids.indexOf(a.clienteId) - ids.indexOf(b.clienteId);
+  });
+  compras.sort(function(a, b) {
+    return ids.indexOf(a.clienteId) - ids.indexOf(b.clienteId) ||
+      String(b.fecha).localeCompare(String(a.fecha)) ||
+      Number(b.total || 0) - Number(a.total || 0);
+  });
+
+  return jsonOut({
+    ok: true,
+    meta: {
+      clientesSolicitados: ids.length,
+      clientesExportados: clientes.length,
       comprasExportadas: compras.length,
       totalExportado: round2_(totalExportado)
     },

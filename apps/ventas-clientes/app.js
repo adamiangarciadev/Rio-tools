@@ -613,30 +613,19 @@
       setBusy(true);
       el.statusText.textContent = `Preparando export de ${selectedIds.length} clientes...`;
 
-      const clients = selectedIds
-        .map((id) => state.dashboard.clientes.find((client) => client.clienteId === id))
-        .filter(Boolean);
-
-      const detailRows = [];
-      for (const client of clients) {
-        const data = await apiGet("cliente", { cliente: client.clienteId });
-        const purchases = Array.isArray(data.compras) ? data.compras : [];
-        purchases.forEach((purchase) => {
-          detailRows.push({
-            clienteId: client.clienteId,
-            nombre: client.nombre || "",
-            telefono: formatPhone(client),
-            email: client.email || "",
-            segmento: client.segmento || "",
-            fecha: purchase.fecha || "",
-            sucursal: purchase.sucursal || "",
-            listaPrecio: purchase.listaPrecio || "",
-            total: Number(purchase.total || 0)
-          });
-        });
+      let exportData = await apiGet("exportar_seleccion", { clientes: selectedIds.join(",") });
+      if (!exportData.ok) throw new Error(exportData.error || "No se pudo exportar la seleccion.");
+      if (!Array.isArray(exportData.clientes) || !Array.isArray(exportData.compras)) {
+        exportData = await exportSelectedClientsFallback(selectedIds);
       }
 
-      downloadExcelFile(clients, detailRows, { prefix: "ventas_clientes_seleccion" });
+      const clients = Array.isArray(exportData.clientes) ? exportData.clientes : [];
+      const detailRows = Array.isArray(exportData.compras) ? exportData.compras : [];
+
+      downloadExcelFile(clients, detailRows, {
+        prefix: "ventas_clientes_seleccion",
+        meta: exportData.meta || {}
+      });
       el.statusText.textContent = `Export listo: ${clients.length} clientes seleccionados.`;
     } catch (error) {
       console.error(error);
@@ -645,6 +634,44 @@
       setBusy(false);
       renderSelection();
     }
+  }
+
+  async function exportSelectedClientsFallback(selectedIds) {
+    const clients = selectedIds
+      .map((id) => state.dashboard.clientes.find((client) => client.clienteId === id))
+      .filter(Boolean);
+
+    const detailRows = [];
+    for (const client of clients) {
+      const data = await apiGet("cliente", { cliente: client.clienteId });
+      const purchases = Array.isArray(data.compras) ? data.compras : [];
+      purchases.forEach((purchase) => {
+        detailRows.push({
+          clienteId: client.clienteId,
+          nombre: client.nombre || "",
+          telefono: cleanPhone(client.telefono),
+          telefonoMovil: cleanPhone(client.telefonoMovil),
+          email: client.email || "",
+          segmento: client.segmento || "",
+          fecha: purchase.fecha || "",
+          sucursal: purchase.sucursal || "",
+          listaPrecio: purchase.listaPrecio || "",
+          total: Number(purchase.total || 0)
+        });
+      });
+    }
+
+    return {
+      ok: true,
+      meta: {
+        clientesSolicitados: selectedIds.length,
+        clientesExportados: clients.length,
+        comprasExportadas: detailRows.length,
+        totalExportado: sumPurchaseTotal(detailRows)
+      },
+      clientes: clients,
+      compras: detailRows
+    };
   }
 
   function downloadExcelFile(clients, purchases, options = {}) {
@@ -665,12 +692,14 @@
     const filters = options.filters || {};
     const meta = options.meta || {};
     const filterRows = [
-      ["Sucursal base", filters.sucursal || ""],
-      ["Desde", filters.desde || ""],
-      ["Hasta", filters.hasta || ""],
+      ["Tipo de exportacion", filters.sucursal ? "Clientes por sucursal y rango" : "Clientes seleccionados"],
+      ["Sucursal base", filters.sucursal || "-"],
+      ["Desde", filters.desde || "-"],
+      ["Hasta", filters.hasta || "-"],
+      ["Clientes solicitados", meta.clientesSolicitados || clients.length],
       ["Clientes exportados", clients.length],
       ["Compras exportadas", purchases.length],
-      ["Clientes que pasaron por sucursal", meta.clientesBase || clients.length],
+      ["Clientes que pasaron por sucursal", meta.clientesBase || "-"],
       ["Total compras exportadas", moneyText(meta.totalExportado || sumPurchaseTotal(purchases))],
       ["Generado", new Date().toISOString().slice(0, 19).replace("T", " ")]
     ];
