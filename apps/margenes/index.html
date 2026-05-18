@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MARGENES · DASHBOARD</title>
+  <link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="module-topbar">
+    <a class="btn ghost" href="../../index.html">Volver</a>
+    <div class="module-topbar__title">
+      <h1>Margenes</h1>
+      <p>Ventas, costos, ganancias y proveedores desde archivos crudos</p>
+    </div>
+    <div class="module-topbar__actions">
+      <button id="btnDemo" class="btn" type="button">Datos demo</button>
+      <button id="btnReset" class="btn danger" type="button">Limpiar</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="upload-panel">
+      <div class="dropzone" id="dropzone">
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" multiple />
+        <div>
+          <strong>Arrastra archivos Excel o CSV</strong>
+          <span>Tambien podes elegirlos desde la PC. Se pueden cargar varios y el tablero consolida todo.</span>
+        </div>
+        <button class="btn primary" id="btnPick" type="button">Elegir archivos</button>
+      </div>
+      <div class="controls">
+        <label>
+          Periodo
+          <input id="periodInput" type="text" placeholder="Ej: Mayo 2026" />
+        </label>
+        <label>
+          Vista
+          <select id="viewMode">
+            <option value="all">Todo</option>
+            <option value="branches">Sucursales</option>
+            <option value="providers">Proveedores</option>
+            <option value="categories">Categorias</option>
+          </select>
+        </label>
+        <label>
+          Buscar
+          <input id="searchInput" type="search" placeholder="Sucursal, proveedor, categoria..." />
+        </label>
+      </div>
+      <div id="status" class="status">Esperando archivos.</div>
+    </section>
+
+    <section class="kpi-grid">
+      <article class="kpi"><span>Venta gral</span><strong id="kpiSales">$ 0</strong></article>
+      <article class="kpi"><span>Costo</span><strong id="kpiCost">$ 0</strong></article>
+      <article class="kpi"><span>Ganancia</span><strong id="kpiProfit">$ 0</strong></article>
+      <article class="kpi"><span>Margen</span><strong id="kpiMargin">0%</strong></article>
+      <article class="kpi"><span>Articulos</span><strong id="kpiQty">0</strong></article>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel chart-panel" data-view="branches">
+        <div class="panel-head">
+          <h2>Venta por sucursal</h2>
+          <span id="branchCount">0 sucursales</span>
+        </div>
+        <div class="chart-box"><canvas id="branchChart"></canvas></div>
+      </article>
+
+      <article class="panel chart-panel" data-view="providers">
+        <div class="panel-head">
+          <h2>Venta por proveedor</h2>
+          <span>Top 12</span>
+        </div>
+        <div class="chart-box"><canvas id="providerChart"></canvas></div>
+      </article>
+
+      <article class="panel chart-panel" data-view="categories">
+        <div class="panel-head">
+          <h2>Categorias mas vendidas</h2>
+          <span>Por venta</span>
+        </div>
+        <div class="chart-box"><canvas id="categoryChart"></canvas></div>
+      </article>
+
+      <article class="panel chart-panel">
+        <div class="panel-head">
+          <h2>Margen por proveedor</h2>
+          <span>Ganancia / costo</span>
+        </div>
+        <div class="chart-box"><canvas id="marginChart"></canvas></div>
+      </article>
+    </section>
+
+    <section class="tables-grid">
+      <article class="panel" data-view="branches">
+        <div class="panel-head">
+          <h2>Detalle por sucursal</h2>
+          <button id="exportBranches" class="btn small" type="button">Exportar</button>
+        </div>
+        <div class="table-wrap"><table id="branchesTable"></table></div>
+      </article>
+
+      <article class="panel" data-view="providers">
+        <div class="panel-head">
+          <h2>Detalle por proveedor</h2>
+          <button id="exportProviders" class="btn small" type="button">Exportar</button>
+        </div>
+        <div class="table-wrap"><table id="providersTable"></table></div>
+      </article>
+    </section>
+
+    <section class="panel" data-view="categories">
+      <div class="panel-head">
+        <h2>Categoria que mas se vendio por proveedor</h2>
+        <button id="exportProviderCategories" class="btn small" type="button">Exportar</button>
+      </div>
+      <div class="table-wrap"><table id="providerCategoryTable"></table></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <script src="../../assets/rio-access.js" data-require-supervision="true"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
