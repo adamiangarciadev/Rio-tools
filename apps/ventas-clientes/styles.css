@@ -255,6 +255,22 @@ tbody tr.active {
   accent-color: var(--sales-primary);
 }
 
+.select-all-label {
+  display: inline-flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 7px;
+  color: var(--sales-muted) !important;
+  cursor: pointer;
+}
+
+.select-all-label input {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  accent-color: var(--sales-primary);
+}
+
 .selection-text {
   margin-top: 6px !important;
   color: var(--sales-primary) !important;
@@ -380,6 +396,72 @@ tbody tr.active {
   text-align: center;
 }
 
+.export-modal.hidden {
+  display: none;
+}
+
+.export-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.export-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 7, 12, .72);
+}
+
+.export-modal__card {
+  position: relative;
+  width: min(760px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, .42);
+}
+
+.export-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.export-modal__head h2 {
+  margin: 0;
+}
+
+.export-modal__head p {
+  margin: 4px 0 0;
+  color: var(--sales-muted);
+  font-size: 13px;
+}
+
+.export-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.export-note {
+  padding: 11px 12px;
+  border: 1px solid rgba(34, 199, 184, .22);
+  border-radius: 8px;
+  background: rgba(34, 199, 184, .07);
+  color: var(--sales-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.export-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 @media (max-width: 1180px) {
   .content-grid {
     grid-template-columns: 1fr;
@@ -396,6 +478,7 @@ tbody tr.active {
   }
 
   .filters,
+  .export-form,
   .summary-grid,
   .content-grid {
     grid-template-columns: 1fr;

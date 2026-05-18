@@ -25,6 +25,7 @@
       <p>Ranking, seguimiento y comportamiento de compra por cliente</p>
     </div>
     <div class="module-topbar__actions">
+      <button id="exportDataBtn" class="btn" type="button" disabled>Exportar datos</button>
       <button id="exportBtn" class="btn" type="button" disabled>Exportar seleccion</button>
       <button id="deselectAllBtn" class="btn" type="button" disabled>Deseleccionar todo</button>
       <button id="refreshBtn" class="btn" type="button">Actualizar</button>
@@ -98,7 +99,12 @@
           <table>
             <thead>
               <tr>
-                <th>Sel.</th>
+                <th>
+                  <label class="select-all-label" title="Seleccionar todos los visibles">
+                    <input id="selectAllVisible" type="checkbox" />
+                    <span>Sel.</span>
+                  </label>
+                </th>
                 <th>Cliente</th>
                 <th>Telefono</th>
                 <th>Telefono movil</th>
@@ -129,6 +135,44 @@
       </aside>
     </section>
   </main>
+
+  <div id="exportDataModal" class="export-modal hidden" role="dialog" aria-modal="true" aria-labelledby="exportDataTitle">
+    <div class="export-modal__backdrop" data-export-close="1"></div>
+    <section class="export-modal__card panel">
+      <div class="export-modal__head">
+        <div>
+          <h2 id="exportDataTitle">Exportar datos</h2>
+          <p>Exporta clientes que compraron en una sucursal y todas sus compras del rango seleccionado.</p>
+        </div>
+        <button id="exportDataCloseBtn" class="btn mini-tab" type="button">Cerrar</button>
+      </div>
+
+      <div class="export-form">
+        <label>
+          Desde
+          <input id="exportFromDate" type="date" />
+        </label>
+        <label>
+          Hasta
+          <input id="exportToDate" type="date" />
+        </label>
+        <label>
+          Pasaron por sucursal
+          <select id="exportBranch">
+            <option value="">Elegir sucursal</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="export-note">
+        Si elegis WEB, busca clientes con al menos una compra WEB en el rango y exporta tambien sus compras en otras sucursales dentro de esas fechas.
+      </div>
+
+      <div class="export-modal__actions">
+        <button id="runExportDataBtn" class="btn" type="button">Generar Excel</button>
+      </div>
+    </section>
+  </div>
 
   <template id="clientRowTemplate">
     <tr class="client-row">

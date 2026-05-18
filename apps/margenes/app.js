@@ -2,11 +2,13 @@
   "use strict";
 
   const COLUMN_PATTERNS = {
-    branch: [/^codigo$/, /^c[oó]digo$/, /^local$/, /^sucursal$/, /^locales$/],
+    branch: [/^codigo$/, /^local$/, /^sucursal$/, /^locales$/],
     discontinuity: [/^discontinuidad$/],
-    provider: [/^grupo$/, /^proveedor$/, /^marca$/, /^fabricante$/],
-    product: [/^nombre$/, /^producto$/, /^descripcion$/, /^descripci[oó]n$/, /^articulo$/, /^art[ií]culo$/],
-    category: [/^categoria$/, /^categor[ií]a$/, /^rubro$/, /^familia$/, /^linea$/, /^l[ií]nea$/, /^departamento$/],
+    group: [/^grupo$/],
+    name: [/^nombre$/],
+    provider: [/^proveedor$/, /^marca$/, /^fabricante$/],
+    category: [/^categoria$/, /^rubro$/, /^familia$/, /^linea$/, /^departamento$/],
+    product: [/^producto$/, /^descripcion$/, /^articulo$/],
     qty: [/^cantidad$/, /^cant\.?$/, /^unidades$/],
     cost: [/^valorizado/, /^costo$/, /^costo total$/],
     sales: [/^monto de ventas$/, /^venta$/, /^ventas$/, /^importe venta$/],
@@ -72,8 +74,7 @@
     });
 
     els.dropzone.addEventListener("drop", (ev) => {
-      const files = [...(ev.dataTransfer?.files || [])];
-      handleFiles(files);
+      handleFiles([...(ev.dataTransfer?.files || [])]);
     });
 
     render();
@@ -103,7 +104,13 @@
     state.files = usable.map((file) => file.name);
     state.aggregates = buildAggregates(state.rows);
 
-    const pieces = [`${fmtInt(state.rows.length)} filas cargadas desde ${usable.length} archivo(s).`];
+    const localesCount = state.rows.filter((row) => row.reportType === "locales").length;
+    const proveedorCount = state.rows.filter((row) => row.reportType === "proveedor").length;
+    const pieces = [
+      `${fmtInt(state.rows.length)} filas cargadas.`,
+      `Locales: ${fmtInt(localesCount)}.`,
+      `Proveedor: ${fmtInt(proveedorCount)}.`,
+    ];
     if (warnings.length) pieces.push(`Avisos: ${warnings.join(" | ")}`);
     setStatus(pieces.join(" "));
     render();
@@ -126,11 +133,12 @@
 
             const columns = Object.keys(json[0]);
             const map = detectColumns(columns);
-            const hasMinimum = map.qty && map.cost && map.sales && map.profit && (map.branch || map.provider);
-            if (!hasMinimum) return;
+            const reportType = detectReportType(map);
+            const hasMetrics = map.qty && map.cost && map.sales && map.profit;
+            if (!reportType || !hasMetrics) return;
 
             json.forEach((raw, index) => {
-              const row = normalizeRawRow(raw, map, file.name, sheetName, index + 2);
+              const row = normalizeRawRow(raw, map, reportType, file.name, sheetName, index + 2);
               if (row.qty || row.cost || row.sales || row.profit) rows.push(row);
             });
           });
@@ -159,22 +167,54 @@
     return out;
   }
 
-  function normalizeRawRow(raw, map, fileName, sheetName, sourceRow) {
-    const branch = String(raw[map.branch] || "").trim();
-    const provider = String(raw[map.provider] || "").trim();
-    const product = String(raw[map.product] || "").trim();
-    const discontinuity = String(raw[map.discontinuity] || "").trim();
-    const category = String(raw[map.category] || "").trim();
+  function detectReportType(map) {
+    if (map.discontinuity && map.group && map.name) return "proveedor";
+    if (map.branch && !map.discontinuity) return "locales";
+    return "";
+  }
+
+  function normalizeRawRow(raw, map, reportType, fileName, sheetName, sourceRow) {
+    const discontinuity = text(raw[map.discontinuity]);
+    const isSubtotal = /^subtotal/i.test(discontinuity);
+    const isTotal = /^total$/i.test(discontinuity) || /^total$/i.test(text(raw[map.branch]));
     const qty = toNumber(raw[map.qty]);
     const cost = toNumber(raw[map.cost]);
     const sales = toNumber(raw[map.sales]);
     const profit = toNumber(raw[map.profit]);
 
+    if (reportType === "locales") {
+      return {
+        reportType,
+        branch: text(raw[map.branch]) || "Sin sucursal",
+        provider: "",
+        product: "",
+        category: "",
+        discontinuity,
+        qty,
+        cost,
+        sales,
+        profit,
+        margin: cost ? profit / cost : 0,
+        fileName,
+        sheetName,
+        sourceRow,
+        isSubtotal: false,
+        isTotal,
+      };
+    }
+
+    const groupValue = text(raw[map.group]);
+    const nameValue = text(raw[map.name]);
+    const provider = isSubtotal ? groupValue : (nameValue || text(raw[map.provider]) || "Sin proveedor");
+    const category = isSubtotal ? "" : (groupValue || text(raw[map.category]) || "Sin categoria");
+    const product = text(raw[map.product]) || nameValue || provider;
+
     return {
-      branch: branch || "Sin sucursal",
-      provider: provider || "Sin proveedor",
-      product: product || discontinuity || "Sin producto",
-      category: category || "Sin categoria",
+      reportType,
+      branch: "",
+      provider,
+      product,
+      category,
       discontinuity,
       qty,
       cost,
@@ -184,29 +224,34 @@
       fileName,
       sheetName,
       sourceRow,
-      isSubtotal: /^subtotal/i.test(discontinuity),
-      isTotal: /^total$/i.test(branch) || /^total$/i.test(discontinuity),
+      isSubtotal,
+      isTotal,
     };
   }
 
   function buildAggregates(rows) {
-    const detail = rows.filter((row) => !row.isTotal);
-    const totals = sumRows(detail.filter((row) => !row.isSubtotal));
-    const branches = grouped(detail, (row) => row.branch, { excludeSubtotal: true });
-    const providers = grouped(detail, (row) => row.provider, { preferSubtotals: true });
-    const categories = grouped(detail, (row) => row.category, { excludeSubtotal: true });
-    const providerCategories = buildProviderCategoryRows(detail);
+    const localRows = rows.filter((row) => row.reportType === "locales" && !row.isTotal);
+    const providerRows = rows.filter((row) => row.reportType === "proveedor" && !row.isTotal);
+    const providerDetailRows = providerRows.filter((row) => !row.isSubtotal);
+    const providerSubtotalRows = providerRows.filter((row) => row.isSubtotal);
+
+    const branches = grouped(localRows, (row) => row.branch);
+    const providers = grouped(
+      providerSubtotalRows.length ? providerSubtotalRows : providerDetailRows,
+      (row) => row.provider
+    );
+    const categories = grouped(providerDetailRows, (row) => row.category);
+    const providerCategories = buildProviderCategoryRows(providerDetailRows);
+
+    const totalsSource = localRows.length ? localRows : providerDetailRows;
+    const totals = sumRows(totalsSource);
 
     return { totals, branches, providers, categories, providerCategories };
   }
 
-  function grouped(rows, getKey, options = {}) {
-    const useRows = options.preferSubtotals && rows.some((row) => row.isSubtotal)
-      ? rows.filter((row) => row.isSubtotal)
-      : rows.filter((row) => !(options.excludeSubtotal && row.isSubtotal));
-
+  function grouped(rows, getKey) {
     const map = new Map();
-    useRows.forEach((row) => {
+    rows.forEach((row) => {
       const key = getKey(row) || "Sin dato";
       const item = map.get(key) || { nombre: key, cantidad: 0, costo: 0, venta: 0, ganancia: 0, margen: 0 };
       item.cantidad += row.qty;
@@ -222,9 +267,8 @@
   }
 
   function buildProviderCategoryRows(rows) {
-    const baseRows = rows.filter((row) => !row.isSubtotal && !row.isTotal);
     const byProviderCategory = new Map();
-    baseRows.forEach((row) => {
+    rows.forEach((row) => {
       const key = `${row.provider}|||${row.category}`;
       const item = byProviderCategory.get(key) || {
         proveedor: row.provider || "Sin proveedor",
@@ -323,19 +367,12 @@
         animation: false,
         plugins: {
           legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => asPct ? fmtPct(ctx.raw) : fmtMoney(ctx.raw),
-            },
-          },
+          tooltip: { callbacks: { label: (ctx) => asPct ? fmtPct(ctx.raw) : fmtMoney(ctx.raw) } },
         },
         scales: {
           x: { ticks: { color: "#94a3b8", maxRotation: 45 }, grid: { color: "rgba(148,163,184,.08)" } },
           y: {
-            ticks: {
-              color: "#94a3b8",
-              callback: (value) => asPct ? fmtPct(value) : compactMoney(value),
-            },
+            ticks: { color: "#94a3b8", callback: (value) => asPct ? fmtPct(value) : compactMoney(value) },
             grid: { color: "rgba(148,163,184,.08)" },
           },
         },
@@ -410,8 +447,7 @@
     }
 
     const period = cleanFilePart(els.periodInput.value || "sin_periodo");
-    const sheetRows = rows.map((row) => ({ ...row }));
-    const worksheet = XLSX.utils.json_to_sheet(sheetRows);
+    const worksheet = XLSX.utils.json_to_sheet(rows.map((row) => ({ ...row })));
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
     XLSX.writeFile(workbook, `${name}_${period}.xlsx`);
@@ -419,17 +455,18 @@
 
   function loadDemo() {
     state.rows = [
-      row("AVELLANEDA", "PROV A", "Zapatilla Run", "Calzado", 22, 710000, 1120000, 410000),
-      row("NAZCA", "PROV A", "Remera Basic", "Indumentaria", 36, 310000, 520000, 210000),
-      row("CORRIENTES", "PROV B", "Mochila Urbana", "Accesorios", 14, 420000, 690000, 270000),
-      row("QUILMES", "PROV C", "Campera Soft", "Abrigo", 9, 580000, 830000, 250000),
-      row("SARMIENTO", "PROV B", "Bolso Gym", "Accesorios", 18, 240000, 430000, 190000),
-      row("LAMARCA", "PROV C", "Buzo Classic", "Indumentaria", 16, 390000, 620000, 230000),
-      row("PUEYRREDON", "PROV D", "Media Pack", "Calzado", 42, 120000, 230000, 110000),
+      demoLocal("AVELLANEDA", 8184, 32310299.43, 64209832.56, 31899533.13),
+      demoLocal("NAZCA", 8177, 35531288.11, 70302197.59, 34770909.48),
+      demoLocal("WEB", 4595, 27439038.78, 43617118.25, 16178079.47),
+      demoProviderDetail("KAURY", "CORSETERIA", 1136, 11357170.24, 20947628.95, 9590458.71),
+      demoProviderDetail("KAURY", "PACKB", 1756, 11198924.4, 19984119.51, 8785195.11),
+      demoProviderSubtotal("KAURY", 4097, 29975734.09, 51655609.36, 21679875.27),
+      demoProviderDetail("ANDRESSA", "CORSETERIA", 615, 6771243.2, 14354106.42, 7582863.22),
+      demoProviderSubtotal("ANDRESSA", 1563, 16091058.7, 32092989.61, 16001930.91),
     ];
     state.files = ["demo"];
     state.aggregates = buildAggregates(state.rows);
-    setStatus("Datos demo cargados. Cuando subas archivos reales se reemplazan.");
+    setStatus("Datos demo cargados con estructura real: locales + proveedor.");
     render();
   }
 
@@ -453,8 +490,16 @@
     };
   }
 
-  function row(branch, provider, product, category, qty, cost, sales, profit) {
-    return { branch, provider, product, category, qty, cost, sales, profit, margin: cost ? profit / cost : 0 };
+  function demoLocal(branch, qty, cost, sales, profit) {
+    return { reportType: "locales", branch, provider: "", product: "", category: "", discontinuity: "", qty, cost, sales, profit, margin: cost ? profit / cost : 0, isSubtotal: false, isTotal: false };
+  }
+
+  function demoProviderDetail(provider, category, qty, cost, sales, profit) {
+    return { reportType: "proveedor", branch: "", provider, product: provider, category, discontinuity: "LINEA", qty, cost, sales, profit, margin: cost ? profit / cost : 0, isSubtotal: false, isTotal: false };
+  }
+
+  function demoProviderSubtotal(provider, qty, cost, sales, profit) {
+    return { reportType: "proveedor", branch: "", provider, product: provider, category: "", discontinuity: "Subtotal 2:", qty, cost, sales, profit, margin: cost ? profit / cost : 0, isSubtotal: true, isTotal: false };
   }
 
   function sumRows(rows) {
@@ -484,13 +529,21 @@
       .trim();
   }
 
+  function text(value) {
+    return String(value ?? "").trim();
+  }
+
   function toNumber(value) {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-    let text = String(value ?? "").trim().replace(/\$/g, "").replace(/%/g, "").replace(/\s/g, "");
-    if (!text) return 0;
-    if (text.includes(",")) text = text.replace(/\./g, "").replace(",", ".");
-    else text = text.replace(/,/g, "");
-    const number = Number.parseFloat(text);
+    let raw = String(value ?? "").trim().replace(/\$/g, "").replace(/%/g, "").replace(/\s/g, "");
+    if (!raw) return 0;
+
+    const comma = raw.lastIndexOf(",");
+    const dot = raw.lastIndexOf(".");
+    if (comma > dot) raw = raw.replace(/\./g, "").replace(",", ".");
+    else raw = raw.replace(/,/g, "");
+
+    const number = Number.parseFloat(raw);
     return Number.isFinite(number) ? number : 0;
   }
 

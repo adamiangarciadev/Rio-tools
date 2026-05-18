@@ -15,6 +15,7 @@
   const el = {
     pingBtn: $("#pingBtn"),
     importBtn: $("#importBtn"),
+    exportDataBtn: $("#exportDataBtn"),
     exportBtn: $("#exportBtn"),
     deselectAllBtn: $("#deselectAllBtn"),
     refreshBtn: $("#refreshBtn"),
@@ -22,6 +23,7 @@
     branchFilter: $("#branchFilter"),
     segmentFilter: $("#segmentFilter"),
     searchInput: $("#searchInput"),
+    selectAllVisible: $("#selectAllVisible"),
     apiBadge: $("#apiBadge"),
     sourceBadge: $("#sourceBadge"),
     statusText: $("#statusText"),
@@ -34,6 +36,12 @@
     clientRows: $("#clientRows"),
     clientDetail: $("#clientDetail"),
     detailHint: $("#detailHint"),
+    exportDataModal: $("#exportDataModal"),
+    exportDataCloseBtn: $("#exportDataCloseBtn"),
+    exportFromDate: $("#exportFromDate"),
+    exportToDate: $("#exportToDate"),
+    exportBranch: $("#exportBranch"),
+    runExportDataBtn: $("#runExportDataBtn"),
     rowTemplate: $("#clientRowTemplate")
   };
 
@@ -63,6 +71,12 @@
     el.pingBtn?.addEventListener("click", checkApi);
     el.refreshBtn.addEventListener("click", loadDashboard);
     el.importBtn?.addEventListener("click", importDriveFiles);
+    el.exportDataBtn.addEventListener("click", openExportDataModal);
+    el.exportDataCloseBtn.addEventListener("click", closeExportDataModal);
+    el.exportDataModal.addEventListener("click", (event) => {
+      if (event.target.closest("[data-export-close='1']")) closeExportDataModal();
+    });
+    el.runExportDataBtn.addEventListener("click", exportDataByBranch);
     el.exportBtn.addEventListener("click", exportSelectedClients);
     el.deselectAllBtn.addEventListener("click", clearSelection);
     el.clearSelectionBtn.addEventListener("click", clearSelection);
@@ -70,6 +84,7 @@
     el.branchFilter.addEventListener("change", render);
     el.segmentFilter.addEventListener("change", render);
     el.searchInput.addEventListener("input", render);
+    el.selectAllVisible.addEventListener("change", toggleAllVisibleClients);
 
     $$("[data-sort]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -201,6 +216,28 @@
     renderSelection();
   }
 
+  function toggleAllVisibleClients() {
+    const visible = getVisibleClients();
+    const checked = el.selectAllVisible.checked;
+    visible.forEach((client) => {
+      if (!client.clienteId) return;
+      if (checked) state.selectedClients.add(client.clienteId);
+      else state.selectedClients.delete(client.clienteId);
+    });
+    renderClients(visible);
+    renderSelection();
+  }
+
+  function updateSelectAllVisibleState(visible) {
+    const clients = visible || getVisibleClients();
+    const selectable = clients.filter((client) => client.clienteId);
+    const selected = selectable.filter((client) => state.selectedClients.has(client.clienteId));
+
+    el.selectAllVisible.disabled = state.loading || selectable.length === 0;
+    el.selectAllVisible.checked = selectable.length > 0 && selected.length === selectable.length;
+    el.selectAllVisible.indeterminate = selected.length > 0 && selected.length < selectable.length;
+  }
+
   async function loadClientDetail(clientId) {
     try {
       el.detailHint.textContent = "Cargando historial...";
@@ -219,11 +256,13 @@
     const branches = state.dashboard.sucursales.map((item) => item.sucursal).filter(Boolean);
 
     el.branchFilter.innerHTML = `<option value="">Todas las sucursales</option>`;
+    el.exportBranch.innerHTML = `<option value="">Elegir sucursal</option>`;
     branches.forEach((branch) => {
       const option = document.createElement("option");
       option.value = branch;
       option.textContent = branch;
       el.branchFilter.appendChild(option);
+      el.exportBranch.appendChild(option.cloneNode(true));
     });
     if (branches.includes(currentBranch)) el.branchFilter.value = currentBranch;
 
@@ -280,6 +319,7 @@
 
     if (!sorted.length) {
       el.clientRows.innerHTML = `<tr><td colspan="8" class="empty-cell">No hay clientes para estos filtros.</td></tr>`;
+      updateSelectAllVisibleState([]);
       return;
     }
 
@@ -306,6 +346,7 @@
     });
 
     el.clientRows.appendChild(fragment);
+    updateSelectAllVisibleState(sorted);
     renderSelection();
   }
 
@@ -438,8 +479,127 @@
     if (el.pingBtn) el.pingBtn.disabled = isBusy;
     el.refreshBtn.disabled = isBusy;
     if (el.importBtn) el.importBtn.disabled = isBusy;
+    el.exportDataBtn.disabled = isBusy || !state.dashboard.clientes.length;
+    el.runExportDataBtn.disabled = isBusy;
     el.exportBtn.disabled = isBusy || state.selectedClients.size === 0;
     el.deselectAllBtn.disabled = isBusy || state.selectedClients.size === 0;
+  }
+
+  function openExportDataModal() {
+    const meta = state.dashboard.meta || {};
+    el.exportFromDate.value = meta.fechaMin || "";
+    el.exportToDate.value = meta.fechaMax || new Date().toISOString().slice(0, 10);
+    if (!el.exportBranch.value && el.branchFilter.value) el.exportBranch.value = el.branchFilter.value;
+    el.exportDataModal.classList.remove("hidden");
+  }
+
+  function closeExportDataModal() {
+    el.exportDataModal.classList.add("hidden");
+  }
+
+  async function exportDataByBranch() {
+    const desde = el.exportFromDate.value;
+    const hasta = el.exportToDate.value;
+    const sucursal = el.exportBranch.value;
+
+    if (!desde || !hasta) {
+      window.alert("Elegí fecha desde y fecha hasta.");
+      return;
+    }
+    if (!sucursal) {
+      window.alert("Elegí una sucursal.");
+      return;
+    }
+    if (desde > hasta) {
+      window.alert("La fecha desde no puede ser mayor a la fecha hasta.");
+      return;
+    }
+
+    try {
+      setBusy(true);
+      el.statusText.textContent = `Buscando clientes que pasaron por ${sucursal} entre ${desde} y ${hasta}...`;
+
+      let data = await apiGet("exportar_datos", { desde, hasta, sucursal });
+      if (!data.ok) throw new Error(data.error || "No se pudo generar la exportacion.");
+      if (!Array.isArray(data.clientes) || !Array.isArray(data.compras)) {
+        data = await exportDataByBranchFallback(desde, hasta, sucursal);
+      }
+
+      const clients = Array.isArray(data.clientes) ? data.clientes : [];
+      const purchases = Array.isArray(data.compras) ? data.compras : [];
+      if (!clients.length || !purchases.length) {
+        window.alert("No se encontraron compras para esos filtros.");
+        el.statusText.textContent = "Exportacion sin resultados.";
+        return;
+      }
+
+      downloadExcelFile(clients, purchases, {
+        prefix: "ventas_clientes_datos",
+        filters: data.filtros || { desde, hasta, sucursal },
+        meta: data.meta || {}
+      });
+      closeExportDataModal();
+      el.statusText.textContent = `Export listo: ${formatNumber(clients.length)} clientes y ${formatNumber(purchases.length)} compras.`;
+    } catch (error) {
+      console.error(error);
+      window.alert(error.message || "No se pudo exportar los datos.");
+    } finally {
+      setBusy(false);
+      renderSelection();
+    }
+  }
+
+  async function exportDataByBranchFallback(desde, hasta, sucursal) {
+    const candidates = state.dashboard.clientes
+      .filter((client) => (client.sucursales || []).some((branch) => sameBranch(branch, sucursal)));
+
+    const selectedClients = [];
+    const detailRows = [];
+    let totalExportado = 0;
+    let processed = 0;
+
+    for (const client of candidates) {
+      processed++;
+      if (processed === 1 || processed % 25 === 0 || processed === candidates.length) {
+        el.statusText.textContent = `Revisando historial ${processed}/${candidates.length} para ${sucursal}...`;
+      }
+
+      const data = await apiGet("cliente", { cliente: client.clienteId });
+      const purchases = Array.isArray(data.compras) ? data.compras : [];
+      const inRange = purchases.filter((purchase) => isDateInRange(purchase.fecha, desde, hasta));
+      const passedByBranch = inRange.some((purchase) => sameBranch(purchase.sucursal, sucursal));
+      if (!passedByBranch) continue;
+
+      selectedClients.push(client);
+      inRange.forEach((purchase) => {
+        const total = Number(purchase.total || 0);
+        totalExportado += total;
+        detailRows.push({
+          clienteId: client.clienteId,
+          nombre: client.nombre || "",
+          telefono: cleanPhone(client.telefono),
+          telefonoMovil: cleanPhone(client.telefonoMovil),
+          email: client.email || "",
+          segmento: client.segmento || "",
+          fecha: purchase.fecha || "",
+          sucursal: purchase.sucursal || "",
+          listaPrecio: purchase.listaPrecio || "",
+          total
+        });
+      });
+    }
+
+    return {
+      ok: true,
+      filtros: { desde, hasta, sucursal },
+      meta: {
+        clientesBase: selectedClients.length,
+        comprasExportadas: detailRows.length,
+        totalExportado
+      },
+      clientes: selectedClients,
+      compras: detailRows
+    };
   }
 
   async function exportSelectedClients() {
@@ -476,7 +636,7 @@
         });
       }
 
-      downloadExcelFile(clients, detailRows);
+      downloadExcelFile(clients, detailRows, { prefix: "ventas_clientes_seleccion" });
       el.statusText.textContent = `Export listo: ${clients.length} clientes seleccionados.`;
     } catch (error) {
       console.error(error);
@@ -487,7 +647,7 @@
     }
   }
 
-  function downloadExcelFile(clients, purchases) {
+  function downloadExcelFile(clients, purchases, options = {}) {
     if (!window.XLSX) {
       throw new Error("No se cargo la libreria para generar XLSX. Revisa la conexion a internet y volve a intentar.");
     }
@@ -500,6 +660,19 @@
     const purchaseHeaders = [
       "Cliente ID", "Nombre", "Telefono", "Telefono movil", "Telefono principal", "Email", "Segmento", "Fecha",
       "Sucursal", "Lista precio", "Total"
+    ];
+    const filterHeaders = ["Filtro", "Valor"];
+    const filters = options.filters || {};
+    const meta = options.meta || {};
+    const filterRows = [
+      ["Sucursal base", filters.sucursal || ""],
+      ["Desde", filters.desde || ""],
+      ["Hasta", filters.hasta || ""],
+      ["Clientes exportados", clients.length],
+      ["Compras exportadas", purchases.length],
+      ["Clientes que pasaron por sucursal", meta.clientesBase || clients.length],
+      ["Total compras exportadas", moneyText(meta.totalExportado || sumPurchaseTotal(purchases))],
+      ["Generado", new Date().toISOString().slice(0, 19).replace("T", " ")]
     ];
 
     const summaryRows = clients.map((client) => [
@@ -537,23 +710,40 @@
     ]);
 
     const wb = XLSX.utils.book_new();
+    const filtersSheet = XLSX.utils.aoa_to_sheet([filterHeaders, ...filterRows]);
     const summarySheet = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
     const purchasesSheet = XLSX.utils.aoa_to_sheet([purchaseHeaders, ...purchaseRows]);
 
+    forceSheetText(filtersSheet);
     forceSheetText(summarySheet);
     forceSheetText(purchasesSheet);
+    setColumnWidths(filtersSheet, filterHeaders, filterRows);
     setColumnWidths(summarySheet, summaryHeaders, summaryRows);
     setColumnWidths(purchasesSheet, purchaseHeaders, purchaseRows);
 
+    XLSX.utils.book_append_sheet(wb, filtersSheet, "Filtros");
     XLSX.utils.book_append_sheet(wb, summarySheet, "Clientes");
     XLSX.utils.book_append_sheet(wb, purchasesSheet, "Compras");
 
     const stamp = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `ventas_clientes_seleccion_${stamp}.xlsx`, {
+    XLSX.writeFile(wb, `${options.prefix || "ventas_clientes"}_${stamp}.xlsx`, {
       bookType: "xlsx",
       compression: true,
       cellDates: false
     });
+  }
+
+  function sumPurchaseTotal(purchases) {
+    return purchases.reduce((sum, row) => sum + Number(row.total || 0), 0);
+  }
+
+  function isDateInRange(value, desde, hasta) {
+    const fecha = String(value || "").slice(0, 10);
+    return fecha >= desde && fecha <= hasta;
+  }
+
+  function sameBranch(a, b) {
+    return normalizeSearch(a) === normalizeSearch(b);
   }
 
   function forceSheetText(sheet) {
