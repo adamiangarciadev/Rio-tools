@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -18,34 +18,24 @@
 
   <!-- jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
-  <!-- QRCode principal -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-
-  <!-- QRCode fallback -->
-  <script>
-    if (typeof window.QRCode === "undefined") {
-      document.write('<script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"><\/script>');
-    }
-  </script>
-<link rel="stylesheet" href="../../assets/rio-theme.css" />
 </head>
 
 <body>
-  <header class="hero module-topbar">
-    <a class="back-home" href="../../index.html">← Volver</a>
-    <div class="module-topbar__title">
+  <a class="back-home" href="https://adamiangarciadev.github.io/Rio-tools/">← Volver</a>
+
+  <header class="hero">
+    <div>
       <p class="eyebrow">RIO Tools Suite</p>
       <h1>Seguimiento interno de Shipnow</h1>
       <p class="sub">Carga de pedidos, rótulo PDF con QR, panel de hubs y dashboard logístico.</p>
     </div>
-    <div class="status-pill module-topbar__actions" id="apiStatus">API pendiente</div>
+    <div class="status-pill" id="apiStatus">API pendiente</div>
   </header>
 
   <main class="layout">
     <nav class="tabs" aria-label="Secciones">
       <button class="tab active" data-view="carga">Carga local</button>
-      <button class="tab" data-view="panel">Panel operativo</button>
       <button class="tab" data-view="dashboard">Dashboard</button>
       <button class="tab" data-view="seguimiento">Seguimiento</button>
     </nav>
@@ -181,33 +171,6 @@
       </section>
     </section>
 
-    <section id="view-panel" class="view">
-      <section class="card">
-        <div class="card-head">
-          <h2>Panel operativo</h2>
-          <span class="hint">Hubs: Sarmiento / Avellaneda / Logística Web</span>
-        </div>
-
-        <div class="toolbar">
-          <select id="filtroHub">
-            <option value="TODOS">Todos</option>
-            <option value="SARMIENTO">Sarmiento</option>
-            <option value="AVELLANEDA">Avellaneda</option>
-            <option value="WEB">Logística Web</option>
-          </select>
-
-          <select id="filtroEstado">
-            <option value="TODOS">Todos los estados</option>
-          </select>
-
-          <input id="buscarPanel" placeholder="Buscar tracking, cliente, sucursal..." />
-          <button id="btnActualizarPanel" class="btn">Actualizar</button>
-        </div>
-
-        <div id="panelLista" class="cards-list"></div>
-      </section>
-    </section>
-
     <section id="view-dashboard" class="view">
       <section class="dashboard-grid">
         <div class="metric"><span>Total activos</span><strong id="mTotal">0</strong></div>
@@ -241,21 +204,56 @@
     </section>
 
     <section id="view-seguimiento" class="view">
-      <section class="card narrow">
-        <h2>Buscar seguimiento</h2>
+      <section class="card">
+        <h2>Seguimiento operativo</h2>
         <div class="tracking-search">
-          <input id="trackingInput" placeholder="Ej: RIO-SN-260429-0001" />
+          <input id="trackingInput" placeholder="Ej: RIO-SN-260508-0008" />
           <button id="btnBuscarTracking" class="btn primary">Buscar</button>
+          <button id="btnActualizarPanel" class="btn">Actualizar panel</button>
         </div>
+        <section class="card">
+          <h2>Recepción rápida</h2>
+          <div class="toolbar">
+            <select id="scanPunto">
+              <option value="SARMIENTO">Sarmiento</option>
+              <option value="AVELLANEDA">Avellaneda</option>
+              <option value="WEB">Logística Web</option>
+            </select>
+            <input
+              id="scanResponsable"
+              placeholder="Código de responsable"
+            />
+            <input
+              id="scanInput"
+              placeholder="Escanear Code128..."
+              autocomplete="off"
+            />
+          </div>
+          <div id="scanHistorial" class="cards-list compact"></div>
+        </section>
         <div id="trackingDetalle" class="tracking-detail"></div>
+        <hr class="soft-separator" />
+        <div class="toolbar">
+          <select id="filtroHub">
+            <option value="TODOS">Todos</option>
+            <option value="SARMIENTO">Sarmiento</option>
+            <option value="AVELLANEDA">Avellaneda</option>
+            <option value="WEB">Logística Web</option>
+          </select>
+          <select id="filtroEstado">
+            <option value="TODOS">Todos los estados</option>
+          </select>
+          <input id="buscarPanel" placeholder="Buscar tracking, cliente, sucursal..." />
+        </div>
+        <div id="panelLista" class="cards-list"></div>
       </section>
     </section>
   </main>
 
   <footer>
-    RIO Tools Suite | Plataforma operativa interna
+    RIO Tools Suite · GitHub Pages · Uso interno by - ADAMIANGARCIADEV® -
   </footer>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>

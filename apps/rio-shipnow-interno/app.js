@@ -2,6 +2,8 @@
   "use strict";
 
   const API_URL = "https://script.google.com/macros/s/AKfycbwi4i-Xsud2rISeNV8cjAJ8iX47ksiuAxfQgRPZFf7LRI75-2wFZEttbX1xeHj815gcVg/exec";
+  const PUBLIC_TRACKING_URL = "https://adamiangarciadev.github.io/Rio-tools/rio-shipnow-interno/";
+  const PDF_LOGO_URL = "./logo.rio.png";
 
   const HOME_TRACKING_URL = location.href.split("#")[0].split("?")[0];
   const LOCALES_CSV_URL = "./locales.csv";
@@ -12,8 +14,94 @@
     "LAMARCA", "NAZCA", "AVELLANEDA", "AVELLANEDA (WEB)"
   ];
 
+  const LOCALES_FALLBACK_DATA = {
+    CASTELLI: {
+      sucursal: "CASTELLI",
+      domicilio: "CASTELLI 344",
+      localidad: "CABA",
+      provincia: "CABA",
+      cp: "1032",
+      telefono: "11 2858-3205",
+      pais: "AR"
+    },
+    CORRIENTES: {
+      sucursal: "CORRIENTES",
+      domicilio: "AV CORRIENTES 2557",
+      localidad: "CABA",
+      provincia: "CABA",
+      cp: "1046",
+      telefono: "11 2859-3658",
+      pais: "AR"
+    },
+    PUEYRREDON: {
+      sucursal: "PUEYRREDON",
+      domicilio: "AV PUEYRREDON 49",
+      localidad: "CABA",
+      provincia: "CABA",
+      cp: "1032",
+      telefono: "11 5666-9191",
+      pais: "AR"
+    },
+    QUILMES: {
+      sucursal: "QUILMES",
+      domicilio: "PEATONAL RIVADAVIA 261",
+      localidad: "QUILMES",
+      provincia: "BUENOS AIRES",
+      cp: "1878",
+      telefono: "11 5602-7674",
+      pais: "AR"
+    },
+    SARMIENTO: {
+      sucursal: "SARMIENTO",
+      domicilio: "SARMIENTO 2566",
+      localidad: "CABA",
+      provincia: "CABA",
+      cp: "1045",
+      telefono: "11 3622-2701",
+      pais: "AR"
+    },
+    LAMARCA: {
+      sucursal: "LAMARCA",
+      domicilio: "AV AVELLANEDA 3494",
+      localidad: "CABA",
+      provincia: "CABA",
+      cp: "1407",
+      telefono: "11 2277-9170",
+      pais: "AR"
+    },
+    NAZCA: {
+      sucursal: "NAZCA",
+      domicilio: "AVELLANEDA 2900",
+      localidad: "CABA",
+      provincia: "CABA",
+      cp: "1406",
+      telefono: "11 2858-3205",
+      pais: "AR"
+    },
+    AVELLANEDA: {
+      sucursal: "AVELLANEDA",
+      domicilio: "AV AVELLANEDA 3249",
+      localidad: "CABA",
+      provincia: "CABA",
+      cp: "1406",
+      telefono: "11 5127-8308",
+      pais: "AR"
+    },
+    "AVELLANEDA (WEB)": {
+      sucursal: "AVELLANEDA (WEB)",
+      domicilio: "AV AVELLANEDA 3249",
+      localidad: "CABA",
+      provincia: "CABA",
+      cp: "1406",
+      telefono: "11 2851-9621",
+      pais: "AR"
+    }
+  };
+
   const PASAN_POR_SARMIENTO = ["CASTELLI", "CORRIENTES", "PUEYRREDON", "QUILMES"];
   const DIRECTO_AVELLANEDA = ["SARMIENTO", "LAMARCA", "NAZCA", "AVELLANEDA", "AVELLANEDA (WEB)"];
+  const JS_BARCODE_URL = "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js";
+  let jsBarcodeLoader = null;
 
   const ESTADOS = [
     "CARGADO EN LOCAL",
@@ -38,24 +126,53 @@
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const apiStatus = $("#apiStatus");
 
-  document.addEventListener("DOMContentLoaded", init);
+  function getTrackingBaseUrl() {
+    const current = HOME_TRACKING_URL;
+
+    if (/^https?:\/\//i.test(current) && !current.startsWith("file:")) {
+      return current;
+    }
+
+    return PUBLIC_TRACKING_URL;
+  }
+
+  document.addEventListener("DOMContentLoaded", bootstrap);
+
+  async function bootstrap() {
+    try {
+      if (!locales.length) {
+        cargarLocalesFallback();
+      } else {
+        fillSelects();
+      }
+    } catch (err) {
+      console.warn("No se pudieron precargar locales fallback:", err);
+    }
+
+    await init();
+  }
 
   async function init() {
     try {
       await loadLocalesCsv();
-      await cargarPadron();
       fillSelects();
+      await cargarPadron();
       bindTabs();
       bindCarga();
       bindPanel();
       bindDashboard();
       bindTracking();
+      bindRecepcionRapida();
       bindAccionesOperativasGlobal();
       toggleTipoEnvio();
       setApiStatus();
       cargarPanel();
     } catch (err) {
       console.error("Error al iniciar la app:", err);
+      if (!locales.length) {
+        cargarLocalesFallback();
+      }
+      fillSelects();
       setApiStatus("err", "Error al iniciar");
       alert("La app no pudo inicializarse correctamente. " + (err.message || err));
     }
@@ -77,6 +194,22 @@
       apiStatus.textContent = "API conectada";
       apiStatus.className = "status-pill ok";
     }
+  }
+
+  function loadJsBarcode() {
+    if (window.JsBarcode) return Promise.resolve();
+    if (jsBarcodeLoader) return jsBarcodeLoader;
+
+    jsBarcodeLoader = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = JS_BARCODE_URL;
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("No se pudo cargar JsBarcode"));
+      document.head.appendChild(script);
+    });
+
+    return jsBarcodeLoader;
   }
 
   function normalizarTexto(v) {
@@ -226,11 +359,13 @@
       locales = Array.from(new Set(locales)).sort((a, b) => a.localeCompare(b, "es"));
 
       if (!locales.length) cargarLocalesFallback();
+      fillSelects();
 
       console.log("LOCALES cargados:", LOCALES);
     } catch (err) {
       console.warn("No se pudo cargar locales.csv:", err);
       cargarLocalesFallback();
+      fillSelects();
     }
   }
 
@@ -240,19 +375,21 @@
     LOCALES = {};
     locales.forEach((s) => {
       const key = normalizarTexto(s);
+      const fallback = LOCALES_FALLBACK_DATA[key] || {};
       LOCALES[key] = {
-        sucursal: key,
-        domicilio: "",
-        localidad: "",
-        provincia: "",
-        cp: "",
-        telefono: "",
-        pais: "AR",
+        sucursal: fallback.sucursal || key,
+        domicilio: fallback.domicilio || "",
+        localidad: fallback.localidad || "",
+        provincia: fallback.provincia || "",
+        cp: fallback.cp || "",
+        telefono: fallback.telefono || "",
+        pais: fallback.pais || "AR",
         centro: resolverCentroInicial(key)
       };
     });
 
     console.warn("Usando locales fallback:", LOCALES);
+    fillSelects();
   }
 
   function asegurarLocalesMinimos() {
@@ -260,14 +397,15 @@
       const key = normalizarTexto(sucursal);
 
       if (!LOCALES[key]) {
+        const fallback = LOCALES_FALLBACK_DATA[key] || {};
         LOCALES[key] = {
-          sucursal: key,
-          domicilio: "",
-          localidad: "",
-          provincia: "",
-          cp: "",
-          telefono: "",
-          pais: "AR",
+          sucursal: fallback.sucursal || key,
+          domicilio: fallback.domicilio || "",
+          localidad: fallback.localidad || "",
+          provincia: fallback.provincia || "",
+          cp: fallback.cp || "",
+          telefono: fallback.telefono || "",
+          pais: fallback.pais || "AR",
           centro: resolverCentroInicial(key)
         };
       }
@@ -452,7 +590,7 @@
         data.estado = "CARGADO EN LOCAL";
         data.ultimaUbicacion = data.sucursalOrigen;
         data.accion = "crearEnvio";
-        data.urlSeguimientoBase = HOME_TRACKING_URL;
+        data.urlSeguimientoBase = getTrackingBaseUrl();
 
         data.responsableCodigo = String(data.responsable || "").trim();
         data.responsable = data.responsableCodigo;
@@ -786,6 +924,103 @@
     return false;
   }
 
+  function esEstadoFinalSeguimiento(estado) {
+    return [
+      "DESPACHADO POR SHIPNOW",
+      "DESPACHADO POR TRANSPORTE",
+      "CANCELADO",
+      "CON PROBLEMA"
+    ].includes(String(estado || "").toUpperCase());
+  }
+
+  function bindRecepcionRapida() {
+    const input = $("#scanInput");
+    const punto = $("#scanPunto");
+    const responsable = $("#scanResponsable");
+    const historial = $("#scanHistorial");
+
+    if (!input) return;
+
+    punto.value = localStorage.getItem("scan_punto") || "SARMIENTO";
+    responsable.value = localStorage.getItem("scan_responsable") || "";
+
+    punto.addEventListener("change", () => {
+      localStorage.setItem("scan_punto", punto.value);
+    });
+
+    responsable.addEventListener("change", () => {
+      localStorage.setItem("scan_responsable", responsable.value);
+    });
+
+    input.addEventListener("keydown", async (e) => {
+      if (e.key !== "Enter") return;
+
+      e.preventDefault();
+
+      const tracking = input.value.trim();
+      if (!tracking) return;
+
+      const mapa = {
+        SARMIENTO: "RECIBIDO EN SARMIENTO",
+        AVELLANEDA: "RECIBIDO EN AVELLANEDA",
+        WEB: "RECIBIDO EN LOGISTICA WEB"
+      };
+
+      try {
+        const res = await api({
+          accion: "actualizarEstado",
+          idTracking: tracking,
+          tracking,
+          nuevoEstado: mapa[punto.value],
+          estado: mapa[punto.value],
+          responsableCodigo: responsable.value,
+          responsable: responsable.value,
+          ultimaUbicacion: punto.value
+        });
+
+        const ok = !!res.ok;
+
+        const div = document.createElement("div");
+        div.className = ok ? "scan-ok" : "scan-error";
+
+        div.innerHTML = ok
+          ? `✅ ${tracking} · ${mapa[punto.value]}`
+          : `❌ ${tracking} · ERROR`;
+
+        historial.prepend(div);
+
+        if (historial.children.length > 15) {
+          historial.removeChild(historial.lastChild);
+        }
+
+        input.value = "";
+        input.focus();
+
+        if (ok) {
+          await cargarPanel();
+        }
+
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  }
+
+  async function generarBarcodeCode128(texto) {
+    await loadJsBarcode();
+    const canvas = document.createElement("canvas");
+
+    JsBarcode(canvas, texto, {
+      format: "CODE128",
+      displayValue: true,
+      fontSize: 11,
+      height: 28,
+      margin: 0
+    });
+
+    return canvas.toDataURL("image/png");
+  }
+
   function bindTracking() {
     $("#btnBuscarTracking")?.addEventListener("click", buscarTracking);
 
@@ -858,6 +1093,21 @@
   }
 
   function renderTracking(x) {
+    if (esEstadoFinalSeguimiento(x.estado)) {
+      $("#trackingDetalle").innerHTML = `<div class="op-card">
+        <div class="op-top">
+          <strong>${escapeHtml(x.idTracking)}</strong>
+          <span class="badge">${escapeHtml(x.estado)}</span>
+        </div>
+
+        <div class="meta-grid">
+          <div><span>Seguimiento</span>El acceso por QR fue deshabilitado para este envío.</div>
+          <div><span>Estado final</span>${escapeHtml(x.estado)}</div>
+        </div>
+      </div>`;
+      return;
+    }
+
     const flow = flujoPorEnvio(x);
     const idx = flow.indexOf(x.estado);
 
@@ -958,7 +1208,8 @@
 
     const data = {
       tracking: e.idTracking,
-      qrUrl: `${HOME_TRACKING_URL}?tracking=${encodeURIComponent(e.idTracking)}`,
+      qrUrl: `${getTrackingBaseUrl()}?tracking=${encodeURIComponent(e.idTracking)}`,
+      estado: e.estado || "",
       tipoEnvio: e.tipoEnvio,
       centro: e.centroAsignado || e.hubAsignado || resolverCentroInicial(e.sucursalOrigen),
 
@@ -983,10 +1234,10 @@
       },
 
       transporte: {
-        nombre: e.transporte || (e.tipoEnvio === "TRANSPORTE" ? "" : "SHIPNOW"),
+        nombre: e.transporte || "SHIPNOW",
         sucursalOca: e.sucursalOca || "",
         direccionOca: e.direccionOca || "",
-        guia: e.guia || e.numeroGuia || "",
+        guia: e.guia || "",
         observaciones: e.observaciones || ""
       },
 
@@ -1017,58 +1268,37 @@
 
   async function generarRotuloDespacho(data) {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "mm", "a4");
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4"
+    });
 
-    const W = 210;
-    const H = 297;
-    const M = 6;
-    const GAP = 5;
-    const LABEL_H = (H - M * 2 - GAP) / 2;
-    const negro = [0, 0, 0];
+    const tipoEnvioRaw = String(data.tipoEnvio || "").toUpperCase();
+    const esTransporte = tipoEnvioRaw.includes("TRANSPORTE") || tipoEnvioRaw.includes("EXPRESO");
 
-    function rect(x, y, w, h, fill = false) {
-      if (fill) {
-        doc.setFillColor(...negro);
-        doc.rect(x, y, w, h, "F");
-      } else {
-        doc.rect(x, y, w, h);
-      }
-    }
+    const pageW = 297;
+    const pageH = 210;
 
-    function tituloBarra(texto, x, y, w) {
-      rect(x, y, w, 6, true);
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text(texto, x + 2.5, y + 4.3);
-      doc.setTextColor(0, 0, 0);
-    }
+    const labelY = 8;
+    const labelH = 194;
 
-    function campo(label, value, x, y, wLabel, wValue, h = 6, size = 8) {
-      rect(x, y, wLabel, h);
-      rect(x + wLabel, y, wValue, h);
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(size);
-      doc.text(label, x + 1.5, y + 4.1);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(size);
-      const txt = String(value || "").toUpperCase();
-      doc.text(txt, x + wLabel + 2, y + 4.1, { maxWidth: wValue - 4 });
-    }
+    const labelW = esTransporte ? 276 : 136;
+    const labelX1 = esTransporte ? 10.5 : 7;
+    const labelX2 = pageW - 7 - 136;
+    const cutX = pageW / 2;
 
     async function qrDataUrl(text) {
       if (window.QRCode && typeof window.QRCode.toDataURL === "function") {
         return window.QRCode.toDataURL(text, {
-          margin: 1,
-          width: 300,
-          errorCorrectionLevel: "M"
+          margin: 2,
+          width: 700,
+          errorCorrectionLevel: "H"
         });
       }
 
       try {
-        const url = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(text);
+        const url = "https://api.qrserver.com/v1/create-qr-code/?size=700x700&data=" + encodeURIComponent(text);
         const res = await fetch(url);
         const blob = await res.blob();
 
@@ -1084,106 +1314,399 @@
       }
     }
 
-    const tracking = data.tracking || generarTrackingInterno();
-    const qrText = data.qrUrl || `${location.origin}${location.pathname}?tracking=${encodeURIComponent(tracking)}`;
-    const qr = await qrDataUrl(qrText);
+    async function imageDataUrl(url) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return null;
 
-    function drawLabel(offsetY) {
-      const innerX = M + 3;
-      const innerW = W - M * 2 - 6;
-      const qrSize = 25;
-      let y = offsetY + 4;
-
-      doc.setLineWidth(0.6);
-      rect(M, offsetY, W - M * 2, LABEL_H);
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.text("DESPACHO DE PEDIDOS", innerX, y + 6);
-
-      doc.setFontSize(8);
-      doc.text("N° DE SEGUIMIENTO INTERNO", innerX, y + 13);
-
-      doc.setFillColor(0, 0, 0);
-      doc.rect(innerX, y + 15, 62, 8, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(11);
-      doc.text(tracking, innerX + 2, y + 20.5);
-      doc.setTextColor(0, 0, 0);
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.text("TIPO DE ENVÍO:", innerX, y + 28);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(data.tipoEnvio || "").toUpperCase(), innerX + 24, y + 28);
-
-      doc.setFont("helvetica", "bold");
-      doc.text("CENTRO:", innerX + 72, y + 28);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(data.centro || "").toUpperCase(), innerX + 86, y + 28);
-
-      doc.addImage(qr, "PNG", M + W - M * 2 - qrSize - 7, y + 1, qrSize, qrSize);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
-      doc.text("SEGUIMIENTO", M + W - M * 2 - qrSize - 1, y + qrSize + 4, { align: "right" });
-
-      y += 34;
-
-      tituloBarra("REMITENTE", innerX, y, innerW);
-      y += 6;
-      campo("SUCURSAL:", data.remitente?.sucursal, innerX, y, 32, innerW - 32);
-      y += 6;
-      campo("DOMICILIO:", data.remitente?.domicilio, innerX, y, 32, innerW - 32);
-      y += 6;
-      campo("LOCALIDAD:", data.remitente?.localidad, innerX, y, 32, 70);
-      campo("CP:", data.remitente?.cp, innerX + 102, y, 14, innerW - 116);
-      y += 6;
-      campo("TELÉFONO:", data.remitente?.telefono, innerX, y, 32, innerW - 32);
-      y += 8;
-
-      tituloBarra("DESTINATARIO", innerX, y, innerW);
-      y += 6;
-      campo("NOMBRE:", data.destinatario?.nombre, innerX, y, 32, innerW - 32);
-      y += 6;
-      campo("DNI/CUIL:", data.destinatario?.dni, innerX, y, 32, 58);
-      campo("TEL:", data.destinatario?.telefono, innerX + 90, y, 18, innerW - 108);
-      y += 6;
-      campo("DOMICILIO:", data.destinatario?.domicilio, innerX, y, 32, innerW - 32);
-      y += 6;
-      campo("ENTRECALLES:", data.destinatario?.entrecalles, innerX, y, 32, innerW - 32);
-      y += 6;
-      campo("LOCALIDAD:", data.destinatario?.localidad, innerX, y, 32, 58);
-      campo("CP:", data.destinatario?.cp, innerX + 90, y, 18, 26);
-      campo("PROV.:", data.destinatario?.provincia, innerX + 134, y, 22, innerW - 156);
-      y += 8;
-
-      tituloBarra("TRANSPORTE", innerX, y, innerW);
-      y += 6;
-      campo("NOMBRE:", data.transporte?.nombre, innerX, y, 32, innerW - 32);
-      y += 6;
-
-      if (String(data.tipoEnvio || "").toUpperCase().includes("OCA")) {
-        campo("SUC. OCA:", data.transporte?.sucursalOca, innerX, y, 32, innerW - 32);
-        y += 6;
-        campo("DIR. OCA:", data.transporte?.direccionOca, innerX, y, 32, innerW - 32);
-        y += 6;
-      } else {
-        campo("GUÍA/CÓD.:", data.transporte?.guia || "A DESIGNAR", innerX, y, 32, innerW - 32);
-        y += 6;
+        const blob = await res.blob();
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (err) {
+        console.warn("No se pudo cargar imagen:", url, err);
+        return null;
       }
-
-      campo("OBS.:", data.transporte?.observaciones, innerX, y, 32, innerW - 32);
-      y += 8;
-      campo("FECHA:", data.fecha || fechaHoyAR(), innerX, y, 32, 56);
-      campo("IMPRESO POR:", data.impresoPor || "", innerX + 88, y, 34, innerW - 122);
-
-      doc.setFont("times", "bold");
-      doc.setFontSize(20);
-      doc.text("LENCERIA RÍO", M + ((W - M * 2) / 2), offsetY + 18, { align: "center" });
     }
 
-    drawLabel(M);
-    drawLabel(M + LABEL_H + GAP);
+    const tracking = data.tracking || generarTrackingInterno();
+    const qrText = data.qrUrl || `${getTrackingBaseUrl()}?tracking=${encodeURIComponent(tracking)}`;
+    const qr = await qrDataUrl(qrText);
+    const barcode = await generarBarcodeCode128(tracking);
+    const logoRio = await imageDataUrl(PDF_LOGO_URL);
+
+    const tipoEnvio = data.tipoEnvio || "";
+    const estado = data.estado || "";
+    const remitente = data.remitente || {};
+    const destinatario = data.destinatario || {};
+    const transporte = data.transporte || {};
+    const fecha = data.fecha || fechaHoyAR();
+    const responsable = data.impresoPor || "";
+
+    function resetColors() {
+      doc.setTextColor(0, 0, 0);
+      doc.setDrawColor(0, 0, 0);
+      doc.setFillColor(255, 255, 255);
+    }
+
+    function drawSection(title, x, y, w, fontSize = 8.2) {
+      doc.setDrawColor(0, 0, 0);
+      doc.setFillColor(0, 0, 0);
+      doc.setLineWidth(0.25);
+      doc.rect(x, y, w, 7, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(fontSize);
+      doc.text(title, x + 3, y + 5);
+
+      resetColors();
+    }
+
+    function drawRow(label, value, x, y, w, h = 7.5, label2 = "", value2 = "", label3 = "", value3 = "", opts = {}) {
+      resetColors();
+      doc.setLineWidth(0.22);
+      doc.rect(x, y, w, h);
+
+      const labelW = opts.labelW || 31;
+      const fs = opts.fontSize || 6.5;
+      const valueFs = opts.valueFontSize || fs;
+      const valueFontStyle = opts.valueFontStyle || "normal";
+      doc.line(x + labelW, y, x + labelW, y + h);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(fs);
+      doc.text(String(label || ""), x + 2, y + h - 2.4);
+
+      const x2Start = x + w * 0.60;
+      const x3Start = x + w * 0.78;
+      const value1MaxWidth = label2
+        ? Math.max(16, (label3 ? x2Start : x2Start) - (x + labelW + 5))
+        : w - labelW - 5;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFont("helvetica", valueFontStyle);
+      doc.setFontSize(valueFs);
+      doc.text(String(value || ""), x + labelW + 3, y + h - 2.4, {
+        maxWidth: value1MaxWidth
+      });
+
+      if (label2) {
+        const x2 = label3 ? x2Start : x + w * 0.58;
+        const label2W = label3 ? 10 : 26;
+        doc.line(x2, y, x2, y + h);
+        doc.line(x2 + label2W, y, x2 + label2W, y + h);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(fs);
+        doc.text(String(label2), x2 + 2, y + h - 2.4);
+
+        doc.setFont("helvetica", valueFontStyle);
+        const value2MaxWidth = label3
+          ? Math.max(8, x3Start - (x2 + label2W + 4))
+          : Math.max(12, (x + w) - (x2 + label2W + 4));
+        doc.setFontSize(valueFs);
+        doc.text(String(value2 || ""), x2 + label2W + 2, y + h - 2.4, {
+          maxWidth: value2MaxWidth
+        });
+      }
+
+      if (label3) {
+        const x3 = x3Start;
+        const label3W = 14;
+        doc.line(x3, y, x3, y + h);
+        doc.line(x3 + label3W, y, x3 + label3W, y + h);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(fs);
+        doc.text(String(label3), x3 + 2, y + h - 2.4);
+
+        doc.setFont("helvetica", valueFontStyle);
+        const value3MaxWidth = Math.max(8, (x + w) - (x3 + label3W + 4));
+        doc.setFontSize(valueFs);
+        doc.text(String(value3 || ""), x3 + label3W + 2, y + h - 2.4, {
+          maxWidth: value3MaxWidth
+        });
+      }
+    }
+
+    function drawLabel(x, y, modoGrande = false) {
+      resetColors();
+
+      const w = modoGrande ? 276 : 136;
+      const h = labelH;
+      const innerX = x + (modoGrande ? 12 : 8);
+      const innerW = w - (modoGrande ? 24 : 16);
+
+      const qrEnabled = !esEstadoFinalSeguimiento(estado);
+
+      doc.setFillColor(255, 255, 255);
+      doc.rect(x, y, w, h, "F");
+      doc.setLineWidth(0.5);
+      doc.rect(x, y, w, h);
+
+      if (modoGrande) {
+        // =========================
+        // RÓTULO ÚNICO A4 HORIZONTAL - TRANSPORTE / EXPRESO
+        // =========================
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("DESPACHO DE PEDIDO", innerX, y + 14);
+
+        doc.setFontSize(6.5);
+        doc.text("N° DE SEGUIMIENTO INTERNO", innerX, y + 24);
+
+        doc.setFillColor(0, 0, 0);
+        doc.rect(innerX, y + 28, 92, 12, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.text(tracking, innerX + 4, y + 36.2);
+        resetColors();
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text("TIPO DE ENVÍO", x + w - 82, y + 14);
+        doc.setFontSize(8.5);
+        doc.text(String(tipoEnvio || "").toUpperCase(), x + w - 82, y + 24);
+
+        const headerBarcodeW = 70;
+        const headerBarcodeH = 11;
+        const headerBarcodeX = x + w - 88;
+        const headerBarcodeY = y + 30;
+        const headerBarcodeCenterX = headerBarcodeX + headerBarcodeW / 2;
+
+        doc.addImage(barcode, "PNG", headerBarcodeX, headerBarcodeY, headerBarcodeW, headerBarcodeH);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.text(tracking, headerBarcodeCenterX, headerBarcodeY + headerBarcodeH + 6, { align: "center" });
+
+        doc.line(x, y + 50, x + w, y + 50);
+
+        if (logoRio) {
+          doc.addImage(logoRio, "PNG", innerX, y + 60, 46, 34);
+        } else {
+          doc.setFont("times", "italic");
+          doc.setFontSize(20);
+          doc.text("Lencería", innerX + 4, y + 74);
+          doc.setFont("times", "bold");
+          doc.setFontSize(30);
+          doc.text("RÍO", innerX + 8, y + 90);
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("REMITENTE", innerX + 58, y + 63);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text("LENCERÍA RÍO", innerX + 58, y + 72);
+        doc.text(String(remitente.domicilio || ""), innerX + 58, y + 81);
+        doc.text(`${String(remitente.localidad || "")}${remitente.cp ? `, CP: ${remitente.cp}` : ""}`, innerX + 58, y + 90);
+        doc.text(`TELÉFONO: ${String(remitente.telefono || "")}`, innerX + 58, y + 99);
+
+        const qrX = x + w - 62;
+        const qrY = y + 60;
+        const qrSize = 42;
+
+        if (qrEnabled) {
+          doc.addImage(qr, "PNG", qrX, qrY, qrSize, qrSize);
+        } else {
+          doc.rect(qrX, qrY, qrSize, qrSize);
+          doc.line(qrX, qrY, qrX + qrSize, qrY + qrSize);
+          doc.line(qrX + qrSize, qrY, qrX, qrY + qrSize);
+        }
+
+        const destY = y + 108;
+        const rowH = 7.4;
+        drawSection("DESTINATARIO", innerX, destY, innerW, 8.8);
+        drawRow("NOMBRE:", destinatario.nombre, innerX, destY + 7, innerW, rowH, "", "", "", "", { labelW: 38, fontSize: 6.9 });
+        drawRow("DNI/CUIL:", destinatario.dni, innerX, destY + 14.4, innerW, rowH, "TEL:", destinatario.telefono, "", "", { labelW: 38, fontSize: 6.9 });
+        drawRow("DOMICILIO:", destinatario.domicilio, innerX, destY + 21.8, innerW, rowH, "", "", "", "", { labelW: 38, fontSize: 6.9 });
+        drawRow("ENTRECALLES:", destinatario.entrecalles, innerX, destY + 29.2, innerW, rowH, "", "", "", "", { labelW: 38, fontSize: 6.9 });
+        drawRow("LOCALIDAD:", destinatario.localidad, innerX, destY + 36.6, innerW, rowH, "CP:", destinatario.cp, "PROV.:", destinatario.provincia, { labelW: 38, fontSize: 6.6 });
+
+        const transY = destY + 46;
+        drawSection("TRANSPORTE", innerX, transY, innerW, 8.8);
+        drawRow("NOMBRE:", transporte.nombre || "TRANSPORTE", innerX, transY + 7, innerW, rowH, "", "", "", "", { labelW: 38, fontSize: 6.9 });
+        drawRow("GUÍA/CÓD.:", transporte.guia || "A DESIGNAR", innerX, transY + 14.4, innerW, rowH, "", "", "", "", { labelW: 38, fontSize: 6.9 });
+        drawRow("FECHA:", fecha, innerX, transY + 21.8, innerW, rowH, "IMPRESO POR:", responsable, "", "", { labelW: 38, fontSize: 6.7 });
+
+        return;
+      }
+
+      // =========================
+      // RÓTULO DOBLE - SHIPNOW / OCA
+      // =========================
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13.8);
+      doc.text("DESPACHO DE PEDIDO", innerX, y + 10);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.text("TIPO DE ENVÍO", innerX, y + 18);
+      doc.setFontSize(7.8);
+      doc.text(String(tipoEnvio || "").toUpperCase(), innerX + 20, y + 18);
+
+      doc.setFillColor(0, 0, 0);
+      doc.rect(x + w - 67, y + 6, 63, 11, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.text(tracking, x + w - 64, y + 13.2);
+      resetColors();
+
+      doc.line(x, y + 31, x + w, y + 31);
+
+      if (logoRio) {
+        doc.addImage(logoRio, "PNG", x + 8, y + 39, 34, 28);
+      } else {
+        doc.setFont("times", "italic");
+        doc.setFontSize(15);
+        doc.text("Lencería", x + 10, y + 50);
+        doc.setFont("times", "bold");
+        doc.setFontSize(22);
+        doc.text("RÍO", x + 13, y + 64);
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("REMITENTE", x + 46, y + 46);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.9);
+      doc.text("LENCERÍA RÍO", x + 46, y + 54);
+      doc.text(String(remitente.domicilio || ""), x + 46, y + 61);
+      doc.text(`${String(remitente.localidad || "")}${remitente.cp ? `, CP: ${remitente.cp}` : ""}`, x + 46, y + 68);
+      doc.text(`TELÉFONO: ${String(remitente.telefono || "")}`, x + 46, y + 75);
+
+      const qrX = x + w - 41;
+      const qrY = y + 37;
+      const qrSize = 33;
+
+      if (qrEnabled) {
+        doc.addImage(qr, "PNG", qrX, qrY, qrSize, qrSize);
+      } else {
+        doc.rect(qrX, qrY, qrSize, qrSize);
+        doc.line(qrX, qrY, qrX + qrSize, qrY + qrSize);
+        doc.line(qrX + qrSize, qrY, qrX, qrY + qrSize);
+      }
+
+      const destY = y + 81;
+      drawSection("DESTINATARIO", innerX, destY, innerW, 8.8);
+      const destRowH = 7.2;
+      const shipLabelW = 24;
+      drawRow("NOMBRE:", destinatario.nombre, innerX, destY + 7, innerW, destRowH, "", "", "", "", {
+        labelW: shipLabelW,
+        fontSize: 6.9,
+        valueFontSize: 9.5,
+        valueFontStyle: "bold"
+      });
+      drawRow("DNI/CUIL:", destinatario.dni, innerX, destY + 14.2, innerW, destRowH, "TEL:", destinatario.telefono, "", "", {
+        labelW: shipLabelW,
+        fontSize: 6.7,
+        valueFontSize: 7.3,
+        valueFontStyle: "bold"
+      });
+      drawRow("DOMICILIO:", destinatario.domicilio, innerX, destY + 21.4, innerW, destRowH, "", "", "", "", {
+        labelW: shipLabelW,
+        fontSize: 6.7,
+        valueFontSize: 7.4,
+        valueFontStyle: "bold"
+      });
+      drawRow("ENTRECALLES:", destinatario.entrecalles, innerX, destY + 28.6, innerW, destRowH, "", "", "", "", {
+        labelW: shipLabelW,
+        fontSize: 6.7,
+        valueFontSize: 7.3,
+        valueFontStyle: "bold"
+      });
+      drawRow("LOCALIDAD:", destinatario.localidad, innerX, destY + 35.8, innerW, destRowH, "CP:", destinatario.cp);
+      drawRow("PROVINCIA:", destinatario.provincia, innerX, destY + 43, innerW, destRowH, "", "", "", "", {
+        labelW: shipLabelW,
+        fontSize: 6.7,
+        valueFontSize: 7.3,
+        valueFontStyle: "bold"
+      });
+
+      const transY = destY + 53;
+      drawSection("TRANSPORTE", innerX, transY, innerW, 8.8);
+      drawRow("NOMBRE:", transporte.nombre || "SHIPNOW", innerX, transY + 7, innerW, 8, "", "", "", "", {
+        labelW: shipLabelW,
+        fontSize: 6.8,
+        valueFontSize: 7.5,
+        valueFontStyle: "bold"
+      });
+
+      let lastTransportRowY = transY + 15;
+
+      if (String(tipoEnvio || "").toUpperCase().includes("OCA")) {
+        drawRow("SUC. OCA:", transporte.sucursalOca || "", innerX, transY + 15, innerW, 8, "", "", "", "", {
+          labelW: shipLabelW,
+          fontSize: 6.8,
+          valueFontSize: 7.4,
+          valueFontStyle: "bold"
+        });
+        drawRow("DIR. OCA:", transporte.direccionOca || "", innerX, transY + 23, innerW, 8, "", "", "", "", {
+          labelW: shipLabelW,
+          fontSize: 6.8,
+          valueFontSize: 7.2,
+          valueFontStyle: "bold"
+        });
+        drawRow("FECHA:", fecha, innerX, transY + 31, innerW, 8, "IMPRESO POR:", responsable, "", "", {
+          labelW: shipLabelW,
+          fontSize: 6.7,
+          valueFontSize: 7.1,
+          valueFontStyle: "bold"
+        });
+        lastTransportRowY = transY + 39;
+      } else {
+        drawRow("GUÍA/CÓD.:", transporte.guia || "A DESIGNAR", innerX, transY + 15, innerW, 8, "", "", "", "", {
+          labelW: shipLabelW,
+          fontSize: 6.8,
+          valueFontSize: 7.4,
+          valueFontStyle: "bold"
+        });
+        drawRow("FECHA:", fecha, innerX, transY + 23, innerW, 8, "IMPRESO POR:", responsable, "", "", {
+          labelW: shipLabelW,
+          fontSize: 6.7,
+          valueFontSize: 7.1,
+          valueFontStyle: "bold"
+        });
+        lastTransportRowY = transY + 31;
+      }
+
+      const barcodeTitleY = lastTransportRowY + 8;
+      const barcodeY = barcodeTitleY + 3;
+      const barcodeX = x + 18;
+      const barcodeW = w - 36;
+      const barcodeH = 15;
+
+      doc.setFillColor(255, 255, 255);
+      doc.rect(x + 4, barcodeTitleY - 5, w - 8, 28, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.text("CÓDIGO DE BARRAS", x + w / 2, barcodeTitleY, { align: "center" });
+
+      doc.addImage(barcode, "PNG", barcodeX, barcodeY, barcodeW, barcodeH);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.2);
+      doc.text(tracking, x + w / 2, barcodeY + barcodeH + 5, { align: "center" });
+    }
+
+    drawLabel(labelX1, labelY, esTransporte);
+
+    if (!esTransporte) {
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.3);
+      doc.setLineDashPattern([2, 2], 0);
+      doc.line(cutX, 5, cutX, pageH - 5);
+      doc.setLineDashPattern([], 0);
+
+      drawLabel(labelX2, labelY, false);
+    }
 
     doc.save(`${tracking}.pdf`);
   }
