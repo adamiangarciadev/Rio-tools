@@ -613,9 +613,11 @@
       setBusy(true);
       el.statusText.textContent = `Preparando export de ${selectedIds.length} clientes...`;
 
-      let exportData = await apiGet("exportar_seleccion", { clientes: selectedIds.join(",") });
-      if (!exportData.ok) throw new Error(exportData.error || "No se pudo exportar la seleccion.");
-      if (!Array.isArray(exportData.clientes) || !Array.isArray(exportData.compras)) {
+      let exportData;
+      try {
+        exportData = await exportSelectedClientsViaApi(selectedIds);
+      } catch (apiError) {
+        console.warn("Export seleccion por API no disponible, usando fallback.", apiError);
         exportData = await exportSelectedClientsFallback(selectedIds);
       }
 
@@ -636,13 +638,59 @@
     }
   }
 
+  async function exportSelectedClientsViaApi(selectedIds) {
+    const chunkSize = 120;
+    const chunks = [];
+    for (let i = 0; i < selectedIds.length; i += chunkSize) {
+      chunks.push(selectedIds.slice(i, i + chunkSize));
+    }
+
+    const out = {
+      ok: true,
+      meta: {
+        clientesSolicitados: selectedIds.length,
+        clientesExportados: 0,
+        comprasExportadas: 0,
+        totalExportado: 0
+      },
+      clientes: [],
+      compras: []
+    };
+    const seenClients = new Set();
+
+    for (let i = 0; i < chunks.length; i++) {
+      el.statusText.textContent = `Exportando seleccion por tandas ${i + 1}/${chunks.length}...`;
+      const data = await apiGet("exportar_seleccion", { clientes: chunks[i].join(",") });
+      if (!data.ok) throw new Error(data.error || "No se pudo exportar la seleccion.");
+      if (!Array.isArray(data.clientes) || !Array.isArray(data.compras)) {
+        throw new Error("La API publicada todavia no tiene exportar_seleccion.");
+      }
+
+      data.clientes.forEach((client) => {
+        if (!client?.clienteId || seenClients.has(client.clienteId)) return;
+        seenClients.add(client.clienteId);
+        out.clientes.push(client);
+      });
+      out.compras.push(...data.compras);
+      out.meta.totalExportado += Number(data.meta?.totalExportado || sumPurchaseTotal(data.compras));
+    }
+
+    out.meta.clientesExportados = out.clientes.length;
+    out.meta.comprasExportadas = out.compras.length;
+    return out;
+  }
+
   async function exportSelectedClientsFallback(selectedIds) {
     const clients = selectedIds
       .map((id) => state.dashboard.clientes.find((client) => client.clienteId === id))
       .filter(Boolean);
 
     const detailRows = [];
-    for (const client of clients) {
+    for (let i = 0; i < clients.length; i++) {
+      const client = clients[i];
+      if (i === 0 || (i + 1) % 25 === 0 || i === clients.length - 1) {
+        el.statusText.textContent = `Exportando seleccion desde historial ${i + 1}/${clients.length}...`;
+      }
       const data = await apiGet("cliente", { cliente: client.clienteId });
       const purchases = Array.isArray(data.compras) ? data.compras : [];
       purchases.forEach((purchase) => {
