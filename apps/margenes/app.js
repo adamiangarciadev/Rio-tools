@@ -18,7 +18,7 @@
   const els = {
     fileInput: qs("#fileInput"),
     btnPick: qs("#btnPick"),
-    btnDemo: qs("#btnDemo"),
+    btnExportAll: qs("#btnExportAll"),
     btnReset: qs("#btnReset"),
     dropzone: qs("#dropzone"),
     status: qs("#status"),
@@ -51,7 +51,7 @@
   function init() {
     els.btnPick.addEventListener("click", () => els.fileInput.click());
     els.fileInput.addEventListener("change", () => handleFiles([...els.fileInput.files]));
-    els.btnDemo.addEventListener("click", loadDemo);
+    els.btnExportAll.addEventListener("click", exportAllReports);
     els.btnReset.addEventListener("click", resetAll);
     els.searchInput.addEventListener("input", render);
     els.viewMode.addEventListener("change", render);
@@ -453,21 +453,229 @@
     XLSX.writeFile(workbook, `${name}_${period}.xlsx`);
   }
 
-  function loadDemo() {
-    state.rows = [
-      demoLocal("AVELLANEDA", 8184, 32310299.43, 64209832.56, 31899533.13),
-      demoLocal("NAZCA", 8177, 35531288.11, 70302197.59, 34770909.48),
-      demoLocal("WEB", 4595, 27439038.78, 43617118.25, 16178079.47),
-      demoProviderDetail("KAURY", "CORSETERIA", 1136, 11357170.24, 20947628.95, 9590458.71),
-      demoProviderDetail("KAURY", "PACKB", 1756, 11198924.4, 19984119.51, 8785195.11),
-      demoProviderSubtotal("KAURY", 4097, 29975734.09, 51655609.36, 21679875.27),
-      demoProviderDetail("ANDRESSA", "CORSETERIA", 615, 6771243.2, 14354106.42, 7582863.22),
-      demoProviderSubtotal("ANDRESSA", 1563, 16091058.7, 32092989.61, 16001930.91),
+  function exportAllReports() {
+    if (!window.XLSX) {
+      setStatus("No se cargo la libreria para exportar Excel.");
+      return;
+    }
+
+    const localRows = state.rows.filter((row) => row.reportType === "locales" && !row.isTotal);
+    const providerRows = state.rows.filter((row) => row.reportType === "proveedor" && !row.isTotal);
+
+    if (!localRows.length && !providerRows.length) {
+      setStatus("Primero carga los archivos crudos de locales y proveedor.");
+      return;
+    }
+
+    const period = cleanFilePart(els.periodInput.value || guessPeriodFromFiles() || "sin_periodo");
+    let exported = 0;
+
+    if (localRows.length) {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(buildLocalesSheet(localRows));
+      ws["!cols"] = [{ wch: 28 }, { wch: 19 }, { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 12 }];
+      ws["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
+      ];
+      applyNumberFormats(ws, 7, ["B"], ["C", "D", "E"], ["F"]);
+      styleExecutiveSheet(ws, "locales");
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+      XLSX.writeFile(wb, `MARGEN_LOCALES_${period}_PROCESADO_LOCALES.xlsx`);
+      exported++;
+    }
+
+    if (providerRows.length) {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(buildProveedorSheet(providerRows));
+      ws["!cols"] = [{ wch: 28 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 12 }];
+      ws["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
+      ];
+      applyNumberFormats(ws, 7, ["D"], ["E", "F", "G"], ["H"]);
+      styleExecutiveSheet(ws, "proveedor");
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+      XLSX.writeFile(wb, `MARGEN_PROVEEDOR_${period}_PROCESADO_PROVEEDOR.xlsx`);
+      exported++;
+    }
+
+    setStatus(`Exportacion lista: ${exported} archivo${exported === 1 ? "" : "s"} generado${exported === 1 ? "" : "s"}.`);
+  }
+
+  function buildLocalesSheet(rows) {
+    const detail = rows.map((row) => [
+      row.branch,
+      row.qty,
+      round2(row.cost),
+      round2(row.sales),
+      round2(row.profit),
+      row.cost ? row.profit / row.cost : 0,
+    ]);
+    const totals = sumRows(rows);
+    return [
+      ["REPORTE EJECUTIVO - VENTA Y GANANCIAS POR LOCALES", "", "", "", "", ""],
+      [`Formato ejecutivo - Generado automaticamente - ${formatDateTimeForExport()} - Fuente: ${state.files.join(", ")}`, "", "", "", "", ""],
+      ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""],
+      ["LOCALES", "Cantidad DE ART.", "COSTO", "VENTAS", "MARGEN DE GANANCIAS $", "MARGENES %"],
+      ...detail,
+      ["TOTAL", totals.cantidad, round2(totals.costo), round2(totals.venta), round2(totals.ganancia), totals.margen],
     ];
-    state.files = ["demo"];
-    state.aggregates = buildAggregates(state.rows);
-    setStatus("Datos demo cargados con estructura real: locales + proveedor.");
-    render();
+  }
+
+  function buildProveedorSheet(rows) {
+    const detailRows = rows.filter((row) => !row.isSubtotal);
+    const body = rows.map((row) => [
+      row.discontinuity,
+      row.isSubtotal ? row.provider : row.category,
+      row.isSubtotal ? "" : row.provider,
+      row.qty,
+      round2(row.cost),
+      round2(row.sales),
+      round2(row.profit),
+      row.isSubtotal && row.cost ? row.profit / row.cost : "",
+    ]);
+    const totals = sumRows(detailRows);
+    return [
+      ["REPORTE EJECUTIVO - VENTAS Y GANANCIAS POR MARCA", "", "", "", "", "", "", ""],
+      [`Formato ejecutivo - Generado automaticamente - ${formatDateTimeForExport()} - Fuente: ${state.files.join(", ")}`, "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["Discontinuidad", "Grupo", "Nombre", "Cantidad", "Costo", "Venta", "Ganancias", "% Ganancias"],
+      ...body,
+      ["TOTAL", "", "", totals.cantidad, round2(totals.costo), round2(totals.venta), round2(totals.ganancia), totals.margen],
+    ];
+  }
+
+  function applyNumberFormats(sheet, startRow, intCols, moneyCols, pctCols) {
+    if (!sheet["!ref"]) return;
+    const range = XLSX.utils.decode_range(sheet["!ref"]);
+    for (let r = startRow - 1; r <= range.e.r; r++) {
+      intCols.forEach((col) => setCellFormat(sheet, `${col}${r + 1}`, "#,##0"));
+      moneyCols.forEach((col) => setCellFormat(sheet, `${col}${r + 1}`, '$ #,##0.00'));
+      pctCols.forEach((col) => setCellFormat(sheet, `${col}${r + 1}`, "0%"));
+    }
+  }
+
+  function setCellFormat(sheet, address, format) {
+    if (!sheet[address] || sheet[address].v === "") return;
+    sheet[address].z = format;
+  }
+
+  function styleExecutiveSheet(sheet, mode) {
+    if (!sheet["!ref"]) return;
+    const range = XLSX.utils.decode_range(sheet["!ref"]);
+    const lastCol = range.e.c;
+    const headerRow = 5;
+    const bodyStart = 6;
+
+    sheet["!rows"] = [
+      { hpt: 28 },
+      { hpt: 22 },
+      { hpt: 10 },
+      { hpt: 10 },
+      { hpt: 10 },
+      { hpt: 24 },
+    ];
+    sheet["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: headerRow, c: 0 }, e: range.e }) };
+
+    for (let c = 0; c <= lastCol; c++) {
+      ensureCell(sheet, 0, c).s = styleTitle();
+      ensureCell(sheet, 1, c).s = styleSubtitle();
+      ensureCell(sheet, headerRow, c).s = styleHeader();
+    }
+
+    for (let r = bodyStart; r <= range.e.r; r++) {
+      const first = text(sheet[XLSX.utils.encode_cell({ r, c: 0 })]?.v);
+      const isTotal = first.toUpperCase() === "TOTAL";
+      const isSubtotal = first.toUpperCase().startsWith("SUBTOTAL");
+      const fill = isTotal ? "D9EAD3" : isSubtotal ? "FCE5CD" : (r % 2 === 0 ? "FFFFFF" : "F8FAFC");
+
+      for (let c = 0; c <= lastCol; c++) {
+        const address = XLSX.utils.encode_cell({ r, c });
+        const cell = ensureCell(sheet, r, c);
+        const isNumeric = typeof cell.v === "number";
+        cell.s = {
+          fill: { fgColor: { rgb: fill } },
+          font: {
+            name: "Calibri",
+            sz: 11,
+            bold: isTotal || isSubtotal,
+            color: { rgb: isTotal ? "0F5132" : "111827" },
+          },
+          alignment: {
+            vertical: "center",
+            horizontal: isNumeric ? "right" : "left",
+          },
+          border: thinBorder("D0D5DD"),
+        };
+      }
+
+      if (isTotal || isSubtotal) {
+        sheet["!rows"][r] = { hpt: 22 };
+      }
+
+      const pctCol = mode === "locales" ? 5 : 7;
+      const pctCell = sheet[XLSX.utils.encode_cell({ r, c: pctCol })];
+      if (pctCell && typeof pctCell.v === "number") {
+        pctCell.s = {
+          ...pctCell.s,
+          fill: { fgColor: { rgb: marginFill(pctCell.v) } },
+          font: { ...pctCell.s.font, bold: true, color: { rgb: "111827" } },
+        };
+      }
+    }
+  }
+
+  function ensureCell(sheet, r, c) {
+    const address = XLSX.utils.encode_cell({ r, c });
+    if (!sheet[address]) sheet[address] = { t: "s", v: "" };
+    return sheet[address];
+  }
+
+  function styleTitle() {
+    return {
+      fill: { fgColor: { rgb: "1F4E78" } },
+      font: { name: "Calibri", sz: 16, bold: true, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: thinBorder("1F4E78"),
+    };
+  }
+
+  function styleSubtitle() {
+    return {
+      fill: { fgColor: { rgb: "D9EAF7" } },
+      font: { name: "Calibri", sz: 10, italic: true, color: { rgb: "1F2937" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: thinBorder("B7D7EA"),
+    };
+  }
+
+  function styleHeader() {
+    return {
+      fill: { fgColor: { rgb: "FFD966" } },
+      font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "111827" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: thinBorder("9CA3AF"),
+    };
+  }
+
+  function thinBorder(color) {
+    return {
+      top: { style: "thin", color: { rgb: color } },
+      bottom: { style: "thin", color: { rgb: color } },
+      left: { style: "thin", color: { rgb: color } },
+      right: { style: "thin", color: { rgb: color } },
+    };
+  }
+
+  function marginFill(value) {
+    if (value >= .8) return "E8F5E9";
+    if (value >= .55) return "FFF4CC";
+    return "FDECEC";
   }
 
   function resetAll() {
@@ -488,18 +696,6 @@
       categories: [],
       providerCategories: [],
     };
-  }
-
-  function demoLocal(branch, qty, cost, sales, profit) {
-    return { reportType: "locales", branch, provider: "", product: "", category: "", discontinuity: "", qty, cost, sales, profit, margin: cost ? profit / cost : 0, isSubtotal: false, isTotal: false };
-  }
-
-  function demoProviderDetail(provider, category, qty, cost, sales, profit) {
-    return { reportType: "proveedor", branch: "", provider, product: provider, category, discontinuity: "LINEA", qty, cost, sales, profit, margin: cost ? profit / cost : 0, isSubtotal: false, isTotal: false };
-  }
-
-  function demoProviderSubtotal(provider, qty, cost, sales, profit) {
-    return { reportType: "proveedor", branch: "", provider, product: provider, category: "", discontinuity: "Subtotal 2:", qty, cost, sales, profit, margin: cost ? profit / cost : 0, isSubtotal: true, isTotal: false };
   }
 
   function sumRows(rows) {
@@ -563,8 +759,28 @@
     return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(value || 0);
   }
 
+  function round2(value) {
+    return Math.round(Number(value || 0) * 100) / 100;
+  }
+
   function cleanFilePart(value) {
     return normalizeText(value).replace(/[^a-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") || "reporte";
+  }
+
+  function guessPeriodFromFiles() {
+    const text = state.files.join(" ");
+    const match = text.match(/(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+\d{1,2}/i);
+    return match ? match[0] : "";
+  }
+
+  function formatDateTimeForExport() {
+    return new Intl.DateTimeFormat("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date());
   }
 
   function escapeHtml(value) {
