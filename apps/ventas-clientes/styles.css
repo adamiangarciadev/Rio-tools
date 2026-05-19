@@ -43,7 +43,7 @@ body {
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(130px, .65fr) minmax(150px, .8fr) minmax(170px, .9fr) minmax(240px, 1.3fr);
+  grid-template-columns: minmax(120px, .6fr) minmax(140px, .72fr) minmax(150px, .78fr) minmax(150px, .78fr) minmax(120px, .55fr) minmax(220px, 1.25fr);
   gap: 10px;
   align-items: end;
 }
@@ -60,6 +60,27 @@ input {
   width: 100%;
   min-width: 0;
   padding: 0 12px;
+}
+
+.toggle-filter {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  border: 1px solid var(--sales-line);
+  border-radius: 8px;
+  background: rgba(8, 13, 20, .55);
+  color: var(--sales-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.toggle-filter input {
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  accent-color: var(--sales-primary);
 }
 
 .status-line {
@@ -443,8 +464,12 @@ tbody tr.active {
 
 .export-form {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
+}
+
+.export-toggle {
+  width: fit-content;
 }
 
 .export-note {

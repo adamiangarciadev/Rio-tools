@@ -57,6 +57,16 @@
           </select>
         </label>
         <label>
+          Lista de precio
+          <select id="priceListFilter">
+            <option value="">Todas las listas</option>
+          </select>
+        </label>
+        <label class="toggle-filter">
+          <input id="priceListOnly" type="checkbox" />
+          <span>Solo esa lista</span>
+        </label>
+        <label>
           Buscar cliente
           <input id="searchInput" type="search" placeholder="Nombre, codigo, telefono o email" />
         </label>
@@ -162,7 +172,18 @@
             <option value="">Elegir sucursal</option>
           </select>
         </label>
+        <label>
+          Lista de precio
+          <select id="exportPriceList">
+            <option value="">Todas las listas</option>
+          </select>
+        </label>
       </div>
+
+      <label class="toggle-filter export-toggle">
+        <input id="exportPriceListOnly" type="checkbox" />
+        <span>Exportar solo compras de esa lista</span>
+      </label>
 
       <div class="export-note">
         Si elegis WEB, busca clientes con al menos una compra WEB en el rango y exporta tambien sus compras en otras sucursales dentro de esas fechas.

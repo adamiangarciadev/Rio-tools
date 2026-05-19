@@ -22,6 +22,8 @@
     periodFilter: $("#periodFilter"),
     branchFilter: $("#branchFilter"),
     segmentFilter: $("#segmentFilter"),
+    priceListFilter: $("#priceListFilter"),
+    priceListOnly: $("#priceListOnly"),
     searchInput: $("#searchInput"),
     selectAllVisible: $("#selectAllVisible"),
     apiBadge: $("#apiBadge"),
@@ -41,6 +43,8 @@
     exportFromDate: $("#exportFromDate"),
     exportToDate: $("#exportToDate"),
     exportBranch: $("#exportBranch"),
+    exportPriceList: $("#exportPriceList"),
+    exportPriceListOnly: $("#exportPriceListOnly"),
     runExportDataBtn: $("#runExportDataBtn"),
     rowTemplate: $("#clientRowTemplate")
   };
@@ -83,6 +87,14 @@
     el.periodFilter.addEventListener("change", render);
     el.branchFilter.addEventListener("change", render);
     el.segmentFilter.addEventListener("change", render);
+    el.priceListFilter.addEventListener("change", () => {
+      syncExportFiltersFromMain();
+      render();
+    });
+    el.priceListOnly.addEventListener("change", () => {
+      syncExportFiltersFromMain();
+      render();
+    });
     el.searchInput.addEventListener("input", render);
     el.selectAllVisible.addEventListener("change", toggleAllVisibleClients);
 
@@ -276,6 +288,22 @@
       el.segmentFilter.appendChild(option);
     });
     if (segments.includes(currentSegment)) el.segmentFilter.value = currentSegment;
+
+    const currentList = el.priceListFilter.value;
+    const priceLists = Array.from(new Set(state.dashboard.clientes.flatMap(getClientLists).filter(Boolean))).sort((a, b) => {
+      return String(a).localeCompare(String(b), "es");
+    });
+
+    el.priceListFilter.innerHTML = `<option value="">Todas las listas</option>`;
+    el.exportPriceList.innerHTML = `<option value="">Todas las listas</option>`;
+    priceLists.forEach((priceList) => {
+      const option = document.createElement("option");
+      option.value = priceList;
+      option.textContent = priceList;
+      el.priceListFilter.appendChild(option);
+      el.exportPriceList.appendChild(option.cloneNode(true));
+    });
+    if (priceLists.includes(currentList)) el.priceListFilter.value = currentList;
   }
 
   function render() {
@@ -408,11 +436,14 @@
   function getVisibleClients() {
     const branch = el.branchFilter.value;
     const segment = el.segmentFilter.value;
+    const priceList = el.priceListFilter.value;
+    const priceListOnly = el.priceListOnly.checked;
     const q = normalizeSearch(el.searchInput.value);
 
     return state.dashboard.clientes
       .filter((client) => !branch || (client.sucursales || []).includes(branch))
       .filter((client) => !segment || client.segmento === segment)
+      .filter((client) => matchesPriceList(client, priceList, priceListOnly))
       .filter((client) => getPeriodTotal(client) !== 0 || el.periodFilter.value === "all")
       .filter((client) => {
         if (!q) return true;
@@ -452,6 +483,7 @@
       ...client,
       clienteId: String(client.clienteId || ""),
       sucursales: Array.isArray(client.sucursales) ? client.sucursales : [],
+      listas: Array.isArray(client.listas) ? client.listas : parseListText(client.listasTexto),
       lastPurchaseTs: Date.parse(client.ultimaCompra || "") || 0
     }));
   }
@@ -490,6 +522,7 @@
     el.exportFromDate.value = meta.fechaMin || "";
     el.exportToDate.value = meta.fechaMax || new Date().toISOString().slice(0, 10);
     if (!el.exportBranch.value && el.branchFilter.value) el.exportBranch.value = el.branchFilter.value;
+    syncExportFiltersFromMain();
     el.exportDataModal.classList.remove("hidden");
   }
 
@@ -497,10 +530,17 @@
     el.exportDataModal.classList.add("hidden");
   }
 
+  function syncExportFiltersFromMain() {
+    el.exportPriceList.value = el.priceListFilter.value || "";
+    el.exportPriceListOnly.checked = el.priceListOnly.checked;
+  }
+
   async function exportDataByBranch() {
     const desde = el.exportFromDate.value;
     const hasta = el.exportToDate.value;
     const sucursal = el.exportBranch.value;
+    const listaPrecio = el.exportPriceList.value;
+    const soloLista = el.exportPriceListOnly.checked;
 
     if (!desde || !hasta) {
       window.alert("Elegí fecha desde y fecha hasta.");
@@ -519,10 +559,16 @@
       setBusy(true);
       el.statusText.textContent = `Buscando clientes que pasaron por ${sucursal} entre ${desde} y ${hasta}...`;
 
-      let data = await apiGet("exportar_datos", { desde, hasta, sucursal });
+      let data = await apiGet("exportar_datos", {
+        desde,
+        hasta,
+        sucursal,
+        listaPrecio,
+        soloLista: soloLista ? "1" : ""
+      });
       if (!data.ok) throw new Error(data.error || "No se pudo generar la exportacion.");
       if (!Array.isArray(data.clientes) || !Array.isArray(data.compras)) {
-        data = await exportDataByBranchFallback(desde, hasta, sucursal);
+        data = await exportDataByBranchFallback(desde, hasta, sucursal, listaPrecio, soloLista);
       }
 
       const clients = Array.isArray(data.clientes) ? data.clientes : [];
@@ -535,7 +581,7 @@
 
       downloadExcelFile(clients, purchases, {
         prefix: "ventas_clientes_datos",
-        filters: data.filtros || { desde, hasta, sucursal },
+        filters: data.filtros || { desde, hasta, sucursal, listaPrecio, soloLista },
         meta: data.meta || {}
       });
       closeExportDataModal();
@@ -549,7 +595,7 @@
     }
   }
 
-  async function exportDataByBranchFallback(desde, hasta, sucursal) {
+  async function exportDataByBranchFallback(desde, hasta, sucursal, listaPrecio, soloLista) {
     const candidates = state.dashboard.clientes
       .filter((client) => (client.sucursales || []).some((branch) => sameBranch(branch, sucursal)));
 
@@ -567,11 +613,17 @@
       const data = await apiGet("cliente", { cliente: client.clienteId });
       const purchases = Array.isArray(data.compras) ? data.compras : [];
       const inRange = purchases.filter((purchase) => isDateInRange(purchase.fecha, desde, hasta));
-      const passedByBranch = inRange.some((purchase) => sameBranch(purchase.sucursal, sucursal));
+      const passedByBranch = inRange.some((purchase) => {
+        return sameBranch(purchase.sucursal, sucursal) && (!listaPrecio || samePriceList(purchase.listaPrecio, listaPrecio));
+      });
       if (!passedByBranch) continue;
 
       selectedClients.push(client);
-      inRange.forEach((purchase) => {
+      const exportPurchases = soloLista && listaPrecio
+        ? inRange.filter((purchase) => samePriceList(purchase.listaPrecio, listaPrecio))
+        : inRange;
+
+      exportPurchases.forEach((purchase) => {
         const total = Number(purchase.total || 0);
         totalExportado += total;
         detailRows.push({
@@ -591,7 +643,7 @@
 
     return {
       ok: true,
-      filtros: { desde, hasta, sucursal },
+      filtros: { desde, hasta, sucursal, listaPrecio, soloLista },
       meta: {
         clientesBase: selectedClients.length,
         comprasExportadas: detailRows.length,
@@ -626,6 +678,10 @@
 
       downloadExcelFile(clients, detailRows, {
         prefix: "ventas_clientes_seleccion",
+        filters: {
+          listaPrecio: el.priceListFilter.value,
+          soloLista: el.priceListOnly.checked
+        },
         meta: exportData.meta || {}
       });
       el.statusText.textContent = `Export listo: ${clients.length} clientes seleccionados.`;
@@ -639,6 +695,8 @@
   }
 
   async function exportSelectedClientsViaApi(selectedIds) {
+    const listaPrecio = el.priceListFilter.value;
+    const soloLista = el.priceListOnly.checked;
     const chunkSize = 120;
     const chunks = [];
     for (let i = 0; i < selectedIds.length; i += chunkSize) {
@@ -660,7 +718,11 @@
 
     for (let i = 0; i < chunks.length; i++) {
       el.statusText.textContent = `Exportando seleccion por tandas ${i + 1}/${chunks.length}...`;
-      const data = await apiGet("exportar_seleccion", { clientes: chunks[i].join(",") });
+      const data = await apiGet("exportar_seleccion", {
+        clientes: chunks[i].join(","),
+        listaPrecio,
+        soloLista: soloLista ? "1" : ""
+      });
       if (!data.ok) throw new Error(data.error || "No se pudo exportar la seleccion.");
       if (!Array.isArray(data.clientes) || !Array.isArray(data.compras)) {
         throw new Error("La API publicada todavia no tiene exportar_seleccion.");
@@ -681,19 +743,27 @@
   }
 
   async function exportSelectedClientsFallback(selectedIds) {
-    const clients = selectedIds
-      .map((id) => state.dashboard.clientes.find((client) => client.clienteId === id))
-      .filter(Boolean);
-
+    const listaPrecio = el.priceListFilter.value;
+    const soloLista = el.priceListOnly.checked;
+    const clients = [];
     const detailRows = [];
-    for (let i = 0; i < clients.length; i++) {
-      const client = clients[i];
-      if (i === 0 || (i + 1) % 25 === 0 || i === clients.length - 1) {
-        el.statusText.textContent = `Exportando seleccion desde historial ${i + 1}/${clients.length}...`;
+    for (let i = 0; i < selectedIds.length; i++) {
+      const client = state.dashboard.clientes.find((item) => item.clienteId === selectedIds[i]);
+      if (!client) continue;
+      if (i === 0 || (i + 1) % 25 === 0 || i === selectedIds.length - 1) {
+        el.statusText.textContent = `Exportando seleccion desde historial ${i + 1}/${selectedIds.length}...`;
       }
       const data = await apiGet("cliente", { cliente: client.clienteId });
       const purchases = Array.isArray(data.compras) ? data.compras : [];
-      purchases.forEach((purchase) => {
+      if (listaPrecio && !purchases.some((purchase) => samePriceList(purchase.listaPrecio, listaPrecio))) continue;
+
+      const exportPurchases = soloLista && listaPrecio
+        ? purchases.filter((purchase) => samePriceList(purchase.listaPrecio, listaPrecio))
+        : purchases;
+      if (!exportPurchases.length) continue;
+
+      clients.push(client);
+      exportPurchases.forEach((purchase) => {
         detailRows.push({
           clienteId: client.clienteId,
           nombre: client.nombre || "",
@@ -744,6 +814,8 @@
       ["Sucursal base", filters.sucursal || "-"],
       ["Desde", filters.desde || "-"],
       ["Hasta", filters.hasta || "-"],
+      ["Lista de precio", filters.listaPrecio || "-"],
+      ["Solo esa lista", filters.soloLista ? "Si" : "No"],
       ["Clientes solicitados", meta.clientesSolicitados || clients.length],
       ["Clientes exportados", clients.length],
       ["Compras exportadas", purchases.length],
@@ -821,6 +893,30 @@
 
   function sameBranch(a, b) {
     return normalizeSearch(a) === normalizeSearch(b);
+  }
+
+  function samePriceList(a, b) {
+    return normalizeSearch(a) === normalizeSearch(b);
+  }
+
+  function parseListText(value) {
+    return String(value || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function getClientLists(client) {
+    if (Array.isArray(client.listas)) return client.listas.filter(Boolean);
+    return parseListText(client.listasTexto);
+  }
+
+  function matchesPriceList(client, priceList, onlySelectedList) {
+    if (!priceList) return true;
+    const lists = getClientLists(client);
+    const hasList = lists.some((list) => samePriceList(list, priceList));
+    if (!hasList) return false;
+    return !onlySelectedList || (lists.length === 1 && samePriceList(lists[0], priceList));
   }
 
   function forceSheetText(sheet) {

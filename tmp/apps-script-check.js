@@ -13,8 +13,8 @@
  * - GET ?accion=importar_csvs
  * - GET ?accion=dashboard
  * - GET ?accion=cliente&cliente=CODIGO
- * - GET ?accion=exportar_datos&desde=YYYY-MM-DD&hasta=YYYY-MM-DD&sucursal=WEB
- * - GET ?accion=exportar_seleccion&clientes=COD1,COD2
+ * - GET ?accion=exportar_datos&desde=YYYY-MM-DD&hasta=YYYY-MM-DD&sucursal=WEB&listaPrecio=LISTA&soloLista=1
+ * - GET ?accion=exportar_seleccion&clientes=COD1,COD2&listaPrecio=LISTA&soloLista=1
  *
  * Funciones manuales:
  * - importarCsvsManual()
@@ -229,6 +229,8 @@ function exportarDatos_(e) {
   const desdeText = cleanStr(e && e.parameter && e.parameter.desde);
   const hastaText = cleanStr(e && e.parameter && e.parameter.hasta);
   const sucursal = cleanStr(e && e.parameter && e.parameter.sucursal).toUpperCase();
+  const listaPrecio = cleanStr(e && e.parameter && e.parameter.listaPrecio);
+  const soloLista = cleanStr(e && e.parameter && e.parameter.soloLista) === "1";
 
   if (!desdeText) return jsonOut({ ok: false, error: "Falta fecha desde" });
   if (!hastaText) return jsonOut({ ok: false, error: "Falta fecha hasta" });
@@ -254,7 +256,8 @@ function exportarDatos_(e) {
       return item.fecha >= desdeText && item.fecha <= hastaText;
     });
     const passedByBranch = inRange.some(function(item) {
-      return cleanStr(item.sucursal).toUpperCase() === sucursal;
+      return cleanStr(item.sucursal).toUpperCase() === sucursal &&
+        (!listaPrecio || sameList_(item.listaPrecio, listaPrecio));
     });
 
     if (!passedByBranch) return;
@@ -263,7 +266,11 @@ function exportarDatos_(e) {
     const finalized = finalizeClient_(client, maxDate, baseMonth, baseYear, last3Months);
     clientes.push(finalized);
 
-    inRange.forEach(function(item) {
+    const exportPurchases = soloLista && listaPrecio
+      ? inRange.filter(function(item) { return sameList_(item.listaPrecio, listaPrecio); })
+      : inRange;
+
+    exportPurchases.forEach(function(item) {
       totalExportado += Number(item.total || 0);
       compras.push({
         clienteId: finalized.clienteId,
@@ -294,7 +301,9 @@ function exportarDatos_(e) {
     filtros: {
       desde: desdeText,
       hasta: hastaText,
-      sucursal: sucursal
+      sucursal: sucursal,
+      listaPrecio: listaPrecio,
+      soloLista: soloLista
     },
     meta: {
       clientesBase: clientesBase,
@@ -310,6 +319,8 @@ function exportarSeleccion_(e) {
   assertConfigured_();
 
   const rawClientes = cleanStr(e && e.parameter && e.parameter.clientes);
+  const listaPrecio = cleanStr(e && e.parameter && e.parameter.listaPrecio);
+  const soloLista = cleanStr(e && e.parameter && e.parameter.soloLista) === "1";
   if (!rawClientes) return jsonOut({ ok: false, error: "Faltan clientes" });
 
   const ids = rawClientes.split(",")
@@ -333,10 +344,18 @@ function exportarSeleccion_(e) {
     const client = store.clients[clienteId];
     if (!client) return;
 
+    const allPurchases = buildClientPurchases_(client);
+    if (listaPrecio && !allPurchases.some(function(item) { return sameList_(item.listaPrecio, listaPrecio); })) return;
+
+    const exportPurchases = soloLista && listaPrecio
+      ? allPurchases.filter(function(item) { return sameList_(item.listaPrecio, listaPrecio); })
+      : allPurchases;
+    if (!exportPurchases.length) return;
+
     const finalized = finalizeClient_(client, maxDate, baseMonth, baseYear, last3Months);
     clientes.push(finalized);
 
-    buildClientPurchases_(client).forEach(function(item) {
+    exportPurchases.forEach(function(item) {
       totalExportado += Number(item.total || 0);
       compras.push({
         clienteId: finalized.clienteId,
@@ -574,6 +593,7 @@ function finalizeClient_(client, maxDate, baseMonth, baseYear, last3Months) {
     frecuenciaTexto: buildFrequencyText_(dias.length, avgGap),
     segmento: segmento,
     sucursales: sucursales,
+    listas: listas,
     sucursalPrincipal: sucursalPrincipal,
     sucursalesTexto: sucursales.join(", "),
     listasTexto: listas.join(", ")
@@ -743,6 +763,10 @@ function normalizeKey_(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/\s+/g, " ");
+}
+
+function sameList_(a, b) {
+  return normalizeKey_(a) === normalizeKey_(b);
 }
 
 function round2_(value) {
