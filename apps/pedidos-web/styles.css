@@ -264,6 +264,11 @@ footer {
   display: none;
 }
 
+.whatsapp-form[aria-busy="true"] {
+  opacity: .72;
+  pointer-events: none;
+}
+
 .whatsapp-modal {
   width: min(560px, 100%);
   max-height: min(720px, calc(100vh - 36px));
@@ -320,6 +325,10 @@ footer {
   font-weight: 700;
 }
 
+.whatsapp-form label[hidden] {
+  display: none;
+}
+
 .optional {
   color: var(--rio-muted);
   font-size: 12px;
@@ -335,6 +344,14 @@ footer {
   color: var(--rio-text);
   padding: 10px 12px;
   outline: none;
+}
+
+.whatsapp-form input:disabled,
+.whatsapp-form select:disabled,
+.whatsapp-form button:disabled,
+.modal-close:disabled {
+  cursor: wait;
+  opacity: .7;
 }
 
 .field-full,

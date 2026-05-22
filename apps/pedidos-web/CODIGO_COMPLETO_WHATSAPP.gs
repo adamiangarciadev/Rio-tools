@@ -475,11 +475,20 @@ function _crearPedidoWhatsapp(data) {
   const cliente = String(data.cliente || "").trim();
   const dni = String(data.dni || "").trim();
   const tipoEnvio = String(data.tipo_envio || "RETIRO").toUpperCase().trim();
+  const sucursalRetiro = String(data.sucursal_retiro || "").toUpperCase().trim();
   const remito = String(data.remito || "").trim();
   const usuario = String(data.usuario || "").trim();
 
   if (!cliente || !usuario) {
     return _jsonError("Faltan datos obligatorios (cliente / usuario)");
+  }
+
+  const sucursal = tipoEnvio === "RETIRO"
+    ? sucursalRetiro
+    : "ENVIO A DOMICILIO";
+
+  if (tipoEnvio === "RETIRO" && !["AVELLANEDA", "SARMIENTO", "QUILMES"].includes(sucursal)) {
+    return _jsonError("Sucursal de retiro no permitida");
   }
 
   const idPedido = remito
@@ -513,7 +522,7 @@ function _crearPedidoWhatsapp(data) {
   row[idx["FECHA_VENTA"]] = new Date();
   row[idx["CLIENTE"]] = cliente;
   row[idx["DNI"]] = dni;
-  row[idx["SUCURSAL_RETIRO"]] = "WEB";
+  row[idx["SUCURSAL_RETIRO"]] = sucursal;
   row[idx["ESTADO"]] = "PARA ARMAR";
   row[idx["QUIEN_REGISTRA"]] = usuario;
   row[idx["CANAL"]] = canal;
@@ -526,7 +535,7 @@ function _crearPedidoWhatsapp(data) {
     accion: "crearPedidoWhatsapp",
     usuario,
     id_pedido: idPedido,
-    sucursal: "WEB",
+    sucursal,
     estado_antes: "",
     estado_despues: "PARA ARMAR",
     tipo_envio: tipoEnvio,
@@ -539,7 +548,7 @@ function _crearPedidoWhatsapp(data) {
       id_pedido: idPedido,
       cliente,
       dni,
-      sucursal_retiro: "WEB",
+      sucursal_retiro: sucursal,
       estado: "PARA ARMAR",
       tipo_envio: tipoEnvio,
       canal,

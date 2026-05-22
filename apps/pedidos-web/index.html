@@ -87,7 +87,17 @@
           </select>
         </label>
 
-        <label>
+        <label id="wspSucursalRetiroWrap">
+          Sucursal de retiro
+          <select id="wspSucursalRetiro" name="sucursal_retiro" required>
+            <option value="">Elegí sucursal</option>
+            <option value="AVELLANEDA">Avellaneda</option>
+            <option value="SARMIENTO">Sarmiento</option>
+            <option value="QUILMES">Quilmes</option>
+          </select>
+        </label>
+
+        <label id="wspRemitoWrap">
           Número de remito <span class="optional">(si tiene)</span>
           <input id="wspRemito" name="remito" type="text" inputmode="numeric" />
         </label>
@@ -99,7 +109,7 @@
 
         <div class="modal-actions">
           <button class="btn ghost" id="btnCancelarWhatsapp" type="button">Cancelar</button>
-          <button class="btn primary" type="submit">Guardar pedido</button>
+          <button class="btn primary" id="btnGuardarWhatsapp" type="submit">Guardar pedido</button>
         </div>
       </form>
     </section>

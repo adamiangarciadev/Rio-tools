@@ -11,6 +11,10 @@
   const whatsappForm = document.getElementById('whatsappForm');
   const btnCerrarWhatsapp = document.getElementById('btnCerrarWhatsapp');
   const btnCancelarWhatsapp = document.getElementById('btnCancelarWhatsapp');
+  const wspTipoEnvio = document.getElementById('wspTipoEnvio');
+  const wspSucursalRetiroWrap = document.getElementById('wspSucursalRetiroWrap');
+  const wspSucursalRetiro = document.getElementById('wspSucursalRetiro');
+  const btnGuardarWhatsapp = document.getElementById('btnGuardarWhatsapp');
 
   // Buscador (opcional, si existe en el HTML)
   const inputQ = document.getElementById('q');
@@ -40,6 +44,7 @@
   // Cache global para buscador
   let PEDIDOS_CACHE = [];
   let QUERY = '';
+  let guardandoWhatsapp = false;
 
   // =========================
   // FLUJO / TRANSICIONES
@@ -137,6 +142,7 @@
       if (event.target === whatsappModal) cerrarWhatsappModal_();
     });
     whatsappForm?.addEventListener('submit', guardarPedidoWhatsapp_);
+    wspTipoEnvio?.addEventListener('change', actualizarSucursalRetiroWhatsapp_);
 
     cargarPedidos(true);
     setInterval(() => cargarPedidos(false), 30 * 1000);
@@ -244,11 +250,44 @@
     if (!whatsappModal || !whatsappForm) return;
     whatsappModal.hidden = false;
     whatsappForm.reset();
+    setWhatsappFormSaving_(false);
+    actualizarSucursalRetiroWhatsapp_();
     setTimeout(() => document.getElementById('wspCliente')?.focus(), 0);
   }
 
   function cerrarWhatsappModal_() {
+    if (guardandoWhatsapp) return;
     if (whatsappModal) whatsappModal.hidden = true;
+  }
+
+  function actualizarSucursalRetiroWhatsapp_() {
+    const tipoEnvio = String(wspTipoEnvio?.value || '')
+      .toUpperCase()
+      .trim();
+    const esRetiro = tipoEnvio === 'RETIRO';
+
+    if (wspSucursalRetiroWrap) wspSucursalRetiroWrap.hidden = !esRetiro;
+    if (wspSucursalRetiro) {
+      wspSucursalRetiro.required = esRetiro;
+      if (!esRetiro) wspSucursalRetiro.value = '';
+    }
+  }
+
+  function setWhatsappFormSaving_(saving) {
+    guardandoWhatsapp = saving;
+    if (whatsappForm) {
+      whatsappForm
+        .querySelectorAll('input, select, button')
+        .forEach((control) => {
+          control.disabled = saving;
+        });
+      whatsappForm.setAttribute('aria-busy', saving ? 'true' : 'false');
+    }
+    if (btnGuardarWhatsapp) {
+      btnGuardarWhatsapp.textContent = saving ? 'Guardando...' : 'Guardar pedido';
+    }
+    if (btnCerrarWhatsapp) btnCerrarWhatsapp.disabled = saving;
+    if (btnCancelarWhatsapp) btnCancelarWhatsapp.disabled = saving;
   }
 
   function cargarPedidosWhatsapp_() {
@@ -278,12 +317,16 @@
 
   async function guardarPedidoWhatsapp_(event) {
     event.preventDefault();
+    if (guardandoWhatsapp) return;
 
     const cliente = document.getElementById('wspCliente')?.value.trim() || '';
     const dni = document.getElementById('wspDni')?.value.trim() || '';
     const tipoEnvio =
       document.getElementById('wspTipoEnvio')?.value.trim().toUpperCase() ||
       'RETIRO';
+    const sucursalRetiro =
+      document.getElementById('wspSucursalRetiro')?.value.trim().toUpperCase() ||
+      '';
     const remito = document.getElementById('wspRemito')?.value.trim() || '';
     const usuario = document.getElementById('wspUsuario')?.value.trim() || '';
 
@@ -291,6 +334,14 @@
       alert('Completá cliente y usuario que carga.');
       return;
     }
+
+    if (tipoEnvio === 'RETIRO' && !sucursalRetiro) {
+      alert('Elegí la sucursal de retiro.');
+      return;
+    }
+
+    const sucursalPedido =
+      tipoEnvio === 'RETIRO' ? sucursalRetiro : 'ENVIO A DOMICILIO';
 
     const idPedido = `WSP-${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`;
     const pedidoLocal = {
@@ -302,18 +353,20 @@
       remito,
       estado: 'PARA ARMAR',
       tipo_envio: tipoEnvio,
-      sucursal_retiro: 'WEB',
+      sucursal_retiro: sucursalPedido,
       quien_registra: usuario,
       fecha_venta: new Date().toISOString(),
     };
 
     try {
+      setWhatsappFormSaving_(true);
       estadoCarga.textContent = 'Guardando pedido de WhatsApp...';
       const data = await postAccion({
         accion: 'crearPedidoWhatsapp',
         cliente,
         dni,
         tipo_envio: tipoEnvio,
+        sucursal_retiro: sucursalPedido,
         remito,
         usuario,
       });
@@ -334,6 +387,7 @@
         QUERY ? aplicarFiltroBusqueda_(PEDIDOS_CACHE, QUERY) : PEDIDOS_CACHE,
       );
       estadoCarga.textContent = 'Pedido de WhatsApp guardado en Sheets.';
+      setWhatsappFormSaving_(false);
       cerrarWhatsappModal_();
       return;
     } catch (err) {
@@ -355,6 +409,7 @@
       QUERY ? aplicarFiltroBusqueda_(PEDIDOS_CACHE, QUERY) : PEDIDOS_CACHE,
     );
     estadoCarga.textContent = 'Pedido de WhatsApp cargado localmente.';
+    setWhatsappFormSaving_(false);
     cerrarWhatsappModal_();
   }
 
