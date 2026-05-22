@@ -13,7 +13,7 @@
       <a class="btn-ghost" href="../../index.html">← Volver</a>
       <div class="module-topbar__title">
         <h1>Contenido para Redes/Pantallas/Estados</h1>
-        <p>Videos para subir a estados / pantallas de locales / para redes</p>
+        <p>Videos para descargar al celular y publicar en estados, pantallas o redes.</p>
       </div>
       <div id="totalCount" class="total module-topbar__actions">0 videos</div>
     </header>
@@ -34,6 +34,28 @@
         <button id="modalClose" class="close-btn">Cerrar</button>
       </div>
       <div id="modalFrameWrap" class="modal-frame"></div>
+    </div>
+  </div>
+
+  <div id="downloadModal" class="modal" hidden>
+    <div class="modal-content download-dialog">
+      <div class="modal-header">
+        <h2 id="downloadTitle">Descargar video</h2>
+        <button id="downloadClose" class="close-btn">Cerrar</button>
+      </div>
+      <div class="download-help">
+        <p id="downloadMessage"></p>
+        <div class="download-actions">
+          <a id="downloadRetry" class="btn" href="#" target="_self" rel="noopener noreferrer">Descargar otra vez</a>
+          <a id="downloadDrive" class="btn btn-link" href="#" target="_blank" rel="noopener noreferrer">Abrir en Drive</a>
+          <button id="copyDownloadLink" class="btn btn-link" type="button">Copiar link</button>
+        </div>
+        <ol>
+          <li>Si el celular muestra una pantalla de Google Drive, tocar el icono de descarga.</li>
+          <li>Cuando termine, abrir WhatsApp o Instagram y elegir el video desde Galeria/Archivos.</li>
+          <li>Para estados conviene usar videos cortos; si pesa mucho, puede tardar con datos moviles.</li>
+        </ol>
+      </div>
     </div>
   </div>
 

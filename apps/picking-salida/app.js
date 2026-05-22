@@ -16,8 +16,9 @@
   const LS_META  = "pickeo_meta_v1";
   const LS_SCANS = "pickeo_scans_v1";
 
-  const AUTOCOMMIT_IDLE_MS = 80;
+  const AUTOCOMMIT_IDLE_MS = 180;
   const MIN_LEN_FOR_COMMIT = 3;
+  const MAX_SCAN_LEN_FALLBACK = 24;
 
   // ====== Apps Script ======
   const SCRIPT_URL_CUADERNILLO = "https://script.google.com/macros/s/AKfycbyAlP7xFvmRAcYq06a7asCB8gWU_6X6m6Eq0QXx1gW4sWcJURywVxI_sXYrYrigmbDUcA/exec";
@@ -36,6 +37,7 @@
   let scanTimer = null;
   let currentRemito = "";
   let isSaving = false;
+  let maxKnownCodeLength = 20;
 
   // ====== Elementos ======
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
@@ -383,6 +385,7 @@
       const raw = r[codeKey];
       const k = key(raw);
       if (!k) return;
+      maxKnownCodeLength = Math.max(maxKnownCodeLength, k.length);
       if (noOverride && byCode.has(k)) return;
       byCode.set(k, r);
     });
@@ -451,9 +454,17 @@
   }
 
   function processScan(code) {
-    const clean = String(code || "").trim();
+    const clean = cleanScanValue(code);
     if (!clean) {
       flash("err");
+      return;
+    }
+
+    const validation = validateScanValue(clean);
+    if (!validation.ok) {
+      flash("err");
+      beepError();
+      note(validation.message);
       return;
     }
 
@@ -482,6 +493,29 @@
     renderLast();
     renderPickList();
     renderArticleCounter();
+  }
+
+  function cleanScanValue(value) {
+    return String(value || "")
+      .replace(/[\u0000-\u001f\u007f]+/g, "")
+      .trim();
+  }
+
+  function validateScanValue(value) {
+    const maxLen = Math.max(MAX_SCAN_LEN_FALLBACK, maxKnownCodeLength + 4);
+
+    if (value.length < MIN_LEN_FOR_COMMIT) {
+      return { ok: false, message: "Lectura demasiado corta. Reintentá el escaneo." };
+    }
+
+    if (value.length > maxLen) {
+      return {
+        ok: false,
+        message: `Lectura descartada (${value.length} caracteres): parece ruido del lector. Reescaneá la etiqueta.`
+      };
+    }
+
+    return { ok: true, message: "" };
   }
 
   function deleteScanById(id) {
