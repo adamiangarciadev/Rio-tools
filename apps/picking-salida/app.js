@@ -515,7 +515,21 @@
       };
     }
 
+    if (value.includes("!") && !isArticuloColorTalleCode(value)) {
+      return {
+        ok: false,
+        message: `Formato inválido: ${value}. Usá artículo!color!talle, por ejemplo 05-5627!NEG!85.`
+      };
+    }
+
     return { ok: true, message: "" };
+  }
+
+  function isArticuloColorTalleCode(value) {
+    const parts = String(value || "").trim().split("!");
+    if (parts.length !== 3) return false;
+
+    return parts.every(part => /^[A-Z0-9][A-Z0-9-]*$/i.test(part.trim()));
   }
 
   function deleteScanById(id) {
