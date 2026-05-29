@@ -529,7 +529,7 @@
     const parts = String(value || "").trim().split("!");
     if (parts.length !== 3) return false;
 
-    return parts.every(part => /^[A-Z0-9][A-Z0-9/-]*$/i.test(part.trim()));
+    return parts.every(part => part.trim().length > 0);
   }
 
   function deleteScanById(id) {
