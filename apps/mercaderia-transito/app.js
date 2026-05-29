@@ -424,6 +424,7 @@
     const estado = canonEstado(r.estado);
     const usaSarmiento = requiereSarmiento(origen, destino);
     if (estado === "CONFIRMADO OK") return false;
+    if (suc === SARMIENTO && origen === DEPOSITO) return false;
     if (!usaSarmiento) {
       return suc === destino;
     }
