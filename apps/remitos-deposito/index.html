@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Remitos Deposito - RIO Tools</title>
+  <meta name="description" content="Carga y control de remitos manuales por cliente para deposito." />
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CDPZFHV1BV"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-CDPZFHV1BV");
+  </script>
+
+  <link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="container module-topbar">
+    <a href="../../index.html" class="btn back-btn">Volver</a>
+    <div class="module-topbar__title">
+      <h1>Remitos Deposito</h1>
+      <p>Carga manual, numeracion por cliente e historial</p>
+    </div>
+    <div class="module-topbar__actions">
+      <button id="reloadBtn" class="btn" type="button">Actualizar</button>
+      <button id="exportBtn" class="btn secondary" type="button">Descargar JSON</button>
+    </div>
+  </header>
+
+  <main class="container app-shell">
+    <section class="panel mode-panel" aria-label="Seleccion de cliente">
+      <div class="segmented" role="tablist" aria-label="Modo de cliente">
+        <button class="segment active" type="button" data-mode="existing">Cliente existente</button>
+        <button class="segment" type="button" data-mode="new">Cliente nuevo</button>
+      </div>
+
+      <div id="existingClientBox" class="client-row">
+        <label>
+          Clientes creados
+          <select id="clientSelect">
+            <option value="">Seleccionar cliente</option>
+          </select>
+        </label>
+        <label>
+          Codigo de cliente
+          <input id="clientCodeInput" type="text" autocomplete="off" list="clientsDatalist" placeholder="Buscar por codigo o nombre" />
+          <datalist id="clientsDatalist"></datalist>
+        </label>
+        <button id="searchClientBtn" class="btn" type="button">Buscar</button>
+      </div>
+
+      <form id="newClientForm" class="client-grid" hidden>
+        <label>
+          Codigo
+          <input id="newClientCode" type="text" autocomplete="off" required />
+        </label>
+        <label>
+          Nombre
+          <input id="newClientName" type="text" autocomplete="off" required />
+        </label>
+        <label>
+          Direccion
+          <input id="newClientAddress" type="text" autocomplete="off" />
+        </label>
+        <label>
+          Telefono
+          <input id="newClientPhone" type="text" autocomplete="off" />
+        </label>
+        <button class="btn" type="submit">Guardar cliente</button>
+      </form>
+    </section>
+
+    <section class="summary-grid" aria-label="Resumen">
+      <article class="summary-card">
+        <span>Cliente</span>
+        <strong id="currentClient">Sin seleccionar</strong>
+      </article>
+      <article class="summary-card">
+        <span>Proximo remito</span>
+        <strong id="nextRemito">-</strong>
+      </article>
+      <article class="summary-card">
+        <span>Remitos del cliente</span>
+        <strong id="clientRemitoCount">0</strong>
+      </article>
+      <article class="summary-card">
+        <span>Estado</span>
+        <strong id="sourceBadge">Local</strong>
+      </article>
+    </section>
+
+    <section class="layout-grid">
+      <form id="remitoForm" class="panel remito-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Nuevo remito</h2>
+            <p id="formStatus">Selecciona o crea un cliente para empezar.</p>
+          </div>
+          <button id="printBtn" class="btn secondary" type="button" disabled>Imprimir</button>
+        </div>
+
+        <div class="remito-sheet">
+          <div class="sheet-title">REMITO RIO</div>
+          <div class="sheet-meta">
+            <label>
+              Nombre
+              <input id="remitoClientName" type="text" readonly />
+            </label>
+            <label>
+              Fecha
+              <input id="remitoDate" type="date" required readonly />
+            </label>
+            <label>
+              Remito
+              <input id="remitoNumber" type="text" readonly />
+            </label>
+            <label>
+              Bultos
+              <input id="packageCount" type="number" min="0" step="1" value="0" />
+            </label>
+          </div>
+
+          <div class="table-wrap">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Articulo</th>
+                  <th>Descripcion</th>
+                  <th>Cantidad</th>
+                  <th>Precio</th>
+                  <th>Monto</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody"></tbody>
+            </table>
+          </div>
+
+          <button id="addRowBtn" class="btn secondary" type="button">Agregar renglon</button>
+
+          <label class="observations">
+            Observaciones
+            <textarea id="observations" rows="3"></textarea>
+          </label>
+
+          <div class="sheet-total">
+            <span>Total</span>
+            <strong id="remitoTotal">$ 0,00</strong>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button id="clearFormBtn" class="btn secondary" type="button">Limpiar</button>
+          <button id="saveRemitoBtn" class="btn" type="submit" disabled>Guardar remito</button>
+        </div>
+      </form>
+
+      <aside class="panel history-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Historial</h2>
+            <p id="historyStatus">Busca un cliente para ver sus remitos.</p>
+          </div>
+        </div>
+        <label class="search-box">
+          Buscar
+          <input id="historySearch" type="search" placeholder="Remito, fecha o articulo" />
+        </label>
+        <div id="historyList" class="history-list">
+          <div class="empty-state">Sin cliente seleccionado.</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <template id="itemRowTemplate">
+    <tr>
+      <td><input data-field="articulo" type="text" autocomplete="off" /></td>
+      <td><input data-field="descripcion" type="text" autocomplete="off" /></td>
+      <td><input data-field="cantidad" type="number" min="0" step="0.01" /></td>
+      <td><input data-field="precio" type="number" min="0" step="0.01" /></td>
+      <td data-field="monto" class="amount">$ 0,00</td>
+      <td><button class="icon-btn" type="button" data-action="remove-row" title="Quitar renglon">X</button></td>
+    </tr>
+  </template>
+
+  <script src="../../assets/rio-access.js" data-require-supervision="true"></script>
+  <script src="api-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
