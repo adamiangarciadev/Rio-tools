@@ -1,9 +1,9 @@
-/* app.js � 2 CSV, match normalizado, UN SOLO TXT con TODOS los c�digos
+﻿/* app.js ï¿½ 2 CSV, match normalizado, UN SOLO TXT con TODOS los cï¿½digos
    Flujo correcto:
    1) La app pide remito al script del cuadernillo
    2) El cuadernillo registra la fila y devuelve remito
    3) La app arma el nombre final del TXT
-   4) La app env�a el TXT al script del origen
+   4) La app envï¿½a el TXT al script del origen
 */
 ;(() => {
   "use strict";
@@ -276,7 +276,7 @@
 
   function signalSaved(remito, fileName) {
     const remText = remito ? `REM${remito}` : "Remito generado";
-    note(fileName ? `${remText} guardado � ${fileName}` : `${remText} guardado en Google Drive`);
+    note(fileName ? `${remText} guardado ï¿½ ${fileName}` : `${remText} guardado en Google Drive`);
     showPill("ok", `${remText} guardado`);
     beepOk();
 
@@ -333,15 +333,15 @@
     const okCount = results.filter(r => r.ok).length;
 
     if (okCount === 0) {
-      showPill("danger", "No se encontr� ning�n CSV");
-      note("No se cargaron CSV. Revis� nombres y may�sculas/min�sculas.");
+      showPill("danger", "No se encontrï¿½ ningï¿½n CSV");
+      note("No se cargaron CSV. Revisï¿½ nombres y mayï¿½sculas/minï¿½sculas.");
     } else if (okCount === list.length) {
       showPill("ok", `Listo (${okCount}/${list.length} CSV)`);
-      note(results.map(r => `OK ${r.name} (${r.rows})`).join(" � "));
+      note(results.map(r => `OK ${r.name} (${r.rows})`).join(" ï¿½ "));
     } else {
       const misses = results.filter(r => !r.ok).map(r => r.name).join(", ");
       showPill("warn", `Listo con ${okCount}/${list.length} CSV`);
-      note(`Falt�: ${misses}. Verific� que est�n en la misma carpeta y con ese nombre exacto.`);
+      note(`Faltï¿½: ${misses}. Verificï¿½ que estï¿½n en la misma carpeta y con ese nombre exacto.`);
     }
 
     renderArticleCounter();
@@ -394,7 +394,7 @@
   function guessCodeColumn(keys) {
     const forced = pickKey(keys, [
       "codigo_barras",
-      "c�digo","codigo","c?digo","código",
+      "cï¿½digo","codigo","c?digo","cÃ³digo",
       "barcode","ean",
       "lectura","scan"
     ]);
@@ -406,7 +406,7 @@
     if (!row) return "";
 
     const keys = Object.keys(row);
-    const artKey = pickKey(keys, ["articulo","art�culo","art?culo","artículo"]);
+    const artKey = pickKey(keys, ["articulo","artï¿½culo","art?culo","artÃ­culo"]);
 
     return artKey ? String(row[artKey] ?? "").trim() : "";
   }
@@ -415,8 +415,8 @@
     if (!row) return { color: "", talle: "" };
 
     const keys = Object.keys(row);
-    const desc1 = pickKey(keys, ["descripcion","descripci�n","descripci?n","descripción"]);
-    const desc2 = pickKey(keys, ["descripcion_2","descripci�n_2","descripci?n_2","descripción_2"]);
+    const desc1 = pickKey(keys, ["descripcion","descripciï¿½n","descripci?n","descripciÃ³n"]);
+    const desc2 = pickKey(keys, ["descripcion_2","descripciï¿½n_2","descripci?n_2","descripciÃ³n_2"]);
 
     const color = desc1 ? String(row[desc1] ?? "").trim() : "";
     const talle = desc2 ? String(row[desc2] ?? "").trim() : "";
@@ -428,8 +428,8 @@
     );
 
     const talle2 = talle || (
-      pickKey(keys, ["talle","tama�o","tamano","size"])
-        ? String(row[pickKey(keys, ["talle","tama�o","tamano","size"])] ?? "").trim()
+      pickKey(keys, ["talle","tamaï¿½o","tamano","size"])
+        ? String(row[pickKey(keys, ["talle","tamaï¿½o","tamano","size"])] ?? "").trim()
         : ""
     );
 
@@ -470,18 +470,20 @@
 
     const k = key(clean);
     const hit = byCode.has(k);
+    const parsedCode = parseArticuloColorTalleCode(clean);
+    const ok = hit || !!parsedCode;
 
     scans.unshift({
       id: ++scanSeq,
       code: clean,
-      ok: hit,
+      ok,
       time: new Date().toISOString()
     });
 
     scans = scans.slice(0, 5000);
     saveScans();
 
-    if (!hit) {
+    if (!ok) {
       flash("err");
       beepError();
       note(`No encontrado: ${clean}`);
@@ -503,22 +505,23 @@
 
   function validateScanValue(value) {
     const maxLen = Math.max(MAX_SCAN_LEN_FALLBACK, maxKnownCodeLength + 4);
+    const parsedCode = parseArticuloColorTalleCode(value);
 
     if (value.length < MIN_LEN_FOR_COMMIT) {
-      return { ok: false, message: "Lectura demasiado corta. Reintentá el escaneo." };
+      return { ok: false, message: "Lectura demasiado corta. ReintentÃ¡ el escaneo." };
     }
 
-    if (value.length > maxLen) {
-      return {
-        ok: false,
-        message: `Lectura descartada (${value.length} caracteres): parece ruido del lector. Reescaneá la etiqueta.`
-      };
-    }
-
-    if (value.includes("!") && !isArticuloColorTalleCode(value)) {
+    if (value.includes("!") && !parsedCode) {
       return {
         ok: false,
         message: `Formato inválido: ${value}. Usá artículo!color!talle, por ejemplo 05-5627!NEG!85.`
+      };
+    }
+
+    if (!parsedCode && value.length > maxLen) {
+      return {
+        ok: false,
+        message: `Lectura descartada (${value.length} caracteres): parece ruido del lector. Reescaneá la etiqueta.`
       };
     }
 
@@ -526,10 +529,17 @@
   }
 
   function isArticuloColorTalleCode(value) {
-    const parts = String(value || "").trim().split("!");
-    if (parts.length !== 3) return false;
+    return !!parseArticuloColorTalleCode(value);
+  }
 
-    return parts.every(part => part.trim().length > 0);
+  function parseArticuloColorTalleCode(value) {
+    const parts = String(value || "").trim().split("!");
+    if (parts.length !== 3) return null;
+
+    const [articulo, color, talle] = parts.map(part => part.trim());
+    if (!articulo || !color || !talle) return null;
+
+    return { articulo, color, talle };
   }
 
   function deleteScanById(id) {
@@ -541,8 +551,8 @@
       renderLast();
       renderPickList();
       renderArticleCounter();
-      note("�tem eliminado.");
-      showPill("ok", "�tem eliminado");
+      note("ï¿½tem eliminado.");
+      showPill("ok", "ï¿½tem eliminado");
     }
   }
 
@@ -577,17 +587,24 @@
       const row = byCode.get(key(s.code));
 
       if (!row) {
-        const label = String(s.code).trim();
+        const parsedCode = parseArticuloColorTalleCode(s.code);
+        const label = parsedCode
+          ? [parsedCode.articulo, parsedCode.color, parsedCode.talle].join(" ")
+          : String(s.code).trim();
+        const variant = parsedCode
+          ? [parsedCode.color, parsedCode.talle].join(" - ")
+          : "SIN EQUIVALENCIA";
+
         if (!map.has(label)) {
           map.set(label, {
             total: 0,
-            variants: new Map([["SIN EQUIVALENCIA", 0]])
+            variants: new Map([[variant, 0]])
           });
         }
 
         const it = map.get(label);
         it.total += 1;
-        it.variants.set("SIN EQUIVALENCIA", (it.variants.get("SIN EQUIVALENCIA") || 0) + 1);
+        it.variants.set(variant, (it.variants.get(variant) || 0) + 1);
         continue;
       }
 
@@ -595,7 +612,7 @@
       const { color, talle } = getColorTalleFromRow(row);
 
       const artLabel = [articulo, color, talle].filter(Boolean).join(" ").trim() || articulo;
-      const variantLabel = [color, talle].filter(Boolean).join(" � ") || "SIN VARIANTE";
+      const variantLabel = [color, talle].filter(Boolean).join(" ï¿½ ") || "SIN VARIANTE";
 
       if (!map.has(artLabel)) {
         map.set(artLabel, { total: 0, variants: new Map() });
@@ -623,7 +640,7 @@
         <details class="art-item">
           <summary>
             <div class="art-sum-left">
-              <span class="art-arrow">�</span>
+              <span class="art-arrow">ï¿½</span>
               <span class="art-code">${escapeHtml(artLabel)}</span>
             </div>
             <span class="art-total">${info.total}</span>
@@ -656,7 +673,7 @@
 
     const recent = scans.slice(0, 10)
       .map(s => `<span class="${s.ok ? "ok" : "err"}">${s.ok ? "?" : "?"} ${escapeHtml(s.code)}</span>`)
-      .join(" � ");
+      .join(" ï¿½ ");
 
     el.lastScans.innerHTML = recent || "";
   }
@@ -716,12 +733,12 @@
     const destino = (el.destinoSelect?.value || "").toUpperCase().trim();
 
     if (!origen) {
-      signalError("Seleccion� un ORIGEN.");
+      signalError("Seleccionï¿½ un ORIGEN.");
       return;
     }
 
     if (!destino) {
-      signalError("Seleccion� un DESTINO.");
+      signalError("Seleccionï¿½ un DESTINO.");
       return;
     }
 
@@ -745,7 +762,7 @@
       const remito = remitoData?.remito;
 
       if (!remito) {
-        throw new Error("El cuadernillo no devolvi� n�mero de remito.");
+        throw new Error("El cuadernillo no devolviï¿½ nï¿½mero de remito.");
       }
 
       updateRemitoUI(remito);
