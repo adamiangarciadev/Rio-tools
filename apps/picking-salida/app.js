@@ -537,7 +537,7 @@
     if (parts.length !== 3) return null;
 
     const [articulo, color, talle] = parts.map(part => part.trim());
-    if (!articulo || !color || !talle) return null;
+    if (!articulo || (!color && !talle)) return null;
 
     return { articulo, color, talle };
   }
@@ -589,10 +589,10 @@
       if (!row) {
         const parsedCode = parseArticuloColorTalleCode(s.code);
         const label = parsedCode
-          ? [parsedCode.articulo, parsedCode.color, parsedCode.talle].join(" ")
+          ? [parsedCode.articulo, parsedCode.color, parsedCode.talle].filter(Boolean).join(" ")
           : String(s.code).trim();
         const variant = parsedCode
-          ? [parsedCode.color, parsedCode.talle].join(" - ")
+          ? [parsedCode.color, parsedCode.talle].filter(Boolean).join(" - ") || "SIN VARIANTE"
           : "SIN EQUIVALENCIA";
 
         if (!map.has(label)) {
