@@ -16,7 +16,7 @@
   const LS_META  = "pickeo_meta_v1";
   const LS_SCANS = "pickeo_scans_v1";
 
-  const AUTOCOMMIT_IDLE_MS = 180;
+  const AUTOCOMMIT_IDLE_MS = 450;
   const MIN_LEN_FOR_COMMIT = 3;
   const MAX_SCAN_LEN_FALLBACK = 24;
 
