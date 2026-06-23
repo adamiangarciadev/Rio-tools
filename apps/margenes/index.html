@@ -21,6 +21,12 @@
   </header>
 
   <main class="shell">
+    <nav class="tabs" aria-label="Secciones de margenes">
+      <button class="tab-btn is-active" type="button" data-tab="dashboard">Procesar crudos</button>
+      <button class="tab-btn" type="button" data-tab="comparison">Comparar procesados</button>
+    </nav>
+
+    <div id="dashboardTab" class="tab-panel is-active">
     <section class="upload-panel">
       <div class="dropzone" id="dropzone">
         <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" multiple />
@@ -119,6 +125,59 @@
       </div>
       <div class="table-wrap"><table id="providerCategoryTable"></table></div>
     </section>
+    </div>
+
+    <div id="comparisonTab" class="tab-panel">
+      <section class="upload-panel comparison-upload">
+        <div class="compare-drop-grid">
+          <label class="file-card">
+            <span>Año pasado procesado</span>
+            <strong id="comparePreviousName">Sin archivo</strong>
+            <input id="comparePreviousInput" type="file" accept=".xlsx,.xls,.csv" />
+          </label>
+          <label class="file-card">
+            <span>Año actual procesado</span>
+            <strong id="compareCurrentName">Sin archivo</strong>
+            <input id="compareCurrentInput" type="file" accept=".xlsx,.xls,.csv" />
+          </label>
+        </div>
+        <div class="controls compare-controls">
+          <label>
+            Periodo anterior
+            <input id="comparePreviousPeriod" type="text" placeholder="Ej: 2025" />
+          </label>
+          <label>
+            Periodo actual
+            <input id="compareCurrentPeriod" type="text" placeholder="Ej: 2026" />
+          </label>
+          <label>
+            Buscar
+            <input id="compareSearchInput" type="search" placeholder="Sucursal o proveedor..." />
+          </label>
+        </div>
+        <div class="module-topbar__actions compare-actions">
+          <button id="btnBuildComparison" class="btn primary" type="button">Generar comparacion</button>
+          <button id="btnExportComparison" class="btn" type="button">Exportar archivo unico</button>
+        </div>
+        <div id="compareStatus" class="status">Carga dos archivos procesados para comparar.</div>
+      </section>
+
+      <section class="kpi-grid compare-kpis">
+        <article class="kpi"><span>Venta actual</span><strong id="compareKpiSalesCurrent">$ 0</strong></article>
+        <article class="kpi"><span>Diferencia venta</span><strong id="compareKpiSalesDiff">$ 0</strong></article>
+        <article class="kpi"><span>Ganancia actual</span><strong id="compareKpiProfitCurrent">$ 0</strong></article>
+        <article class="kpi"><span>Diferencia ganancia</span><strong id="compareKpiProfitDiff">$ 0</strong></article>
+        <article class="kpi"><span>Margen actual</span><strong id="compareKpiMarginCurrent">0%</strong></article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Comparacion año contra año</h2>
+          <span id="compareRowsCount">0 registros</span>
+        </div>
+        <div class="table-wrap compare-table-wrap"><table id="comparisonTable"></table></div>
+      </section>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
