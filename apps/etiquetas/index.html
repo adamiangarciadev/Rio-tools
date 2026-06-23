@@ -132,15 +132,10 @@
     const $ = (sel) => document.querySelector(sel);
 
     // ---------- Carga de equivalencias.csv ----------
-    fetch('equivalencia.csv')
-      .then(r => r.text())
-      .then(text => {
+    cargarTodasLasEquivalencias()
+      .then(datos => {
         // Admite ; como separador. Ignora líneas vacías.
-        const lines = text.split(/\r?\n/).filter(Boolean);
-        registros = lines.slice(1).map(line => {
-          const cols = line.split(';').map(c => c.replace(/^"|"$|(\r)/g, '').trim());
-          return { codigo: cols[0], articulo: cols[1], color: cols[2], talle: cols[3] };
-        }).filter(r => r.codigo && r.articulo && r.color && r.talle);
+        registros = datos;
 
         // Poblar artículos únicos
         const articulos = [...new Set(registros.map(r => r.articulo))].sort();
@@ -153,8 +148,48 @@
         });
       })
       .catch(() => {
-        $('#articulo').innerHTML = '<option value="">Error al cargar equivalencias_.csv</option>';
+        $('#articulo').innerHTML = '<option value="">Error al cargar equivalencias de data</option>';
       });
+
+    function cargarTodasLasEquivalencias() {
+      const archivos = [
+        '../../data/equivalencia.csv',
+        '../../data/equivalencia2.csv'
+      ];
+
+      return Promise.allSettled(archivos.map(cargarEquivalencias))
+        .then(resultados => {
+          const cargados = resultados
+            .filter(r => r.status === 'fulfilled')
+            .flatMap(r => r.value);
+
+          const unicos = new Map();
+          cargados.forEach(r => {
+            unicos.set(`${r.codigo}|${r.articulo}|${r.color}|${r.talle}`, r);
+          });
+
+          const registrosUnicos = [...unicos.values()];
+          if (!registrosUnicos.length) throw new Error('No se cargaron equivalencias');
+          return registrosUnicos;
+        });
+    }
+
+    function cargarEquivalencias(archivo) {
+      return fetch(archivo)
+        .then(r => {
+          if (!r.ok) throw new Error(`No se pudo cargar ${archivo}`);
+          return r.text();
+        })
+        .then(parsearEquivalencias);
+    }
+
+    function parsearEquivalencias(text) {
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      return lines.slice(1).map(line => {
+        const cols = line.split(';').map(c => c.replace(/^"|"$|(\r)/g, '').trim());
+        return { codigo: cols[0], articulo: cols[1], color: cols[2], talle: cols[3] };
+      }).filter(r => r.codigo && r.articulo && r.color && r.talle);
+    }
 
     // ---------- Buscador de artículo ----------
     $('#busquedaArticulo').addEventListener('input', function () {
