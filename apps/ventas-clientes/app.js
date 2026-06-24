@@ -539,21 +539,15 @@
       setBusy(true);
       el.statusText.textContent = `Buscando clientes que compraron entre ${desde} y ${hasta}...`;
 
-      let data;
-      try {
-        data = await apiGet("clientes_rango", {
-          desde,
-          hasta,
-          sucursal: el.branchFilter.value,
-          listaPrecio: el.priceListFilter.value,
-          soloLista: el.priceListOnly.checked ? "1" : ""
-        });
-        if (!data.ok || !Array.isArray(data.clientes)) {
-          throw new Error(data.error || "La API publicada todavia no tiene clientes_rango.");
-        }
-      } catch (apiError) {
-        console.warn("clientes_rango no disponible, usando fallback.", apiError);
-        data = await loadRangeClientsFallback(desde, hasta);
+      const data = await apiGet("clientes_rango", {
+        desde,
+        hasta,
+        sucursal: el.branchFilter.value,
+        listaPrecio: el.priceListFilter.value,
+        soloLista: el.priceListOnly.checked ? "1" : ""
+      });
+      if (!data.ok || !Array.isArray(data.clientes)) {
+        throw new Error(data.error || "La API publicada todavia no tiene clientes_rango. Actualiza el deploy de Apps Script para usar el filtro rapido.");
       }
 
       state.range = {
