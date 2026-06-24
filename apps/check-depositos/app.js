@@ -16,7 +16,8 @@
     "Santander - Johanna Suets",
     "Santander - Infantino Fernando",
     "Galicia - 1988 SRL",
-    "Supervielle - Nexus Realty SA"
+    "Supervielle - Nexus Realty SA",
+    "Mercado Pago - Miguel Angel Raccio",
   ];
 
   const $ = (selector) => document.querySelector(selector);

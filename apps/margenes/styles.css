@@ -28,6 +28,34 @@ body {
   padding: 16px 0 32px;
 }
 
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(17, 24, 33, .96);
+  color: var(--muted);
+  padding: 9px 13px;
+  cursor: pointer;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tab-btn.is-active {
+  background: rgba(34, 199, 184, .14);
+  border-color: rgba(34, 199, 184, .55);
+  color: var(--text);
+}
+
+.tab-panel { display: none; }
+.tab-panel.is-active { display: block; }
+
 .btn {
   min-height: 38px;
   border: 1px solid var(--border);
@@ -129,6 +157,55 @@ select:focus {
 
 .status {
   min-height: 22px;
+}
+
+.compare-drop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.file-card {
+  position: relative;
+  min-height: 118px;
+  padding: 16px;
+  border: 1px dashed rgba(148, 163, 184, .34);
+  border-radius: 8px;
+  background: rgba(9, 13, 18, .32);
+  cursor: pointer;
+}
+
+.file-card:hover {
+  border-color: rgba(34, 199, 184, .55);
+}
+
+.file-card span {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.file-card strong {
+  display: block;
+  margin-top: 12px;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.file-card input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.compare-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.compare-table-wrap {
+  max-height: 620px;
 }
 
 .kpi-grid {
@@ -234,6 +311,9 @@ th.num {
 .margin-good { color: var(--green); }
 .margin-mid { color: var(--amber); }
 .margin-bad { color: var(--red); }
+.diff-good { color: var(--green); }
+.diff-bad { color: var(--red); }
+.diff-flat { color: var(--muted); }
 
 .hidden-view { display: none !important; }
 
@@ -246,7 +326,8 @@ th.num {
 @media (max-width: 720px) {
   .shell { width: min(100% - 20px, 1440px); }
   .dropzone,
-  .controls { grid-template-columns: 1fr; }
+  .controls,
+  .compare-drop-grid { grid-template-columns: 1fr; }
   .kpi-grid { grid-template-columns: 1fr; }
   .chart-box { height: 280px; }
   th,

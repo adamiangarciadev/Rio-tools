@@ -37,6 +37,26 @@
     exportBranches: qs("#exportBranches"),
     exportProviders: qs("#exportProviders"),
     exportProviderCategories: qs("#exportProviderCategories"),
+    tabButtons: document.querySelectorAll(".tab-btn"),
+    dashboardTab: qs("#dashboardTab"),
+    comparisonTab: qs("#comparisonTab"),
+    comparePreviousInput: qs("#comparePreviousInput"),
+    compareCurrentInput: qs("#compareCurrentInput"),
+    comparePreviousName: qs("#comparePreviousName"),
+    compareCurrentName: qs("#compareCurrentName"),
+    comparePreviousPeriod: qs("#comparePreviousPeriod"),
+    compareCurrentPeriod: qs("#compareCurrentPeriod"),
+    compareSearchInput: qs("#compareSearchInput"),
+    btnBuildComparison: qs("#btnBuildComparison"),
+    btnExportComparison: qs("#btnExportComparison"),
+    compareStatus: qs("#compareStatus"),
+    compareKpiSalesCurrent: qs("#compareKpiSalesCurrent"),
+    compareKpiSalesDiff: qs("#compareKpiSalesDiff"),
+    compareKpiProfitCurrent: qs("#compareKpiProfitCurrent"),
+    compareKpiProfitDiff: qs("#compareKpiProfitDiff"),
+    compareKpiMarginCurrent: qs("#compareKpiMarginCurrent"),
+    compareRowsCount: qs("#compareRowsCount"),
+    comparisonTable: qs("#comparisonTable"),
   };
 
   const state = {
@@ -44,6 +64,13 @@
     files: [],
     charts: {},
     aggregates: emptyAggregates(),
+    comparison: {
+      previousFile: null,
+      currentFile: null,
+      rows: [],
+      totals: emptyComparisonTotals(),
+      mode: "",
+    },
   };
 
   document.addEventListener("DOMContentLoaded", init);
@@ -58,6 +85,12 @@
     els.exportBranches.addEventListener("click", () => exportRows("reporte_sucursales", state.aggregates.branches));
     els.exportProviders.addEventListener("click", () => exportRows("reporte_proveedores", state.aggregates.providers));
     els.exportProviderCategories.addEventListener("click", () => exportRows("categoria_por_proveedor", state.aggregates.providerCategories));
+    els.tabButtons.forEach((button) => button.addEventListener("click", () => switchTab(button.dataset.tab)));
+    els.comparePreviousInput.addEventListener("change", () => setComparisonFile("previous", els.comparePreviousInput.files[0]));
+    els.compareCurrentInput.addEventListener("change", () => setComparisonFile("current", els.compareCurrentInput.files[0]));
+    els.compareSearchInput.addEventListener("input", renderComparison);
+    els.btnBuildComparison.addEventListener("click", buildComparisonFromInputs);
+    els.btnExportComparison.addEventListener("click", exportComparisonWorkbook);
 
     ["dragenter", "dragover"].forEach((eventName) => {
       els.dropzone.addEventListener(eventName, (ev) => {
@@ -78,6 +111,13 @@
     });
 
     render();
+    renderComparison();
+  }
+
+  function switchTab(tab) {
+    els.tabButtons.forEach((button) => button.classList.toggle("is-active", button.dataset.tab === tab));
+    els.dashboardTab.classList.toggle("is-active", tab === "dashboard");
+    els.comparisonTab.classList.toggle("is-active", tab === "comparison");
   }
 
   async function handleFiles(files) {
@@ -155,6 +195,367 @@
       };
       reader.readAsArrayBuffer(file);
     });
+  }
+
+  function parseProcessedWorkbook(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
+      reader.onload = () => {
+        try {
+          const data = new Uint8Array(reader.result);
+          const workbook = XLSX.read(data, { type: "array", cellDates: true });
+          const candidates = [];
+
+          workbook.SheetNames.forEach((sheetName) => {
+            const matrix = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: "", raw: false });
+            const parsed = parseProcessedMatrix(matrix);
+            if (parsed.rows.length) candidates.push({ ...parsed, sheetName });
+          });
+
+          if (!candidates.length) {
+            reject(new Error("No encontre una hoja procesada compatible."));
+            return;
+          }
+
+          candidates.sort((a, b) => b.rows.length - a.rows.length);
+          resolve(candidates[0]);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function parseProcessedMatrix(matrix) {
+    const headerIndex = matrix.findIndex((row) => {
+      const cells = row.map(cleanColumn);
+      return cells.some((cell) => ["locales", "sucursal", "proveedor", "nombre"].includes(cell))
+        && cells.some((cell) => ["ventas", "venta"].includes(cell))
+        && cells.some((cell) => ["costo"].includes(cell));
+    });
+
+    if (headerIndex < 0) return { mode: "", rows: [] };
+
+    const headers = matrix[headerIndex].map(cleanColumn);
+    const findIndex = (...names) => headers.findIndex((header) => names.some((name) => header === name || header.includes(name)));
+    const idx = {
+      branch: findIndex("locales", "sucursal"),
+      discontinuity: findIndex("discontinuidad"),
+      group: findIndex("grupo"),
+      name: findIndex("nombre", "proveedor"),
+      qty: findIndex("cantidad"),
+      cost: findIndex("costo"),
+      sales: findIndex("ventas", "venta"),
+      profit: findIndex("ganancias", "ganancia", "margen de ganancias"),
+      margin: findIndex("margenes", "% ganancias", "%"),
+    };
+    const mode = idx.branch >= 0 ? "locales" : "proveedor";
+    const rows = [];
+
+    for (let i = headerIndex + 1; i < matrix.length; i++) {
+      const raw = matrix[i] || [];
+      const firstCell = text(raw[0]);
+      if (!raw.some((cell) => text(cell))) continue;
+      if (/^total$/i.test(firstCell)) continue;
+
+      const discontinuity = text(raw[idx.discontinuity]);
+      const isSubtotal = /^subtotal/i.test(discontinuity);
+      let key = "";
+      let detail = "";
+
+      if (mode === "locales") {
+        key = text(raw[idx.branch]);
+      } else if (isSubtotal) {
+        key = text(raw[idx.group]);
+        detail = "Subtotal";
+      } else {
+        key = text(raw[idx.name]) || text(raw[idx.group]);
+        detail = text(raw[idx.group]);
+      }
+
+      if (!key) continue;
+
+      rows.push({
+        key,
+        detalle: detail,
+        cantidad: idx.qty >= 0 ? toNumber(raw[idx.qty]) : 0,
+        costo: idx.cost >= 0 ? toNumber(raw[idx.cost]) : 0,
+        venta: idx.sales >= 0 ? toNumber(raw[idx.sales]) : 0,
+        ganancia: idx.profit >= 0 ? toNumber(raw[idx.profit]) : 0,
+        margen: idx.margin >= 0 ? normalizePercent(raw[idx.margin]) : 0,
+        isSubtotal,
+      });
+    }
+
+    const comparableRows = mode === "proveedor" && rows.some((row) => row.isSubtotal)
+      ? rows.filter((row) => row.isSubtotal)
+      : rows;
+
+    return { mode, rows: mergeComparableRows(comparableRows) };
+  }
+
+  function mergeComparableRows(rows) {
+    const map = new Map();
+    rows.forEach((row) => {
+      const key = row.key || "Sin dato";
+      const item = map.get(key) || { key, detalle: row.detalle, cantidad: 0, costo: 0, venta: 0, ganancia: 0, margen: 0 };
+      item.cantidad += row.cantidad;
+      item.costo += row.costo;
+      item.venta += row.venta;
+      item.ganancia += row.ganancia;
+      if (!item.detalle && row.detalle) item.detalle = row.detalle;
+      map.set(key, item);
+    });
+    return [...map.values()].map(addMargin).sort((a, b) => b.venta - a.venta);
+  }
+
+  function setComparisonFile(slot, file) {
+    if (!file) return;
+    if (!/\.(xlsx|xls|csv)$/i.test(file.name)) {
+      setCompareStatus("El archivo tiene que ser Excel o CSV.");
+      return;
+    }
+    if (slot === "previous") {
+      state.comparison.previousFile = file;
+      els.comparePreviousName.textContent = file.name;
+    } else {
+      state.comparison.currentFile = file;
+      els.compareCurrentName.textContent = file.name;
+    }
+    setCompareStatus("Archivo cargado. Cuando tengas los dos, genera la comparacion.");
+  }
+
+  async function buildComparisonFromInputs() {
+    const previousFile = state.comparison.previousFile;
+    const currentFile = state.comparison.currentFile;
+    if (!previousFile || !currentFile) {
+      setCompareStatus("Carga el procesado del año pasado y el procesado de este año.");
+      return;
+    }
+
+    setCompareStatus("Leyendo procesados y armando comparacion...");
+    try {
+      const [previous, current] = await Promise.all([
+        parseProcessedWorkbook(previousFile),
+        parseProcessedWorkbook(currentFile),
+      ]);
+      const rows = buildComparisonRows(previous.rows, current.rows);
+      state.comparison.rows = rows;
+      state.comparison.totals = buildComparisonTotals(rows);
+      state.comparison.mode = current.mode || previous.mode;
+      setCompareStatus(`Comparacion lista: ${fmtInt(rows.length)} registros. Tipo detectado: ${comparisonModeLabel(state.comparison.mode)}.`);
+      renderComparison();
+    } catch (error) {
+      state.comparison.rows = [];
+      state.comparison.totals = emptyComparisonTotals();
+      setCompareStatus(`No pude generar la comparacion: ${error.message}`);
+      renderComparison();
+    }
+  }
+
+  function buildComparisonRows(previousRows, currentRows) {
+    const previousMap = new Map(previousRows.map((row) => [normalizeText(row.key), row]));
+    const currentMap = new Map(currentRows.map((row) => [normalizeText(row.key), row]));
+    const keys = new Map();
+    previousRows.forEach((row) => keys.set(normalizeText(row.key), row.key));
+    currentRows.forEach((row) => keys.set(normalizeText(row.key), row.key));
+
+    return [...keys.entries()].map(([normalizedKey, label]) => {
+      const previous = previousMap.get(normalizedKey) || emptyMetricRow(label);
+      const current = currentMap.get(normalizedKey) || emptyMetricRow(label);
+      return {
+        nombre: label,
+        cantidad_anterior: previous.cantidad,
+        cantidad_actual: current.cantidad,
+        cantidad_dif: current.cantidad - previous.cantidad,
+        costo_anterior: previous.costo,
+        costo_actual: current.costo,
+        costo_dif: current.costo - previous.costo,
+        venta_anterior: previous.venta,
+        venta_actual: current.venta,
+        venta_dif: current.venta - previous.venta,
+        venta_var: variation(current.venta, previous.venta),
+        ganancia_anterior: previous.ganancia,
+        ganancia_actual: current.ganancia,
+        ganancia_dif: current.ganancia - previous.ganancia,
+        ganancia_var: variation(current.ganancia, previous.ganancia),
+        margen_anterior: previous.margen,
+        margen_actual: current.margen,
+        margen_dif: current.margen - previous.margen,
+      };
+    }).sort((a, b) => b.venta_actual - a.venta_actual || b.venta_anterior - a.venta_anterior);
+  }
+
+  function buildComparisonTotals(rows) {
+    const totals = rows.reduce((acc, row) => {
+      acc.ventaAnterior += row.venta_anterior;
+      acc.ventaActual += row.venta_actual;
+      acc.gananciaAnterior += row.ganancia_anterior;
+      acc.gananciaActual += row.ganancia_actual;
+      acc.costoAnterior += row.costo_anterior;
+      acc.costoActual += row.costo_actual;
+      return acc;
+    }, emptyComparisonTotals());
+    totals.ventaDif = totals.ventaActual - totals.ventaAnterior;
+    totals.gananciaDif = totals.gananciaActual - totals.gananciaAnterior;
+    totals.margenActual = totals.costoActual ? totals.gananciaActual / totals.costoActual : 0;
+    return totals;
+  }
+
+  function emptyComparisonTotals() {
+    return {
+      ventaAnterior: 0,
+      ventaActual: 0,
+      ventaDif: 0,
+      gananciaAnterior: 0,
+      gananciaActual: 0,
+      gananciaDif: 0,
+      costoAnterior: 0,
+      costoActual: 0,
+      margenActual: 0,
+    };
+  }
+
+  function emptyMetricRow(key) {
+    return { key, cantidad: 0, costo: 0, venta: 0, ganancia: 0, margen: 0 };
+  }
+
+  function renderComparison() {
+    const query = normalizeText(els.compareSearchInput.value);
+    const rows = query
+      ? state.comparison.rows.filter((row) => normalizeText(row.nombre).includes(query))
+      : state.comparison.rows;
+    const totals = state.comparison.totals;
+
+    els.compareKpiSalesCurrent.textContent = fmtMoney(totals.ventaActual);
+    els.compareKpiSalesDiff.textContent = fmtMoney(totals.ventaDif);
+    els.compareKpiProfitCurrent.textContent = fmtMoney(totals.gananciaActual);
+    els.compareKpiProfitDiff.textContent = fmtMoney(totals.gananciaDif);
+    els.compareKpiMarginCurrent.textContent = fmtPct(totals.margenActual);
+    els.compareRowsCount.textContent = `${fmtInt(rows.length)} registros`;
+    renderComparisonTable(rows);
+  }
+
+  function renderComparisonTable(rows) {
+    els.comparisonTable.innerHTML = `
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th class="num">Venta ant.</th>
+          <th class="num">Venta act.</th>
+          <th class="num">Dif. venta</th>
+          <th class="num">Var. venta</th>
+          <th class="num">Ganancia ant.</th>
+          <th class="num">Ganancia act.</th>
+          <th class="num">Dif. ganancia</th>
+          <th class="num">Margen ant.</th>
+          <th class="num">Margen act.</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.length ? rows.map((row) => `
+          <tr>
+            <td>${escapeHtml(row.nombre)}</td>
+            <td class="num">${fmtMoney(row.venta_anterior)}</td>
+            <td class="num">${fmtMoney(row.venta_actual)}</td>
+            <td class="num ${diffClass(row.venta_dif)}">${fmtMoney(row.venta_dif)}</td>
+            <td class="num ${diffClass(row.venta_var)}">${fmtPct(row.venta_var)}</td>
+            <td class="num">${fmtMoney(row.ganancia_anterior)}</td>
+            <td class="num">${fmtMoney(row.ganancia_actual)}</td>
+            <td class="num ${diffClass(row.ganancia_dif)}">${fmtMoney(row.ganancia_dif)}</td>
+            <td class="num ${marginClass(row.margen_anterior)}">${fmtPct(row.margen_anterior)}</td>
+            <td class="num ${marginClass(row.margen_actual)}">${fmtPct(row.margen_actual)}</td>
+          </tr>
+        `).join("") : emptyTableRow(10)}
+      </tbody>
+    `;
+  }
+
+  function exportComparisonWorkbook() {
+    if (!state.comparison.rows.length) {
+      setCompareStatus("Primero genera la comparacion.");
+      return;
+    }
+
+    const previousPeriod = cleanFilePart(els.comparePreviousPeriod.value || "anio_pasado");
+    const currentPeriod = cleanFilePart(els.compareCurrentPeriod.value || "anio_actual");
+    const workbook = XLSX.utils.book_new();
+    const summary = [
+      ["COMPARACION DE MARGENES PROCESADOS"],
+      [`Generado automaticamente - ${formatDateTimeForExport()}`],
+      [""],
+      ["Periodo anterior", previousPeriod],
+      ["Periodo actual", currentPeriod],
+      ["Tipo", comparisonModeLabel(state.comparison.mode)],
+      [""],
+      ["Venta anterior", round2(state.comparison.totals.ventaAnterior)],
+      ["Venta actual", round2(state.comparison.totals.ventaActual)],
+      ["Diferencia venta", round2(state.comparison.totals.ventaDif)],
+      ["Ganancia anterior", round2(state.comparison.totals.gananciaAnterior)],
+      ["Ganancia actual", round2(state.comparison.totals.gananciaActual)],
+      ["Diferencia ganancia", round2(state.comparison.totals.gananciaDif)],
+      ["Margen actual", state.comparison.totals.margenActual],
+    ];
+    const comparisonRows = state.comparison.rows.map((row) => ({
+      Nombre: row.nombre,
+      [`Cantidad ${previousPeriod}`]: row.cantidad_anterior,
+      [`Cantidad ${currentPeriod}`]: row.cantidad_actual,
+      "Dif. cantidad": row.cantidad_dif,
+      [`Costo ${previousPeriod}`]: round2(row.costo_anterior),
+      [`Costo ${currentPeriod}`]: round2(row.costo_actual),
+      "Dif. costo": round2(row.costo_dif),
+      [`Venta ${previousPeriod}`]: round2(row.venta_anterior),
+      [`Venta ${currentPeriod}`]: round2(row.venta_actual),
+      "Dif. venta": round2(row.venta_dif),
+      "Var. venta": row.venta_var,
+      [`Ganancia ${previousPeriod}`]: round2(row.ganancia_anterior),
+      [`Ganancia ${currentPeriod}`]: round2(row.ganancia_actual),
+      "Dif. ganancia": round2(row.ganancia_dif),
+      "Var. ganancia": row.ganancia_var,
+      [`Margen ${previousPeriod}`]: row.margen_anterior,
+      [`Margen ${currentPeriod}`]: row.margen_actual,
+      "Dif. margen": row.margen_dif,
+    }));
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summary);
+    const wsComparison = XLSX.utils.json_to_sheet(comparisonRows);
+    wsSummary["!cols"] = [{ wch: 24 }, { wch: 24 }];
+    wsComparison["!cols"] = [
+      { wch: 32 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 16 },
+      { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 16 },
+      { wch: 16 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 12 },
+    ];
+    styleComparisonSheet(wsComparison);
+    XLSX.utils.book_append_sheet(workbook, wsSummary, "Resumen");
+    XLSX.utils.book_append_sheet(workbook, wsComparison, "Comparacion");
+    XLSX.writeFile(workbook, `COMPARACION_MARGENES_${previousPeriod}_vs_${currentPeriod}.xlsx`);
+    setCompareStatus("Archivo unico de comparacion generado.");
+  }
+
+  function styleComparisonSheet(sheet) {
+    if (!sheet["!ref"]) return;
+    const range = XLSX.utils.decode_range(sheet["!ref"]);
+    sheet["!autofilter"] = { ref: XLSX.utils.encode_range(range) };
+    for (let c = 0; c <= range.e.c; c++) ensureCell(sheet, 0, c).s = styleHeader();
+    for (let r = 1; r <= range.e.r; r++) {
+      for (let c = 0; c <= range.e.c; c++) {
+        const cell = ensureCell(sheet, r, c);
+        const isNumeric = typeof cell.v === "number";
+        cell.s = {
+          fill: { fgColor: { rgb: r % 2 === 0 ? "FFFFFF" : "F8FAFC" } },
+          font: { name: "Calibri", sz: 11, color: { rgb: "111827" } },
+          alignment: { vertical: "center", horizontal: isNumeric ? "right" : "left" },
+          border: thinBorder("D0D5DD"),
+        };
+      }
+    }
+    for (let r = 2; r <= range.e.r + 1; r++) {
+      ["B", "C", "D"].forEach((col) => setCellFormat(sheet, `${col}${r}`, "#,##0"));
+      ["E", "F", "G", "H", "I", "J", "L", "M", "N"].forEach((col) => setCellFormat(sheet, `${col}${r}`, '$ #,##0.00'));
+      ["K", "O", "P", "Q", "R"].forEach((col) => setCellFormat(sheet, `${col}${r}`, "0.0%"));
+    }
   }
 
   function detectColumns(columns) {
@@ -713,6 +1114,17 @@
     return item;
   }
 
+  function variation(current, previous) {
+    if (!previous) return current ? 1 : 0;
+    return (current - previous) / Math.abs(previous);
+  }
+
+  function normalizePercent(value) {
+    const number = toNumber(value);
+    if (Math.abs(number) > 1) return number / 100;
+    return number;
+  }
+
   function cleanColumn(value) {
     return normalizeText(String(value).replace(/\s+/g, " ").trim());
   }
@@ -801,6 +1213,22 @@
     if (value >= .4) return "margin-good";
     if (value >= .2) return "margin-mid";
     return "margin-bad";
+  }
+
+  function diffClass(value) {
+    if (value > 0) return "diff-good";
+    if (value < 0) return "diff-bad";
+    return "diff-flat";
+  }
+
+  function comparisonModeLabel(mode) {
+    if (mode === "locales") return "Locales";
+    if (mode === "proveedor") return "Proveedor";
+    return "Sin detectar";
+  }
+
+  function setCompareStatus(message) {
+    els.compareStatus.textContent = message;
   }
 
   function setStatus(message) {
