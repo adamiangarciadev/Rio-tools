@@ -45,6 +45,14 @@
           </select>
         </label>
         <label>
+          Desde
+          <input id="rangeFromDate" type="date" />
+        </label>
+        <label>
+          Hasta
+          <input id="rangeToDate" type="date" />
+        </label>
+        <label>
           Sucursal
           <select id="branchFilter">
             <option value="">Todas las sucursales</option>
@@ -70,6 +78,10 @@
           Buscar cliente
           <input id="searchInput" type="search" placeholder="Nombre, codigo, telefono o email" />
         </label>
+        <div class="range-actions">
+          <button id="applyRangeBtn" class="btn" type="button">Aplicar fechas</button>
+          <button id="clearRangeBtn" class="btn mini-tab" type="button">Limpiar fechas</button>
+        </div>
       </div>
       <div class="status-line">
         <span id="apiBadge" class="source-badge">API sin probar</span>

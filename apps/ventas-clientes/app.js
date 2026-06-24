@@ -20,6 +20,10 @@
     deselectAllBtn: $("#deselectAllBtn"),
     refreshBtn: $("#refreshBtn"),
     periodFilter: $("#periodFilter"),
+    rangeFromDate: $("#rangeFromDate"),
+    rangeToDate: $("#rangeToDate"),
+    applyRangeBtn: $("#applyRangeBtn"),
+    clearRangeBtn: $("#clearRangeBtn"),
     branchFilter: $("#branchFilter"),
     segmentFilter: $("#segmentFilter"),
     priceListFilter: $("#priceListFilter"),
@@ -61,6 +65,15 @@
       sucursales: [],
       meses: []
     },
+    range: {
+      active: false,
+      loading: false,
+      desde: "",
+      hasta: "",
+      clientes: [],
+      compras: [],
+      meta: {}
+    },
     comprasCliente: []
   };
 
@@ -74,6 +87,8 @@
   function bindEvents() {
     el.pingBtn?.addEventListener("click", checkApi);
     el.refreshBtn.addEventListener("click", loadDashboard);
+    el.applyRangeBtn.addEventListener("click", applyDateRange);
+    el.clearRangeBtn.addEventListener("click", clearDateRange);
     el.importBtn?.addEventListener("click", importDriveFiles);
     el.exportDataBtn.addEventListener("click", openExportDataModal);
     el.exportDataCloseBtn.addEventListener("click", closeExportDataModal);
@@ -85,14 +100,28 @@
     el.deselectAllBtn.addEventListener("click", clearSelection);
     el.clearSelectionBtn.addEventListener("click", clearSelection);
     el.periodFilter.addEventListener("change", render);
-    el.branchFilter.addEventListener("change", render);
+    el.branchFilter.addEventListener("change", () => {
+      if (state.range.active) {
+        applyDateRange();
+        return;
+      }
+      render();
+    });
     el.segmentFilter.addEventListener("change", render);
     el.priceListFilter.addEventListener("change", () => {
       syncExportFiltersFromMain();
+      if (state.range.active) {
+        applyDateRange();
+        return;
+      }
       render();
     });
     el.priceListOnly.addEventListener("change", () => {
       syncExportFiltersFromMain();
+      if (state.range.active) {
+        applyDateRange();
+        return;
+      }
       render();
     });
     el.searchInput.addEventListener("input", render);
@@ -139,6 +168,7 @@
       };
 
       populateFilters();
+      setDefaultDateRange();
       if (!state.selectedClientId && state.dashboard.clientes.length) {
         state.selectedClientId = state.dashboard.clientes[0].clienteId;
       }
@@ -312,6 +342,7 @@
     renderClients(visible);
     renderDetail();
     renderSelection();
+    updateRangeControls();
   }
 
   function renderSummary(visible) {
@@ -327,11 +358,17 @@
     }
     el.sourceBadge.textContent = meta.totalFilas ? "Base historica" : "Sin datos";
     el.sourceBadge.dataset.state = meta.totalFilas ? "ok" : "empty";
-    el.statusText.textContent = meta.totalFilas
-      ? `${formatNumber(meta.totalFilas)} filas importadas. Periodo ${meta.fechaMin || "-"} a ${meta.fechaMax || "-"}.`
-      : "Todavia no hay CSVs importados.";
+    if (state.range.active) {
+      el.statusText.textContent = `${formatNumber(visible.length)} clientes compraron entre ${state.range.desde} y ${state.range.hasta}. Total rango: ${formatMoney(state.range.meta.totalRango || sumClientRangeTotal(visible))}.`;
+    } else {
+      el.statusText.textContent = meta.totalFilas
+        ? `${formatNumber(meta.totalFilas)} filas importadas. Periodo ${meta.fechaMin || "-"} a ${meta.fechaMax || "-"}.`
+        : "Todavia no hay CSVs importados.";
+    }
 
-    el.rankingTitle.textContent = `Mejores clientes - ${PERIOD_LABELS[el.periodFilter.value] || "Periodo"}`;
+    el.rankingTitle.textContent = state.range.active
+      ? `Clientes con compra - ${state.range.desde} a ${state.range.hasta}`
+      : `Mejores clientes - ${PERIOD_LABELS[el.periodFilter.value] || "Periodo"}`;
   }
 
   function renderClients(preset) {
@@ -364,12 +401,14 @@
       row.querySelector("[data-field='code']").textContent = `Cliente ${client.clienteId || "-"}`;
       row.querySelector("[data-field='phone']").textContent = cleanPhone(client.telefono) || "-";
       row.querySelector("[data-field='mobile']").textContent = cleanPhone(client.telefonoMovil) || "-";
-      row.querySelector("[data-field='branch']").textContent = client.sucursalPrincipal || "-";
+      row.querySelector("[data-field='branch']").textContent = state.range.active
+        ? ((client.sucursalesRango || []).join(", ") || client.sucursalPrincipal || "-")
+        : (client.sucursalPrincipal || "-");
       const segment = row.querySelector("[data-field='segment']");
       segment.textContent = client.segmento || "-";
       segment.dataset.segment = segmentKey(client.segmento);
       row.querySelector("[data-field='periodTotal']").textContent = formatMoney(getPeriodTotal(client));
-      row.querySelector("[data-field='lastPurchase']").textContent = formatDateShort(client.ultimaCompra);
+      row.querySelector("[data-field='lastPurchase']").textContent = formatDateShort(state.range.active ? client.ultimaCompraRango : client.ultimaCompra);
       fragment.appendChild(row);
     });
 
@@ -387,7 +426,8 @@
   }
 
   function renderDetail() {
-    const client = state.dashboard.clientes.find((item) => item.clienteId === state.selectedClientId);
+    const source = state.range.active ? state.range.clientes : state.dashboard.clientes;
+    const client = source.find((item) => item.clienteId === state.selectedClientId);
     if (!client) {
       el.detailHint.textContent = "Selecciona un cliente para ver su historial.";
       el.clientDetail.innerHTML = `<div class="empty-state">Sin cliente seleccionado.</div>`;
@@ -395,7 +435,9 @@
     }
 
     el.detailHint.textContent = client.nombre || "Cliente";
-    const purchases = state.comprasCliente.filter((item) => String(item.clienteId || "") === String(client.clienteId || ""));
+    const purchases = state.comprasCliente
+      .filter((item) => String(item.clienteId || "") === String(client.clienteId || ""))
+      .filter((item) => !state.range.active || isDateInRange(item.fecha, state.range.desde, state.range.hasta));
     const purchaseRows = purchases.slice(0, 80).map((item) => `
       <div class="purchase-row">
         <strong>${escapeHtml(formatDateShort(item.fecha))}</strong>
@@ -413,14 +455,14 @@
         <span class="segment-pill" data-segment="${segmentKey(client.segmento)}">${escapeHtml(client.segmento || "-")}</span>
         <div class="metric-grid">
           <div class="metric"><span>Historico</span><strong>${formatMoney(Number(client.totalHistorico || 0))}</strong></div>
-          <div class="metric"><span>Periodo</span><strong>${formatMoney(getPeriodTotal(client))}</strong></div>
+          <div class="metric"><span>${state.range.active ? "Rango" : "Periodo"}</span><strong>${formatMoney(getPeriodTotal(client))}</strong></div>
           <div class="metric"><span>Telefono</span><strong>${escapeHtml(cleanPhone(client.telefono) || "-")}</strong></div>
           <div class="metric"><span>Telefono movil</span><strong>${escapeHtml(cleanPhone(client.telefonoMovil) || "-")}</strong></div>
           <div class="metric"><span>Email</span><strong>${escapeHtml(client.email || "-")}</strong></div>
           <div class="metric"><span>Dias compra</span><strong>${formatNumber(client.diasCompra || 0)}</strong></div>
           <div class="metric"><span>Frecuencia</span><strong>${escapeHtml(client.frecuenciaTexto || "-")}</strong></div>
-          <div class="metric"><span>Primera</span><strong>${escapeHtml(formatDateShort(client.primeraCompra))}</strong></div>
-          <div class="metric"><span>Ultima</span><strong>${escapeHtml(formatDateShort(client.ultimaCompra))}</strong></div>
+          <div class="metric"><span>Primera</span><strong>${escapeHtml(formatDateShort(state.range.active ? client.primeraCompraRango : client.primeraCompra))}</strong></div>
+          <div class="metric"><span>Ultima</span><strong>${escapeHtml(formatDateShort(state.range.active ? client.ultimaCompraRango : client.ultimaCompra))}</strong></div>
         </div>
         <div class="metric">
           <span>Sucursales / listas</span>
@@ -439,9 +481,10 @@
     const priceList = el.priceListFilter.value;
     const priceListOnly = el.priceListOnly.checked;
     const q = normalizeSearch(el.searchInput.value);
+    const source = state.range.active ? state.range.clientes : state.dashboard.clientes;
 
-    return state.dashboard.clientes
-      .filter((client) => !branch || (client.sucursales || []).includes(branch))
+    return source
+      .filter((client) => !branch || getClientBranchesForFilter(client).some((item) => sameBranch(item, branch)))
       .filter((client) => !segment || client.segmento === segment)
       .filter((client) => matchesPriceList(client, priceList, priceListOnly))
       .filter((client) => getPeriodTotal(client) !== 0 || el.periodFilter.value === "all")
@@ -459,6 +502,7 @@
   }
 
   function getPeriodTotal(client) {
+    if (state.range.active) return Number(client.totalRango || 0);
     const period = el.periodFilter.value;
     if (period === "month") return Number(client.totalMesBase || 0);
     if (period === "last3") return Number(client.totalUltimos3Meses || 0);
@@ -470,6 +514,160 @@
     if (state.sort === "frequencyScore") return Number(client.frequencyScore || 0);
     if (state.sort === "lastPurchaseTs") return Number(client.lastPurchaseTs || 0);
     return getPeriodTotal(client);
+  }
+
+  function setDefaultDateRange() {
+    const meta = state.dashboard.meta || {};
+    if (!el.rangeFromDate.value && meta.fechaMin) el.rangeFromDate.value = meta.fechaMin;
+    if (!el.rangeToDate.value && meta.fechaMax) el.rangeToDate.value = meta.fechaMax;
+  }
+
+  async function applyDateRange() {
+    const desde = el.rangeFromDate.value;
+    const hasta = el.rangeToDate.value;
+    if (!desde || !hasta) {
+      window.alert("Elegí fecha desde y fecha hasta.");
+      return;
+    }
+    if (desde > hasta) {
+      window.alert("La fecha desde no puede ser mayor a la fecha hasta.");
+      return;
+    }
+
+    try {
+      state.range.loading = true;
+      setBusy(true);
+      el.statusText.textContent = `Buscando clientes que compraron entre ${desde} y ${hasta}...`;
+
+      let data;
+      try {
+        data = await apiGet("clientes_rango", {
+          desde,
+          hasta,
+          sucursal: el.branchFilter.value,
+          listaPrecio: el.priceListFilter.value,
+          soloLista: el.priceListOnly.checked ? "1" : ""
+        });
+        if (!data.ok || !Array.isArray(data.clientes)) {
+          throw new Error(data.error || "La API publicada todavia no tiene clientes_rango.");
+        }
+      } catch (apiError) {
+        console.warn("clientes_rango no disponible, usando fallback.", apiError);
+        data = await loadRangeClientsFallback(desde, hasta);
+      }
+
+      state.range = {
+        active: true,
+        loading: false,
+        desde,
+        hasta,
+        clientes: normalizeClients(data.clientes),
+        compras: Array.isArray(data.compras) ? data.compras : [],
+        meta: data.meta || {}
+      };
+      el.periodFilter.value = "all";
+      if (state.range.clientes.length && !state.range.clientes.some((client) => client.clienteId === state.selectedClientId)) {
+        state.selectedClientId = state.range.clientes[0].clienteId;
+        state.comprasCliente = [];
+      }
+      render();
+      if (state.selectedClientId) await loadClientDetail(state.selectedClientId);
+    } catch (error) {
+      console.error(error);
+      window.alert(error.message || "No se pudo filtrar entre fechas.");
+    } finally {
+      state.range.loading = false;
+      setBusy(false);
+      renderSelection();
+    }
+  }
+
+  function clearDateRange() {
+    state.range = {
+      active: false,
+      loading: false,
+      desde: "",
+      hasta: "",
+      clientes: [],
+      compras: [],
+      meta: {}
+    };
+    render();
+  }
+
+  function updateRangeControls() {
+    el.clearRangeBtn.disabled = state.loading || state.range.loading || !state.range.active;
+    el.applyRangeBtn.disabled = state.loading || state.range.loading;
+  }
+
+  async function loadRangeClientsFallback(desde, hasta) {
+    const branch = el.branchFilter.value;
+    const listaPrecio = el.priceListFilter.value;
+    const soloLista = el.priceListOnly.checked;
+    const clientes = [];
+    const compras = [];
+    let totalRango = 0;
+    const source = state.dashboard.clientes.filter((client) => {
+      return !branch || (client.sucursales || []).some((item) => sameBranch(item, branch));
+    });
+
+    for (let i = 0; i < source.length; i++) {
+      const client = source[i];
+      if (i === 0 || (i + 1) % 25 === 0 || i === source.length - 1) {
+        el.statusText.textContent = `Revisando historial ${i + 1}/${source.length} entre fechas...`;
+      }
+      const data = await apiGet("cliente", { cliente: client.clienteId });
+      const purchases = Array.isArray(data.compras) ? data.compras : [];
+      const inRange = purchases.filter((purchase) => {
+        return isDateInRange(purchase.fecha, desde, hasta) &&
+          (!branch || sameBranch(purchase.sucursal, branch)) &&
+          (!listaPrecio || samePriceList(purchase.listaPrecio, listaPrecio));
+      });
+      if (!inRange.length) continue;
+
+      const exportPurchases = soloLista && listaPrecio
+        ? inRange.filter((purchase) => samePriceList(purchase.listaPrecio, listaPrecio))
+        : inRange;
+      const rangeTotal = sumPurchaseTotal(exportPurchases);
+      if (!rangeTotal) continue;
+
+      totalRango += rangeTotal;
+      compras.push(...exportPurchases.map((purchase) => ({ ...purchase, clienteId: client.clienteId, nombre: client.nombre })));
+      clientes.push(addRangeFields(client, exportPurchases));
+    }
+
+    clientes.sort((a, b) => Number(b.totalRango || 0) - Number(a.totalRango || 0));
+    return {
+      ok: true,
+      filtros: { desde, hasta, sucursal: branch, listaPrecio, soloLista },
+      meta: { clientesRango: clientes.length, comprasRango: compras.length, totalRango },
+      clientes,
+      compras
+    };
+  }
+
+  function addRangeFields(client, purchases) {
+    const dates = Array.from(new Set(purchases.map((purchase) => purchase.fecha).filter(Boolean))).sort();
+    const branches = Array.from(new Set(purchases.map((purchase) => purchase.sucursal).filter(Boolean))).sort();
+    const lists = Array.from(new Set(purchases.map((purchase) => purchase.listaPrecio).filter(Boolean))).sort();
+    return {
+      ...client,
+      totalRango: sumPurchaseTotal(purchases),
+      comprasRango: purchases.length,
+      primeraCompraRango: dates[0] || "",
+      ultimaCompraRango: dates[dates.length - 1] || "",
+      sucursalesRango: branches,
+      listasRango: lists,
+      sucursalPrincipal: branches[0] || client.sucursalPrincipal
+    };
+  }
+
+  function getClientBranchesForFilter(client) {
+    return state.range.active && Array.isArray(client.sucursalesRango) ? client.sucursalesRango : (client.sucursales || []);
+  }
+
+  function sumClientRangeTotal(clients) {
+    return clients.reduce((sum, client) => sum + Number(client.totalRango || 0), 0);
   }
 
   function getSortLabel() {
@@ -510,6 +708,8 @@
   function setBusy(isBusy) {
     if (el.pingBtn) el.pingBtn.disabled = isBusy;
     el.refreshBtn.disabled = isBusy;
+    el.applyRangeBtn.disabled = isBusy;
+    el.clearRangeBtn.disabled = isBusy || !state.range.active;
     if (el.importBtn) el.importBtn.disabled = isBusy;
     el.exportDataBtn.disabled = isBusy || !state.dashboard.clientes.length;
     el.runExportDataBtn.disabled = isBusy;
@@ -907,6 +1107,7 @@
   }
 
   function getClientLists(client) {
+    if (state.range.active && Array.isArray(client.listasRango)) return client.listasRango.filter(Boolean);
     if (Array.isArray(client.listas)) return client.listas.filter(Boolean);
     return parseListText(client.listasTexto);
   }

@@ -13,6 +13,7 @@
  * - GET ?accion=importar_csvs
  * - GET ?accion=dashboard
  * - GET ?accion=cliente&cliente=CODIGO
+ * - GET ?accion=clientes_rango&desde=YYYY-MM-DD&hasta=YYYY-MM-DD&sucursal=WEB&listaPrecio=LISTA&soloLista=1
  * - GET ?accion=exportar_datos&desde=YYYY-MM-DD&hasta=YYYY-MM-DD&sucursal=WEB&listaPrecio=LISTA&soloLista=1
  * - GET ?accion=exportar_seleccion&clientes=COD1,COD2&listaPrecio=LISTA&soloLista=1
  *
@@ -49,6 +50,10 @@ function doGet(e) {
 
     if (accion === "cliente") {
       return getCliente_(e);
+    }
+
+    if (accion === "clientes_rango") {
+      return getClientesRango_(e);
     }
 
     if (accion === "exportar_datos") {
@@ -220,6 +225,93 @@ function getCliente_(e) {
     ok: true,
     cliente: cliente,
     compras: client ? buildClientPurchases_(client) : []
+  });
+}
+
+function getClientesRango_(e) {
+  assertConfigured_();
+
+  const desdeText = cleanStr(e && e.parameter && e.parameter.desde);
+  const hastaText = cleanStr(e && e.parameter && e.parameter.hasta);
+  const sucursal = cleanStr(e && e.parameter && e.parameter.sucursal).toUpperCase();
+  const listaPrecio = cleanStr(e && e.parameter && e.parameter.listaPrecio);
+  const soloLista = cleanStr(e && e.parameter && e.parameter.soloLista) === "1";
+
+  if (!desdeText) return jsonOut({ ok: false, error: "Falta fecha desde" });
+  if (!hastaText) return jsonOut({ ok: false, error: "Falta fecha hasta" });
+  if (desdeText > hastaText) return jsonOut({ ok: false, error: "La fecha desde no puede ser mayor a la fecha hasta" });
+
+  const folder = DriveApp.getFolderById(CSV_FOLDER_ID);
+  const store = readStore_(folder);
+  const maxDate = parseDate_(store.meta.fechaMax);
+  const baseMonth = store.meta.fechaMax ? store.meta.fechaMax.slice(0, 7) : "";
+  const baseYear = store.meta.fechaMax ? store.meta.fechaMax.slice(0, 4) : "";
+  const last3Months = getLastMonths_(baseMonth, 3);
+  const clientes = [];
+  const compras = [];
+  let totalRango = 0;
+
+  Object.keys(store.clients || {}).forEach(function(clienteId) {
+    const client = store.clients[clienteId];
+    const allPurchases = buildClientPurchases_(client);
+    const inRange = allPurchases.filter(function(item) {
+      return item.fecha >= desdeText &&
+        item.fecha <= hastaText &&
+        (!sucursal || cleanStr(item.sucursal).toUpperCase() === sucursal) &&
+        (!listaPrecio || sameList_(item.listaPrecio, listaPrecio));
+    });
+    const rangePurchases = soloLista && listaPrecio
+      ? inRange.filter(function(item) { return sameList_(item.listaPrecio, listaPrecio); })
+      : inRange;
+    if (!rangePurchases.length) return;
+
+    const finalized = finalizeClient_(client, maxDate, baseMonth, baseYear, last3Months);
+    const withRange = addRangeFields_(finalized, rangePurchases);
+    totalRango += withRange.totalRango;
+    clientes.push(withRange);
+
+    rangePurchases.forEach(function(item) {
+      compras.push({
+        clienteId: finalized.clienteId,
+        nombre: finalized.nombre,
+        telefono: finalized.telefono,
+        telefonoMovil: finalized.telefonoMovil,
+        email: finalized.email,
+        segmento: finalized.segmento,
+        fecha: item.fecha,
+        sucursal: item.sucursal,
+        listaPrecio: item.listaPrecio,
+        total: item.total
+      });
+    });
+  });
+
+  clientes.sort(function(a, b) {
+    return Number(b.totalRango || 0) - Number(a.totalRango || 0) ||
+      String(a.nombre || "").localeCompare(String(b.nombre || ""), "es");
+  });
+  compras.sort(function(a, b) {
+    return String(a.clienteId).localeCompare(String(b.clienteId), "es") ||
+      String(b.fecha).localeCompare(String(a.fecha)) ||
+      Number(b.total || 0) - Number(a.total || 0);
+  });
+
+  return jsonOut({
+    ok: true,
+    filtros: {
+      desde: desdeText,
+      hasta: hastaText,
+      sucursal: sucursal,
+      listaPrecio: listaPrecio,
+      soloLista: soloLista
+    },
+    meta: {
+      clientesRango: clientes.length,
+      comprasRango: compras.length,
+      totalRango: round2_(totalRango)
+    },
+    clientes: clientes,
+    compras: compras
   });
 }
 
@@ -616,6 +708,36 @@ function buildClientPurchases_(client) {
   }).sort(function(a, b) {
     return String(b.fecha).localeCompare(String(a.fecha)) || b.total - a.total;
   });
+}
+
+function addRangeFields_(client, purchases) {
+  const dateMap = {};
+  const branchMap = {};
+  const listMap = {};
+  let total = 0;
+
+  purchases.forEach(function(item) {
+    if (item.fecha) dateMap[item.fecha] = true;
+    if (item.sucursal) branchMap[item.sucursal] = true;
+    if (item.listaPrecio) listMap[item.listaPrecio] = true;
+    total += Number(item.total || 0);
+  });
+
+  const dates = Object.keys(dateMap).sort();
+  const branches = Object.keys(branchMap).sort();
+  const lists = Object.keys(listMap).sort();
+  const out = {};
+  Object.keys(client).forEach(function(key) {
+    out[key] = client[key];
+  });
+  out.totalRango = round2_(total);
+  out.comprasRango = purchases.length;
+  out.primeraCompraRango = dates[0] || "";
+  out.ultimaCompraRango = dates[dates.length - 1] || "";
+  out.sucursalesRango = branches;
+  out.listasRango = lists;
+  out.sucursalPrincipal = branches[0] || client.sucursalPrincipal;
+  return out;
 }
 
 function classifyClient_(client, diasCompra, daysSinceLast, avgGap, primera, ultima) {
