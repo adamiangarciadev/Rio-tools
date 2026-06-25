@@ -13,7 +13,12 @@
     "CORRIENTES",
     "LAMARCA",
     "PUEY",
-    "SARMIENTO"
+    "SARMIENTO",
+    "MORENO",
+    "GERENCIA",
+    "37278236",
+    "JOHA"
+
   ]);
 
   const el = {
