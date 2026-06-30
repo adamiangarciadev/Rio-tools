@@ -85,12 +85,12 @@ function getDepositos_(e) {
   }
 
   const totalRows = lastRow - 1;
-  const values = sh.getRange(2, 1, totalRows, 8).getValues();
-  const displayValues = sh.getRange(2, 1, totalRows, 8).getDisplayValues();
+  const values = sh.getRange(2, 1, totalRows, 9).getValues();
+  const displayValues = sh.getRange(2, 1, totalRows, 9).getDisplayValues();
 
   let richLinks = [];
   try {
-    richLinks = sh.getRange(2, 6, totalRows, 1).getRichTextValues();
+    richLinks = sh.getRange(2, 7, totalRows, 1).getRichTextValues();
   } catch (_) {
     richLinks = Array.from({ length: totalRows }, function() { return [null]; });
   }
@@ -114,10 +114,11 @@ function getDepositos_(e) {
         : cleanStr(rowDisplay[1]);
 
       const local = cleanStr(rowDisplay[2]).toUpperCase();
-      const monto = String(rowDisplay[3] || "");
-      const cuenta = cleanStr(rowDisplay[4]);
-      const observacion = cleanStr(rowDisplay[6]);
-      const estado = normalizarEstado(rowDisplay[7]);
+      const dniCliente = cleanStr(rowDisplay[3]);
+      const monto = String(rowDisplay[4] || "");
+      const cuenta = cleanStr(rowDisplay[5]);
+      const observacion = cleanStr(rowDisplay[7]);
+      const estado = normalizarEstado(rowDisplay[8]);
 
       if (estadoFiltro && estado !== estadoFiltro) continue;
       if (localFiltro && local !== localFiltro) continue;
@@ -136,6 +137,8 @@ function getDepositos_(e) {
         id: id,
         fecha: fechaTexto,
         local: local,
+        dniCliente: dniCliente,
+        dni: dniCliente,
         monto: monto,
         cuenta: cuenta,
         link: linkUrl,
@@ -193,7 +196,7 @@ function confirmarDeposito_(data) {
       });
     }
 
-    sh.getRange(rowNumber, 8).setValue("CONFIRMADO");
+    sh.getRange(rowNumber, 9).setValue("CONFIRMADO");
 
     return jsonOut({
       ok: true,
@@ -247,8 +250,8 @@ function actualizarDeposito_(data) {
       });
     }
 
-    sh.getRange(rowNumber, 4).setValue(monto);
-    sh.getRange(rowNumber, 5).setValue(cuenta);
+    sh.getRange(rowNumber, 5).setValue(monto);
+    sh.getRange(rowNumber, 6).setValue(cuenta);
 
     return jsonOut({
       ok: true,
@@ -287,7 +290,17 @@ function getSheet_() {
 }
 
 function asegurarCabeceras_(sh) {
-  const headers = ["ID", "FECHA", "LOCAL", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
+  const headers = ["ID", "FECHA", "LOCAL", "DNI CLIENTE", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
+  const legacyHeaders = ["ID", "FECHA", "LOCAL", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
+  const legacyCurrent = sh.getRange(1, 1, 1, legacyHeaders.length).getValues()[0];
+  const isLegacy = legacyHeaders.every(function(h, i) {
+    return String(legacyCurrent[i] || "").trim() === h;
+  });
+
+  if (isLegacy) {
+    sh.insertColumnAfter(3);
+  }
+
   const current = sh.getRange(1, 1, 1, headers.length).getValues()[0];
 
   const needsHeaders = headers.some(function(h, i) {

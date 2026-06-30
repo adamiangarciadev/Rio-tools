@@ -9,6 +9,7 @@
   const el = {
     localSelect: $("#localSelect"),
     montoInput: $("#montoInput"),
+    dniClienteInput: $("#dniClienteInput"),
     cuentaSelect: $("#cuentaSelect"),
     obsInput: $("#obsInput"),
     fileInput: $("#fileInput"),
@@ -42,11 +43,13 @@
   async function guardarDeposito() {
     const local = (el.localSelect.value || "").trim();
     const monto = (el.montoInput.value || "").trim();
+    const dniCliente = normalizeDni(el.dniClienteInput.value);
     const cuenta = (el.cuentaSelect.value || "").trim();
     const observacion = (el.obsInput.value || "").trim();
 
     if (!local) return setStatus("Seleccioná un local.", true);
     if (!monto) return setStatus("Ingresá el monto.", true);
+    if (!dniCliente) return setStatus("Ingresá el DNI del cliente.", true);
     if (!cuenta) return setStatus("Seleccioná la cuenta.", true);
     if (!selectedFile) return setStatus("Subí un comprobante.", true);
 
@@ -59,6 +62,8 @@
       const payload = {
         local,
         monto,
+        dniCliente,
+        dni: dniCliente,
         cuenta,
         observacion,
         fileName: selectedFile.name,
@@ -96,6 +101,7 @@
 
   function resetForm() {
     el.montoInput.value = "";
+    el.dniClienteInput.value = "";
     el.cuentaSelect.value = "";
     el.obsInput.value = "";
     el.fileInput.value = "";
@@ -129,5 +135,9 @@
       reader.onerror = () => reject(new Error("Error leyendo el archivo."));
       reader.readAsDataURL(file);
     });
+  }
+
+  function normalizeDni(value) {
+    return String(value || "").replace(/\D/g, "").trim();
   }
 })();

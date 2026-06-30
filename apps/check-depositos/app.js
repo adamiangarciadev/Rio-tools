@@ -226,6 +226,7 @@
       card.querySelector('[data-field="estado"]').classList.add(isConfirmed ? "confirmed" : "pending");
       card.querySelector('[data-field="monto"]').textContent = formatAmount(deposit.monto);
       card.querySelector('[data-field="fecha"]').textContent = deposit.fecha || "-";
+      card.querySelector('[data-field="dniCliente"]').textContent = deposit.dniCliente || "-";
       card.querySelector('[data-field="cuenta"]').textContent = deposit.cuenta || "-";
       card.querySelector('[data-field="observacion"]').textContent = deposit.observacion || "-";
 
@@ -260,7 +261,7 @@
       .filter((item) => !local || item.local === local)
       .filter((item) => {
         if (!query) return true;
-        const haystack = normalizeSearch([item.id, item.local, item.cuenta, item.observacion, item.monto].join(" "));
+        const haystack = normalizeSearch([item.id, item.dniCliente, item.local, item.cuenta, item.observacion, item.monto].join(" "));
         return haystack.includes(query);
       })
       .sort(sortDeposits);
@@ -570,6 +571,7 @@
         id: String(item.id || item.ID || item.codigo || "").trim(),
         fecha: String(item.fecha || item.Fecha || "").trim(),
         local: String(item.local || item.Local || "").trim().toUpperCase(),
+        dniCliente: String(item.dniCliente || item.dni || item["DNI CLIENTE"] || item.DNI || "").trim(),
         monto: String(item.monto || item.Monto || "").trim(),
         cuenta: String(item.cuenta || item.Cuenta || "").trim(),
         link: String(item.link || item.comprobante || item.Comprobante || "").trim(),

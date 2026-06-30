@@ -101,8 +101,8 @@ function actualizarDeposito_(data) {
       });
     }
 
-    sh.getRange(rowNumber, 4).setValue(monto);
-    sh.getRange(rowNumber, 5).setValue(cuenta);
+    sh.getRange(rowNumber, 5).setValue(monto);
+    sh.getRange(rowNumber, 6).setValue(cuenta);
 
     return jsonOut({
       ok: true,
@@ -141,7 +141,17 @@ function getSheet_() {
 }
 
 function asegurarCabeceras_(sh) {
-  const headers = ["ID", "FECHA", "LOCAL", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
+  const headers = ["ID", "FECHA", "LOCAL", "DNI CLIENTE", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
+  const legacyHeaders = ["ID", "FECHA", "LOCAL", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
+  const legacyCurrent = sh.getRange(1, 1, 1, legacyHeaders.length).getValues()[0];
+  const isLegacy = legacyHeaders.every(function(h, i) {
+    return String(legacyCurrent[i] || "").trim() === h;
+  });
+
+  if (isLegacy) {
+    sh.insertColumnAfter(3);
+  }
+
   const current = sh.getRange(1, 1, 1, headers.length).getValues()[0];
 
   const needsHeaders = headers.some(function(h, i) {
