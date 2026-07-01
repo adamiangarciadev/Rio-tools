@@ -3,7 +3,7 @@
 
   const API_URL = "https://script.google.com/macros/s/AKfycbwi4i-Xsud2rISeNV8cjAJ8iX47ksiuAxfQgRPZFf7LRI75-2wFZEttbX1xeHj815gcVg/exec";
   const PUBLIC_TRACKING_URL = "https://adamiangarciadev.github.io/Rio-tools/rio-shipnow-interno/";
-  const PDF_LOGO_URL = "./logo.rio.png";
+  const PDF_LOGO_URL = "./logo-rio-label.png";
 
   const HOME_TRACKING_URL = location.href.split("#")[0].split("?")[0];
   const LOCALES_CSV_URL = "./locales.csv";
@@ -538,6 +538,8 @@
   function bindCarga() {
     $("#tipoEnvio")?.addEventListener("change", toggleTipoEnvio);
 
+    bindMayusculasFormulario();
+
     $("#btnLimpiar")?.addEventListener("click", () => {
       $("#formEnvio").reset();
       toggleTipoEnvio();
@@ -582,6 +584,7 @@
         }
 
         const data = Object.fromEntries(new FormData(form).entries());
+        normalizarPayloadFormulario(data);
         data.direccionOca = String(data.direccionOca || "").trim();
 
         data.sucursalOrigen = normalizarTexto(data.sucursalOrigen);
@@ -670,6 +673,39 @@
     $$(".field-oca").forEach((e) => e.classList.toggle("hidden", tipo !== "SHIPNOW_OCA"));
     $$(".field-transporte").forEach((e) => e.classList.toggle("hidden", tipo !== "TRANSPORTE"));
     $$(".field-domicilio").forEach((e) => e.classList.toggle("hidden", tipo === "SHIPNOW_OCA"));
+
+    setRequired("#domicilio", tipo !== "SHIPNOW_OCA");
+    setRequired("#entrecalles", tipo !== "SHIPNOW_OCA");
+    setRequired("#sucursalOca", tipo === "SHIPNOW_OCA");
+    setRequired("#direccionOca", tipo === "SHIPNOW_OCA");
+    setRequired("#transporte", tipo === "TRANSPORTE");
+  }
+
+  function setRequired(selector, required) {
+    const el = $(selector);
+    if (!el) return;
+    el.required = Boolean(required);
+  }
+
+  function bindMayusculasFormulario() {
+    $("#formEnvio")?.addEventListener("input", (ev) => {
+      const el = ev.target;
+      if (!el?.matches?.("input, textarea")) return;
+
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      el.value = String(el.value || "").toLocaleUpperCase("es-AR");
+
+      if (typeof start === "number" && typeof end === "number") {
+        el.setSelectionRange(start, end);
+      }
+    });
+  }
+
+  function normalizarPayloadFormulario(data) {
+    Object.keys(data).forEach((key) => {
+      data[key] = String(data[key] || "").trim().toLocaleUpperCase("es-AR");
+    });
   }
 
   function validarPayload(d) {
@@ -688,8 +724,10 @@
 
     if (d.tipoEnvio === "SHIPNOW_OCA") {
       base.push("sucursalOca");
+      base.push("direccionOca");
     } else {
       base.push("domicilio");
+      base.push("entrecalles");
     }
 
     if (d.tipoEnvio === "TRANSPORTE") base.push("transporte");
@@ -1224,6 +1262,7 @@
 
       destinatario: {
         nombre: e.cliente || "",
+        mail: e.mail || "",
         dni: e.dniCuil || "",
         telefono: e.telefono || "",
         domicilio: e.domicilio || "",
@@ -1433,6 +1472,99 @@
       }
     }
 
+    function textoPDF(value) {
+      return String(value || "").trim().toLocaleUpperCase("es-AR");
+    }
+
+    function tipoEnvioPDF(value) {
+      const tipo = textoPDF(value).replace(/_/g, " ");
+
+      if (tipo.includes("SHIPNOW") && tipo.includes("OCA")) return "SHIPNOW - SUCURSAL OCA";
+      if (tipo.includes("SHIPNOW") && tipo.includes("DOMICILIO")) return "SHIPNOW - DOMICILIO";
+
+      return tipo;
+    }
+
+    function drawRoundedRect(x, y, w, h, r, style = "S") {
+      if (typeof doc.roundedRect === "function") {
+        doc.roundedRect(x, y, w, h, r, r, style);
+        return;
+      }
+
+      doc.rect(x, y, w, h, style);
+    }
+
+    function drawFitText(text, x, y, maxW, size, style = "bold", color = [0, 0, 0]) {
+      const value = textoPDF(text);
+      let fontSize = size;
+
+      doc.setFont("helvetica", style);
+      doc.setFontSize(fontSize);
+      while (fontSize > 6 && doc.getTextWidth(value) > maxW) {
+        fontSize -= 0.35;
+        doc.setFontSize(fontSize);
+      }
+
+      doc.setTextColor(...color);
+      doc.setFontSize(fontSize);
+      doc.text(value, x, y, { maxWidth: maxW });
+      resetColors();
+    }
+
+    function drawMethodBadge(x, y, w, h, text) {
+      doc.setFillColor(255, 241, 242);
+      drawRoundedRect(x, y, w, h, 2.8, "F");
+      doc.setFillColor(242, 111, 120);
+      drawRoundedRect(x, y, 2.7, h, 1.4, "F");
+      drawFitText(text, x + 5, y + 6.3, w - 8, 10.2, "bold", [22, 22, 22]);
+    }
+
+    function drawSoftSection(title, x, y, w) {
+      doc.setFillColor(244, 245, 247);
+      drawRoundedRect(x, y, w, 10, 2.4, "F");
+      doc.setFillColor(242, 111, 120);
+      drawRoundedRect(x, y, 2.7, 10, 1.4, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.2);
+      doc.setTextColor(22, 22, 22);
+      doc.text(textoPDF(title), x + 5.4, y + 6.7);
+      resetColors();
+    }
+
+    function drawModernRow(x, y, w, h, items, valueSize = 10.2) {
+      doc.setDrawColor(214, 220, 227);
+      doc.setLineWidth(0.25);
+      doc.line(x, y, x + w, y);
+
+      const colW = w / items.length;
+      items.forEach((item, index) => {
+        const [label, value, strong = true] = item;
+        const colX = x + index * colW;
+
+        if (index) {
+          doc.setDrawColor(237, 240, 243);
+          doc.line(colX, y + 2, colX, y + h - 2);
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6);
+        doc.setTextColor(102, 112, 133);
+        doc.text(textoPDF(label), colX + 3, y + 4.6);
+
+        drawFitText(
+          value,
+          colX + 3,
+          y + h - 3.2,
+          colW - 6,
+          strong ? valueSize : valueSize - 1.4,
+          strong ? "bold" : "normal",
+          [22, 22, 22]
+        );
+      });
+
+      resetColors();
+    }
+
     function drawLabel(x, y, modoGrande = false) {
       resetColors();
 
@@ -1541,49 +1673,55 @@
       // RÓTULO DOBLE - SHIPNOW / OCA
       // =========================
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(13.8);
-      doc.text("DESPACHO DE PEDIDO", innerX, y + 10);
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      doc.text("TIPO DE ENVÍO", innerX, y + 18);
-      doc.setFontSize(7.8);
-      doc.text(String(tipoEnvio || "").toUpperCase(), innerX + 20, y + 18);
+      doc.setFontSize(13);
+      doc.setTextColor(22, 22, 22);
+      doc.text("DESPACHO DE PEDIDO", innerX, y + 12);
 
       doc.setFillColor(0, 0, 0);
-      doc.rect(x + w - 67, y + 6, 63, 11, "F");
+      drawRoundedRect(x + w - 67, y + 7, 63, 12, 2.2, "F");
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      doc.text(tracking, x + w - 64, y + 13.2);
+      doc.setFontSize(9.7);
+      doc.text(tracking, x + w - 35.5, y + 14.8, { align: "center" });
       resetColors();
 
-      doc.line(x, y + 31, x + w, y + 31);
+      doc.setDrawColor(242, 111, 120);
+      doc.setLineWidth(0.45);
+      doc.line(innerX, y + 16, innerX + 43, y + 16);
+
+      drawMethodBadge(innerX, y + 20, 47, 9, tipoEnvioPDF(tipoEnvio));
+
+      doc.setDrawColor(214, 220, 227);
+      doc.setLineWidth(0.25);
+      doc.line(innerX, y + 35, innerX + innerW, y + 35);
 
       if (logoRio) {
-        doc.addImage(logoRio, "PNG", x + 8, y + 39, 34, 28);
+        doc.addImage(logoRio, "PNG", x + 8, y + 48, 32, 17);
       } else {
         doc.setFont("times", "italic");
         doc.setFontSize(15);
-        doc.text("Lencería", x + 10, y + 50);
+        doc.text("Lencería", x + 10, y + 55);
         doc.setFont("times", "bold");
         doc.setFontSize(22);
-        doc.text("RÍO", x + 13, y + 64);
+        doc.text("RÍO", x + 13, y + 66);
       }
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("REMITENTE", x + 46, y + 46);
+      doc.setFontSize(8.5);
+      doc.setTextColor(22, 22, 22);
+      doc.text("REMITENTE", x + 47, y + 48);
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.9);
-      doc.text("LENCERÍA RÍO", x + 46, y + 54);
-      doc.text(String(remitente.domicilio || ""), x + 46, y + 61);
-      doc.text(`${String(remitente.localidad || "")}${remitente.cp ? `, CP: ${remitente.cp}` : ""}`, x + 46, y + 68);
-      doc.text(`TELÉFONO: ${String(remitente.telefono || "")}`, x + 46, y + 75);
+      doc.setFontSize(7.3);
+      doc.text("LENCERIA RIO", x + 47, y + 54);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.7);
+      doc.text(textoPDF(remitente.domicilio), x + 47, y + 60);
+      doc.text(`${textoPDF(remitente.localidad)}${remitente.cp ? `, CP ${textoPDF(remitente.cp)}` : ""}`, x + 47, y + 66);
+      doc.text(`TEL. ${textoPDF(remitente.telefono)}`, x + 47, y + 72);
 
-      const qrX = x + w - 41;
-      const qrY = y + 37;
-      const qrSize = 33;
+      const qrX = x + w - 38;
+      const qrY = y + 43;
+      const qrSize = 30;
 
       if (qrEnabled) {
         doc.addImage(qr, "PNG", qrX, qrY, qrSize, qrSize);
@@ -1593,107 +1731,45 @@
         doc.line(qrX + qrSize, qrY, qrX, qrY + qrSize);
       }
 
-      const destY = y + 81;
-      drawSection("DESTINATARIO", innerX, destY, innerW, 8.8);
-      const destRowH = 7.2;
-      const shipLabelW = 24;
-      drawRow("NOMBRE:", destinatario.nombre, innerX, destY + 7, innerW, destRowH, "", "", "", "", {
-        labelW: shipLabelW,
-        fontSize: 6.9,
-        valueFontSize: 9.5,
-        valueFontStyle: "bold"
-      });
-      drawRow("DNI/CUIL:", destinatario.dni, innerX, destY + 14.2, innerW, destRowH, "TEL:", destinatario.telefono, "", "", {
-        labelW: shipLabelW,
-        fontSize: 6.7,
-        valueFontSize: 7.3,
-        valueFontStyle: "bold"
-      });
-      drawRow("DOMICILIO:", destinatario.domicilio, innerX, destY + 21.4, innerW, destRowH, "", "", "", "", {
-        labelW: shipLabelW,
-        fontSize: 6.7,
-        valueFontSize: 7.4,
-        valueFontStyle: "bold"
-      });
-      drawRow("ENTRECALLES:", destinatario.entrecalles, innerX, destY + 28.6, innerW, destRowH, "", "", "", "", {
-        labelW: shipLabelW,
-        fontSize: 6.7,
-        valueFontSize: 7.3,
-        valueFontStyle: "bold"
-      });
-      drawRow("LOCALIDAD:", destinatario.localidad, innerX, destY + 35.8, innerW, destRowH, "CP:", destinatario.cp);
-      drawRow("PROVINCIA:", destinatario.provincia, innerX, destY + 43, innerW, destRowH, "", "", "", "", {
-        labelW: shipLabelW,
-        fontSize: 6.7,
-        valueFontSize: 7.3,
-        valueFontStyle: "bold"
-      });
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(5.2);
+      doc.setTextColor(102, 112, 133);
+      doc.text("SEGUIMIENTO", qrX + qrSize / 2, qrY + qrSize + 7, { align: "center" });
 
-      const transY = destY + 53;
-      drawSection("TRANSPORTE", innerX, transY, innerW, 8.8);
-      drawRow("NOMBRE:", transporte.nombre || "SHIPNOW", innerX, transY + 7, innerW, 8, "", "", "", "", {
-        labelW: shipLabelW,
-        fontSize: 6.8,
-        valueFontSize: 7.5,
-        valueFontStyle: "bold"
-      });
+      const destY = y + 76;
+      drawSoftSection("DATOS DEL DESTINATARIO", innerX, destY, innerW);
 
-      let lastTransportRowY = transY + 15;
+      const rowH = 11.2;
+      const firstRowY = destY + 10;
+      drawModernRow(innerX, firstRowY, innerW, rowH, [["NOMBRE COMPLETO", destinatario.nombre, true]], 11.8);
+      drawModernRow(innerX, firstRowY + rowH, innerW, rowH, [["MAIL", destinatario.mail, true]], 9.8);
+      drawModernRow(innerX, firstRowY + rowH * 2, innerW, rowH, [["DNI/CUIL", destinatario.dni, true], ["TELEFONO", destinatario.telefono, true]], 10.8);
+      drawModernRow(innerX, firstRowY + rowH * 3, innerW, rowH, [["DOMICILIO", destinatario.domicilio, true]], 11.5);
+      drawModernRow(innerX, firstRowY + rowH * 4, innerW, rowH, [["ENTRECALLES", destinatario.entrecalles, false]], 10);
+      drawModernRow(innerX, firstRowY + rowH * 5, innerW, rowH, [["LOCALIDAD", destinatario.localidad, true], ["CP", destinatario.cp, true]], 10.6);
+      drawModernRow(innerX, firstRowY + rowH * 6, innerW, rowH, [["PROVINCIA", destinatario.provincia, true]], 10.6);
 
-      if (String(tipoEnvio || "").toUpperCase().includes("OCA")) {
-        drawRow("SUC. OCA:", transporte.sucursalOca || "", innerX, transY + 15, innerW, 8, "", "", "", "", {
-          labelW: shipLabelW,
-          fontSize: 6.8,
-          valueFontSize: 7.4,
-          valueFontStyle: "bold"
-        });
-        drawRow("DIR. OCA:", transporte.direccionOca || "", innerX, transY + 23, innerW, 8, "", "", "", "", {
-          labelW: shipLabelW,
-          fontSize: 6.8,
-          valueFontSize: 7.2,
-          valueFontStyle: "bold"
-        });
-        drawRow("FECHA:", fecha, innerX, transY + 31, innerW, 8, "IMPRESO POR:", responsable, "", "", {
-          labelW: shipLabelW,
-          fontSize: 6.7,
-          valueFontSize: 7.1,
-          valueFontStyle: "bold"
-        });
-        lastTransportRowY = transY + 39;
-      } else {
-        drawRow("GUÍA/CÓD.:", transporte.guia || "A DESIGNAR", innerX, transY + 15, innerW, 8, "", "", "", "", {
-          labelW: shipLabelW,
-          fontSize: 6.8,
-          valueFontSize: 7.4,
-          valueFontStyle: "bold"
-        });
-        drawRow("FECHA:", fecha, innerX, transY + 23, innerW, 8, "IMPRESO POR:", responsable, "", "", {
-          labelW: shipLabelW,
-          fontSize: 6.7,
-          valueFontSize: 7.1,
-          valueFontStyle: "bold"
-        });
-        lastTransportRowY = transY + 31;
-      }
-
-      const barcodeTitleY = lastTransportRowY + 8;
-      const barcodeY = barcodeTitleY + 3;
-      const barcodeX = x + 18;
-      const barcodeW = w - 36;
-      const barcodeH = 15;
+      const barcodeTitleY = y + 170;
+      const barcodeY = y + 174;
+      const barcodeX = x + 32;
+      const barcodeW = w - 64;
+      const barcodeH = 12;
 
       doc.setFillColor(255, 255, 255);
-      doc.rect(x + 4, barcodeTitleY - 5, w - 8, 28, "F");
+      doc.rect(innerX, barcodeTitleY - 5, innerW, 24, "F");
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
+      doc.setFontSize(6);
+      doc.setTextColor(102, 112, 133);
       doc.text("CÓDIGO DE BARRAS", x + w / 2, barcodeTitleY, { align: "center" });
 
       doc.addImage(barcode, "PNG", barcodeX, barcodeY, barcodeW, barcodeH);
 
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(6.2);
+      doc.setFontSize(6.3);
+      doc.setTextColor(22, 22, 22);
       doc.text(tracking, x + w / 2, barcodeY + barcodeH + 5, { align: "center" });
+      resetColors();
     }
 
     drawLabel(labelX1, labelY, esTransporte);
