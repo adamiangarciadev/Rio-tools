@@ -8,6 +8,7 @@
   const HOME_TRACKING_URL = location.href.split("#")[0].split("?")[0];
   const LOCALES_CSV_URL = "./locales.csv";
   const PADRON_CSV_URL = "./Padron.csv";
+  const SUCURSAL_ORIGEN_STORAGE_KEY = "rio_shipnow_sucursal_origen";
 
   const LOCALES_FALLBACK = [
     "CASTELLI", "CORRIENTES", "PUEYRREDON", "QUILMES", "SARMIENTO",
@@ -488,6 +489,8 @@
       sucursalSelect.innerHTML =
         '<option value="">Seleccionar...</option>' +
         locales.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+
+      restaurarSucursalOrigenGuardada(sucursalSelect);
     }
 
     const responsable = $("#responsableLocal");
@@ -520,12 +523,14 @@
   }
 
   function bindCarga() {
+    $("#sucursalOrigen")?.addEventListener("change", guardarSucursalOrigenSeleccionada);
     $("#tipoEnvio")?.addEventListener("change", toggleTipoEnvio);
 
     bindMayusculasFormulario();
 
     $("#btnLimpiar")?.addEventListener("click", () => {
       $("#formEnvio").reset();
+      restaurarSucursalOrigenGuardada($("#sucursalOrigen"));
       toggleTipoEnvio();
       $("#resultadoCard")?.classList.add("hidden");
       ocultarBotonWhatsappWeb();
@@ -592,6 +597,7 @@
         data.direccionOca = String(data.direccionOca || "").trim();
 
         data.sucursalOrigen = normalizarTexto(data.sucursalOrigen);
+        guardarSucursalOrigen(data.sucursalOrigen);
         data.centroAsignado = "";
         data.hubAsignado = "";
         data.estado = "CARGADO EN LOCAL";
@@ -672,6 +678,27 @@
         }
       }
     });
+  }
+
+  function restaurarSucursalOrigenGuardada(select) {
+    if (!select) return;
+
+    const guardada = normalizarTexto(localStorage.getItem(SUCURSAL_ORIGEN_STORAGE_KEY) || "");
+    if (!guardada) return;
+
+    const existe = Array.from(select.options).some((option) => normalizarTexto(option.value) === guardada);
+    if (existe) select.value = guardada;
+  }
+
+  function guardarSucursalOrigenSeleccionada(ev) {
+    guardarSucursalOrigen(ev?.target?.value || "");
+  }
+
+  function guardarSucursalOrigen(value) {
+    const sucursal = normalizarTexto(value);
+    if (sucursal) {
+      localStorage.setItem(SUCURSAL_ORIGEN_STORAGE_KEY, sucursal);
+    }
   }
 
   function esEnvioShipnowWeb(envio) {

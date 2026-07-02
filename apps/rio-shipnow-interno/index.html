@@ -44,7 +44,6 @@
       <section class="card">
         <div class="card-head">
           <h2>Nuevo envío</h2>
-          <span class="hint">Reemplaza el envío de datos por WhatsApp.</span>
         </div>
 
         <form id="formEnvio" class="form-grid">
@@ -53,10 +52,6 @@
               <option value="">Cargando locales...</option>
             </select>
           </label>
-
-          <p class="hint" style="margin-top: 0;">
-            Se cargan automáticamente desde <code>locales.csv</code>. El remitente del rótulo sale de esta sucursal.
-          </p>
 
           <label>Tipo de envío
             <select id="tipoEnvio" name="tipoEnvio" required>
@@ -130,7 +125,7 @@
           </label>
 
           <label class="full">Observaciones
-            <textarea id="observaciones" name="observaciones" rows="3" placeholder="Notas internas, bultos, aclaraciones, etc."></textarea>
+            <textarea id="observaciones" name="observaciones" rows="2" placeholder="Notas internas, bultos, aclaraciones, etc."></textarea>
           </label>
 
           <div class="actions full">
