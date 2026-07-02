@@ -2,7 +2,7 @@
   "use strict";
 
   const API_URL = "https://script.google.com/macros/s/AKfycbyK5RuQXTqm3VsYn5kMbP48OSxGNper_pJbdE8Che7jOsMOydG9k8c9j63ywbL53HWl/exec";
-  const PUBLIC_TRACKING_URL = "https://adamiangarciadev.github.io/Rio-tools/apps/rio-shipnow-interno/";
+  const PUBLIC_TRACKING_URL = "https://adamiangarciadev.github.io/Rio-tools/apps/envios/";
   const PDF_LOGO_URL = "./logo-rio-label.png";
 
   const HOME_TRACKING_URL = location.href.split("#")[0].split("?")[0];
