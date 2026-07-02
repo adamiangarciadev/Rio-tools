@@ -1,8 +1,8 @@
 ﻿;(() => {
   "use strict";
 
-  const API_URL = "https://script.google.com/macros/s/AKfycbwi4i-Xsud2rISeNV8cjAJ8iX47ksiuAxfQgRPZFf7LRI75-2wFZEttbX1xeHj815gcVg/exec";
-  const PUBLIC_TRACKING_URL = "https://adamiangarciadev.github.io/Rio-tools/rio-shipnow-interno/";
+  const API_URL = "https://script.google.com/macros/s/AKfycbyK5RuQXTqm3VsYn5kMbP48OSxGNper_pJbdE8Che7jOsMOydG9k8c9j63ywbL53HWl/exec";
+  const PUBLIC_TRACKING_URL = "https://adamiangarciadev.github.io/Rio-tools/apps/rio-shipnow-interno/";
   const PDF_LOGO_URL = "./logo-rio-label.png";
 
   const HOME_TRACKING_URL = location.href.split("#")[0].split("?")[0];
@@ -98,18 +98,11 @@
     }
   };
 
-  const PASAN_POR_SARMIENTO = ["CASTELLI", "CORRIENTES", "PUEYRREDON", "QUILMES"];
-  const DIRECTO_AVELLANEDA = ["SARMIENTO", "LAMARCA", "NAZCA", "AVELLANEDA", "AVELLANEDA (WEB)"];
   const JS_BARCODE_URL = "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js";
   let jsBarcodeLoader = null;
 
   const ESTADOS = [
     "CARGADO EN LOCAL",
-    "ENVIADO A SARMIENTO",
-    "RECIBIDO EN SARMIENTO",
-    "ENVIADO A AVELLANEDA",
-    "RECIBIDO EN AVELLANEDA",
-    "RECIBIDO EN LOGISTICA WEB",
     "DESPACHADO POR SHIPNOW",
     "DESPACHADO POR TRANSPORTE",
     "CANCELADO",
@@ -509,15 +502,6 @@
         ESTADOS.map((e) => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join("");
     }
 
-    const filtroHub = $("#filtroHub");
-    if (filtroHub) {
-      filtroHub.innerHTML = `
-        <option value="TODOS">Todos</option>
-        <option value="SARMIENTO">Sarmiento</option>
-        <option value="AVELLANEDA">Avellaneda</option>
-        <option value="WEB">Logística Web</option>
-      `;
-    }
   }
 
   function bindTabs() {
@@ -544,6 +528,7 @@
       $("#formEnvio").reset();
       toggleTipoEnvio();
       $("#resultadoCard")?.classList.add("hidden");
+      ocultarBotonWhatsappWeb();
       ultimoEnvio = null;
     });
 
@@ -558,10 +543,23 @@
         }
 
         await generarPDFRotulo(ultimoEnvio);
+        habilitarBotonWhatsappWeb(ultimoEnvio);
       } catch (err) {
         console.error("No se pudo generar el PDF manualmente:", err);
         alert("No se pudo generar el rótulo PDF. " + (err.message || err));
       }
+    });
+
+    $("#btnWhatsappWeb")?.addEventListener("click", () => {
+      if (!ultimoEnvio) return;
+
+      const url = generarLinkWhatsappWeb(ultimoEnvio);
+      if (!url) {
+        alert("El mensaje a Web solo está disponible para envíos Shipnow a domicilio u OCA.");
+        return;
+      }
+
+      window.open(url, "_blank", "noopener,noreferrer");
     });
 
     $("#btnCopiarTracking")?.addEventListener("click", async () => {
@@ -594,8 +592,8 @@
         data.direccionOca = String(data.direccionOca || "").trim();
 
         data.sucursalOrigen = normalizarTexto(data.sucursalOrigen);
-        data.centroAsignado = resolverCentroInicial(data.sucursalOrigen);
-        data.hubAsignado = data.centroAsignado;
+        data.centroAsignado = "";
+        data.hubAsignado = "";
         data.estado = "CARGADO EN LOCAL";
         data.ultimaUbicacion = data.sucursalOrigen;
         data.accion = "crearEnvio";
@@ -635,7 +633,7 @@
           return;
         }
 
-        ultimoEnvio = res.envio || data;
+        ultimoEnvio = { ...data, ...(res.envio || {}) };
 
         if (!ultimoEnvio.idTracking) {
           ultimoEnvio.idTracking = generarTrackingInterno();
@@ -644,9 +642,10 @@
         ultimoEnvio.remitente = remitente;
 
         $("#trackingGenerado").textContent = ultimoEnvio.idTracking;
-        $("#hubGenerado").textContent = ultimoEnvio.centroAsignado || ultimoEnvio.hubAsignado || data.centroAsignado;
+        $("#hubGenerado").textContent = ultimoEnvio.tipoEnvio || data.tipoEnvio;
         $("#estadoGenerado").textContent = ultimoEnvio.estado || data.estado;
         $("#resultadoCard").classList.remove("hidden");
+        ocultarBotonWhatsappWeb();
 
         try {
           const faltanPdf = validarEnvioParaPDF(ultimoEnvio);
@@ -656,6 +655,7 @@
           }
 
           await generarPDFRotulo(ultimoEnvio);
+          habilitarBotonWhatsappWeb(ultimoEnvio);
         } catch (pdfErr) {
           console.error("No se pudo generar el rótulo PDF:", pdfErr);
           alert(`El tracking se generó, pero falló el PDF: ${pdfErr.message || pdfErr}`);
@@ -674,6 +674,77 @@
     });
   }
 
+  function esEnvioShipnowWeb(envio) {
+    const tipo = String(envio?.tipoEnvio || "").toUpperCase();
+    return tipo.includes("SHIPNOW") && (tipo.includes("DOMICILIO") || tipo.includes("OCA"));
+  }
+
+  function ocultarBotonWhatsappWeb() {
+    $("#btnWhatsappWeb")?.classList.add("hidden");
+  }
+
+  function habilitarBotonWhatsappWeb(envio) {
+    const btn = $("#btnWhatsappWeb");
+    if (!btn) return;
+
+    btn.classList.toggle("hidden", !esEnvioShipnowWeb(envio));
+  }
+
+  function generarLinkWhatsappWeb(envio) {
+    if (!esEnvioShipnowWeb(envio)) return "";
+
+    const numero = "5491128519621";
+    const mensaje = generarMensajeWhatsappWeb(envio);
+    return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+  }
+
+  function agregarLineaMensaje(lineas, label, value) {
+    const texto = String(value || "").trim();
+    if (texto) lineas.push(`${label}: ${texto}`);
+  }
+
+  function generarMensajeWhatsappWeb(envio) {
+    const tipo = String(envio.tipoEnvio || "").toUpperCase();
+    const esOca = tipo.includes("OCA");
+    const remitente = envio.remitente || obtenerRemitente(envio.sucursalOrigen) || {};
+    const lineas = [
+      "Hola Web, se generó un envío para despachar.",
+      "",
+      `Tipo: ${tipoEnvioLegible(envio.tipoEnvio)}`,
+      `Tracking: ${envio.idTracking || ""}`,
+      ""
+    ];
+
+    agregarLineaMensaje(lineas, "Cliente", envio.cliente);
+    agregarLineaMensaje(lineas, "Mail", envio.mail);
+    agregarLineaMensaje(lineas, "Teléfono", envio.telefono);
+    agregarLineaMensaje(lineas, "DNI/CUIL", envio.dniCuil);
+
+    if (esOca) {
+      agregarLineaMensaje(lineas, "Dirección OCA", envio.direccionOca);
+    } else {
+      agregarLineaMensaje(lineas, "Domicilio", envio.domicilio);
+      agregarLineaMensaje(lineas, "Entrecalles", envio.entrecalles);
+    }
+
+    agregarLineaMensaje(lineas, "Localidad", envio.localidad);
+    agregarLineaMensaje(lineas, "Provincia", envio.provincia);
+    agregarLineaMensaje(lineas, "CP", envio.cp);
+    lineas.push("");
+    agregarLineaMensaje(lineas, "Sucursal origen", remitente.sucursal || envio.sucursalOrigen);
+    agregarLineaMensaje(lineas, "Responsable", envio.responsableNombre || envio.responsableCodigo || envio.responsable);
+    agregarLineaMensaje(lineas, "Observaciones", envio.observaciones);
+
+    return lineas.join("\n");
+  }
+
+  function tipoEnvioLegible(tipoEnvio) {
+    const tipo = String(tipoEnvio || "").toUpperCase();
+    if (tipo.includes("SHIPNOW") && tipo.includes("OCA")) return "SHIPNOW - SUCURSAL OCA";
+    if (tipo.includes("SHIPNOW") && tipo.includes("DOMICILIO")) return "SHIPNOW - DOMICILIO";
+    return tipo || "SIN TIPO";
+  }
+
   function obtenerRemitente(sucursal) {
     const key = normalizarTexto(sucursal);
     return LOCALES[key] || null;
@@ -688,7 +759,6 @@
 
     setRequired("#domicilio", tipo !== "SHIPNOW_OCA");
     setRequired("#entrecalles", tipo !== "SHIPNOW_OCA");
-    setRequired("#sucursalOca", tipo === "SHIPNOW_OCA");
     setRequired("#direccionOca", tipo === "SHIPNOW_OCA");
     setRequired("#transporte", tipo === "TRANSPORTE");
   }
@@ -735,7 +805,6 @@
     ];
 
     if (d.tipoEnvio === "SHIPNOW_OCA") {
-      base.push("sucursalOca");
       base.push("direccionOca");
     } else {
       base.push("domicilio");
@@ -783,20 +852,14 @@
     return Array.from(new Set(faltan));
   }
 
-  function necesitaSarmiento(suc) {
-    return PASAN_POR_SARMIENTO.includes(normalizarTexto(suc));
-  }
-
   function resolverCentroInicial(suc) {
-    return necesitaSarmiento(suc) ? "SARMIENTO" : "AVELLANEDA";
+    return "";
   }
 
   function resolverUltimaUbicacionPorEstado(envio) {
     const estado = String(envio.estado || "").toUpperCase();
 
-    if (estado.includes("SARMIENTO")) return "SARMIENTO";
-    if (estado.includes("AVELLANEDA")) return "AVELLANEDA";
-    if (estado.includes("LOGISTICA WEB") || estado.includes("DESPACHADO")) return "LOGISTICA WEB";
+    if (estado.includes("DESPACHADO")) return "DESPACHADO";
 
     return envio.sucursalOrigen || "";
   }
@@ -808,23 +871,8 @@
       ? "DESPACHADO POR TRANSPORTE"
       : "DESPACHADO POR SHIPNOW";
 
-    if (necesitaSarmiento(x.sucursalOrigen)) {
-      return [
-        "CARGADO EN LOCAL",
-        "ENVIADO A SARMIENTO",
-        "RECIBIDO EN SARMIENTO",
-        "ENVIADO A AVELLANEDA",
-        "RECIBIDO EN AVELLANEDA",
-        "RECIBIDO EN LOGISTICA WEB",
-        final
-      ];
-    }
-
     return [
       "CARGADO EN LOCAL",
-      "ENVIADO A AVELLANEDA",
-      "RECIBIDO EN AVELLANEDA",
-      "RECIBIDO EN LOGISTICA WEB",
       final
     ];
   }
@@ -832,7 +880,7 @@
   function bindPanel() {
     $("#btnActualizarPanel")?.addEventListener("click", cargarPanel);
 
-    ["filtroHub", "filtroEstado", "buscarPanel"].forEach((id) => {
+    ["filtroEstado", "buscarPanel"].forEach((id) => {
       const el = $(`#${id}`);
       if (el) el.addEventListener("input", renderPanel);
     });
@@ -851,7 +899,6 @@
   }
 
   function renderPanel() {
-    const filtroCentro = $("#filtroHub")?.value || "TODOS";
     const estado = $("#filtroEstado")?.value || "TODOS";
     const q = ($("#buscarPanel")?.value || "").toLowerCase().trim();
 
@@ -859,15 +906,7 @@
 
     rows.forEach((x) => {
       x.ultimaUbicacion = x.ultimaUbicacion || resolverUltimaUbicacionPorEstado(x);
-      x.centroAsignado = x.centroAsignado || x.hubAsignado || resolverCentroInicial(x.sucursalOrigen);
     });
-
-    if (filtroCentro !== "TODOS") {
-      rows = rows.filter((x) => {
-        if (filtroCentro === "WEB") return x.ultimaUbicacion === "LOGISTICA WEB";
-        return x.ultimaUbicacion === filtroCentro || x.centroAsignado === filtroCentro;
-      });
-    }
 
     if (estado !== "TODOS") {
       rows = rows.filter((x) => x.estado === estado);
@@ -887,7 +926,6 @@
     const demora = calcularDemora(x);
     const next = siguientesEstados(x);
     const ubicacion = x.ultimaUbicacion || resolverUltimaUbicacionPorEstado(x);
-    const centro = x.centroAsignado || x.hubAsignado || resolverCentroInicial(x.sucursalOrigen);
 
     return `<article class="op-card">
       <div class="op-top">
@@ -901,7 +939,6 @@
       <div class="meta-grid">
         <div><span>Cliente</span>${escapeHtml(x.cliente || "")}</div>
         <div><span>Origen</span>${escapeHtml(x.sucursalOrigen || "")}</div>
-        <div><span>Centro</span>${escapeHtml(centro)}</div>
         <div><span>Ubicación actual</span>${escapeHtml(ubicacion)}</div>
         <div><span>Tipo</span>${escapeHtml(x.tipoEnvio || "")}</div>
         <div><span>Responsable</span>${escapeHtml(x.responsableCodigo || x.responsable || "")}</div>
@@ -943,21 +980,16 @@
 
     cache = res.envios || [];
 
-    cache.forEach((x) => {
-      x.ultimaUbicacion = x.ultimaUbicacion || resolverUltimaUbicacionPorEstado(x);
-      x.centroAsignado = x.centroAsignado || x.hubAsignado || resolverCentroInicial(x.sucursalOrigen);
-    });
-
     const activos = cache.filter((x) => !/^DESPACHADO|CANCELADO/.test(x.estado || ""));
     const demoras = activos.filter(calcularDemora);
 
     $("#mTotal").textContent = activos.length;
     $("#mPendientes").textContent = activos.filter((x) => x.estado === "CARGADO EN LOCAL").length;
-    $("#mHubs").textContent = activos.filter((x) => ["SARMIENTO", "AVELLANEDA"].includes(x.ultimaUbicacion)).length;
-    $("#mWeb").textContent = activos.filter((x) => x.ultimaUbicacion === "LOGISTICA WEB").length;
+    $("#mHubs").textContent = cache.filter((x) => /^DESPACHADO/.test(x.estado || "")).length;
+    $("#mWeb").textContent = activos.filter((x) => x.estado === "CON PROBLEMA").length;
     $("#mDemora").textContent = demoras.length;
 
-    renderBars("#dashHub", groupCount(activos, "ultimaUbicacion"));
+    renderBars("#dashHub", groupCount(cache, "tipoEnvio"));
     renderBars("#dashEstado", groupCount(activos, "estado"));
 
     $("#dashAlertas").innerHTML =
@@ -994,19 +1026,6 @@
 
     if (x.estado === "CARGADO EN LOCAL" && hs > 24) return true;
 
-    if (
-      [
-        "ENVIADO A SARMIENTO",
-        "RECIBIDO EN SARMIENTO",
-        "ENVIADO A AVELLANEDA",
-        "RECIBIDO EN AVELLANEDA",
-        "RECIBIDO EN LOGISTICA WEB"
-      ].includes(x.estado) &&
-      hs > 12
-    ) {
-      return true;
-    }
-
     return false;
   }
 
@@ -1027,7 +1046,7 @@
 
     if (!input) return;
 
-    punto.value = localStorage.getItem("scan_punto") || "SARMIENTO";
+    punto.value = localStorage.getItem("scan_punto") || "SHIPNOW";
     responsable.value = localStorage.getItem("scan_responsable") || "";
 
     punto.addEventListener("change", () => {
@@ -1047,9 +1066,8 @@
       if (!tracking) return;
 
       const mapa = {
-        SARMIENTO: "RECIBIDO EN SARMIENTO",
-        AVELLANEDA: "RECIBIDO EN AVELLANEDA",
-        WEB: "RECIBIDO EN LOGISTICA WEB"
+        SHIPNOW: "DESPACHADO POR SHIPNOW",
+        TRANSPORTE: "DESPACHADO POR TRANSPORTE"
       };
 
       try {
@@ -1061,7 +1079,7 @@
           estado: mapa[punto.value],
           responsableCodigo: responsable.value,
           responsable: responsable.value,
-          ultimaUbicacion: punto.value
+          ultimaUbicacion: "DESPACHADO"
         });
 
         const ok = !!res.ok;
@@ -1206,7 +1224,6 @@
       <div class="meta-grid">
         <div><span>Cliente</span>${escapeHtml(x.cliente)}</div>
         <div><span>Origen</span>${escapeHtml(x.sucursalOrigen)}</div>
-        <div><span>Centro</span>${escapeHtml(x.centroAsignado || x.hubAsignado || resolverCentroInicial(x.sucursalOrigen))}</div>
         <div><span>Ubicación actual</span>${escapeHtml(x.ultimaUbicacion || resolverUltimaUbicacionPorEstado(x))}</div>
         <div><span>Tipo</span>${escapeHtml(x.tipoEnvio)}</div>
       </div>
@@ -1320,6 +1337,8 @@
         telefono: e.telefono || "",
         domicilio: e.domicilio || "",
         entrecalles: e.entrecalles || "",
+        sucursalOca: e.sucursalOca || "",
+        direccionOca: e.direccionOca || "",
         localidad: e.localidad || "",
         cp: e.cp || "",
         provincia: e.provincia || ""
@@ -1342,19 +1361,11 @@
   }
 
   function etiquetasPDFPorEnvio(e) {
-    if (necesitaSarmiento(e.sucursalOrigen)) {
-      return [
-        "CARGADO EN\nSUCURSAL",
-        "RECIBIDO EN\nSARMIENTO",
-        "RECIBIDO EN\nAVELLANEDA",
-        "RECIBIDO EN\nLOGÍSTICA WEB"
-      ];
-    }
-
     return [
       "CARGADO EN\nSUCURSAL",
-      "RECIBIDO EN\nAVELLANEDA",
-      "RECIBIDO EN\nLOGÍSTICA WEB"
+      String(e.tipoEnvio || "").toUpperCase().includes("TRANSPORTE")
+        ? "DESPACHADO POR\nTRANSPORTE"
+        : "DESPACHADO POR\nSHIPNOW"
     ];
   }
 
@@ -1368,6 +1379,7 @@
 
     const tipoEnvioRaw = String(data.tipoEnvio || "").toUpperCase();
     const esTransporte = tipoEnvioRaw.includes("TRANSPORTE") || tipoEnvioRaw.includes("EXPRESO");
+    const esShipnowOca = tipoEnvioRaw.includes("SHIPNOW") && tipoEnvioRaw.includes("OCA");
 
     const pageW = 297;
     const pageH = 210;
@@ -1810,10 +1822,16 @@
       drawModernRow(innerX, firstRowY, innerW, rowH, [["NOMBRE COMPLETO", destinatario.nombre, true]], 11.8);
       drawModernRow(innerX, firstRowY + rowH, innerW, rowH, [["MAIL", destinatario.mail, true]], 9.8);
       drawModernRow(innerX, firstRowY + rowH * 2, innerW, rowH, [["DNI/CUIL", destinatario.dni, true], ["TELEFONO", destinatario.telefono, true]], 10.8);
-      drawModernRow(innerX, firstRowY + rowH * 3, innerW, rowH, [["DOMICILIO", destinatario.domicilio, true]], 11.5);
-      drawModernRow(innerX, firstRowY + rowH * 4, innerW, rowH, [["ENTRECALLES", destinatario.entrecalles, false]], 10);
-      drawModernRow(innerX, firstRowY + rowH * 5, innerW, rowH, [["LOCALIDAD", destinatario.localidad, true], ["CP", destinatario.cp, true]], 10.6);
-      drawModernRow(innerX, firstRowY + rowH * 6, innerW, rowH, [["PROVINCIA", destinatario.provincia, true]], 10.6);
+      if (esShipnowOca) {
+        drawModernRow(innerX, firstRowY + rowH * 3, innerW, rowH, [["DIRECCIÓN OCA", destinatario.direccionOca, true]], 11.5);
+        drawModernRow(innerX, firstRowY + rowH * 4, innerW, rowH, [["LOCALIDAD", destinatario.localidad, true], ["CP", destinatario.cp, true]], 10.6);
+        drawModernRow(innerX, firstRowY + rowH * 5, innerW, rowH, [["PROVINCIA", destinatario.provincia, true]], 10.6);
+      } else {
+        drawModernRow(innerX, firstRowY + rowH * 3, innerW, rowH, [["DOMICILIO", destinatario.domicilio, true]], 11.5);
+        drawModernRow(innerX, firstRowY + rowH * 4, innerW, rowH, [["ENTRECALLES", destinatario.entrecalles, false]], 10);
+        drawModernRow(innerX, firstRowY + rowH * 5, innerW, rowH, [["LOCALIDAD", destinatario.localidad, true], ["CP", destinatario.cp, true]], 10.6);
+        drawModernRow(innerX, firstRowY + rowH * 6, innerW, rowH, [["PROVINCIA", destinatario.provincia, true]], 10.6);
+      }
 
       const barcodeTitleY = y + 170;
       const barcodeY = y + 174;

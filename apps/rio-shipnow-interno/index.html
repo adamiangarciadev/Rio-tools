@@ -28,7 +28,7 @@
     <div>
       <p class="eyebrow">RIO Tools Suite</p>
       <h1>Seguimiento interno de Shipnow</h1>
-      <p class="sub">Carga de pedidos, rótulo PDF con QR, panel de hubs y dashboard logístico.</p>
+      <p class="sub">Carga de pedidos, rótulo PDF con QR, panel operativo y dashboard de despachos.</p>
     </div>
     <div class="status-pill" id="apiStatus">API pendiente</div>
   </header>
@@ -104,14 +104,6 @@
           </label>
 
           <div class="field-oca hidden full oca-box">
-            <label>Sucursal OCA
-              <input
-                id="sucursalOca"
-                name="sucursalOca"
-                placeholder="Ej: OCA MORON CENTRO"
-              />
-            </label>
-
             <label>Dirección sucursal OCA
               <input
                 id="direccionOca"
@@ -156,7 +148,7 @@
             <strong id="trackingGenerado"></strong>
           </div>
           <div>
-            <span class="label">Hub asignado</span>
+            <span class="label">Tipo de envío</span>
             <strong id="hubGenerado"></strong>
           </div>
           <div>
@@ -166,6 +158,12 @@
         </div>
         <div class="actions">
           <button id="btnPDF" class="btn primary">Descargar rótulo PDF</button>
+          <button id="btnWhatsappWeb" class="btn whatsapp hidden" type="button" aria-label="Enviar mensaje a Web por WhatsApp">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12.04 2.2A9.74 9.74 0 0 0 2.3 11.93c0 1.72.45 3.4 1.3 4.89l-1.38 5.02 5.14-1.35a9.72 9.72 0 0 0 4.68 1.2h.01a9.74 9.74 0 0 0-.01-19.49Zm0 17.84a8.04 8.04 0 0 1-4.1-1.12l-.29-.17-3.05.8.81-2.97-.19-.3a8.05 8.05 0 1 1 6.82 3.76Zm4.41-6.02c-.24-.12-1.43-.7-1.65-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.4 1.37.51.58.18 1.1.16 1.51.1.46-.07 1.43-.58 1.63-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z" />
+            </svg>
+            Enviar mensaje a Web
+          </button>
           <button id="btnCopiarTracking" class="btn">Copiar tracking</button>
         </div>
       </section>
@@ -175,8 +173,8 @@
       <section class="dashboard-grid">
         <div class="metric"><span>Total activos</span><strong id="mTotal">0</strong></div>
         <div class="metric"><span>Pendientes local</span><strong id="mPendientes">0</strong></div>
-        <div class="metric"><span>En hubs</span><strong id="mHubs">0</strong></div>
-        <div class="metric"><span>Listos web</span><strong id="mWeb">0</strong></div>
+        <div class="metric"><span>Despachados</span><strong id="mHubs">0</strong></div>
+        <div class="metric"><span>Con problema</span><strong id="mWeb">0</strong></div>
         <div class="metric danger"><span>Con demora</span><strong id="mDemora">0</strong></div>
       </section>
 
@@ -188,7 +186,7 @@
 
         <div class="dash-cols">
           <div>
-            <h3>Por hub</h3>
+            <h3>Por tipo de envío</h3>
             <div id="dashHub" class="bar-list"></div>
           </div>
           <div>
@@ -212,12 +210,11 @@
           <button id="btnActualizarPanel" class="btn">Actualizar panel</button>
         </div>
         <section class="card">
-          <h2>Recepción rápida</h2>
+          <h2>Despacho rápido</h2>
           <div class="toolbar">
             <select id="scanPunto">
-              <option value="SARMIENTO">Sarmiento</option>
-              <option value="AVELLANEDA">Avellaneda</option>
-              <option value="WEB">Logística Web</option>
+              <option value="SHIPNOW">Despachado por Shipnow</option>
+              <option value="TRANSPORTE">Despachado por transporte</option>
             </select>
             <input
               id="scanResponsable"
@@ -225,7 +222,7 @@
             />
             <input
               id="scanInput"
-              placeholder="Escanear Code128..."
+              placeholder="Escanear Code128 para despachar..."
               autocomplete="off"
             />
           </div>
@@ -234,12 +231,6 @@
         <div id="trackingDetalle" class="tracking-detail"></div>
         <hr class="soft-separator" />
         <div class="toolbar">
-          <select id="filtroHub">
-            <option value="TODOS">Todos</option>
-            <option value="SARMIENTO">Sarmiento</option>
-            <option value="AVELLANEDA">Avellaneda</option>
-            <option value="WEB">Logística Web</option>
-          </select>
           <select id="filtroEstado">
             <option value="TODOS">Todos los estados</option>
           </select>

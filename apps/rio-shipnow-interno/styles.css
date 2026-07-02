@@ -21,6 +21,22 @@ h1{margin:0;font-size:clamp(28px,4vw,46px);line-height:1}
   margin-top: 12px;
 }
 
+.btn.whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #25d366, #128c4a);
+  border-color: #1ca85a;
+  color: #062314;
+}
+
+.btn.whatsapp svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
 .scan-ok,
 .scan-error {
   padding: 10px 12px;

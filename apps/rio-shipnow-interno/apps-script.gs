@@ -17,7 +17,7 @@ const TZ = 'America/Argentina/Buenos_Aires';
 
 const HEADERS = [
   'ID_TRACKING','FECHA','SUCURSAL_ORIGEN','HUB_ASIGNADO','TIPO_ENVIO','ESTADO',
-  'CLIENTE','MAIL','TELEFONO','DNI_CUIL','DOMICILIO','ENTRECALLES','SUCURSAL_OCA',
+  'CLIENTE','MAIL','TELEFONO','DNI_CUIL','DOMICILIO','ENTRECALLES','SUCURSAL_OCA','DIRECCION_OCA',
   'LOCALIDAD','PROVINCIA','CP','TRANSPORTE','RESPONSABLE','REMITO','OBSERVACIONES',
   'FECHA_ESTADO','RESPONSABLE_ULTIMO_ESTADO','URL_SEGUIMIENTO'
 ];
@@ -92,6 +92,7 @@ function crearEnvio_(d) {
     DOMICILIO: clean_(d.domicilio),
     ENTRECALLES: clean_(d.entrecalles),
     SUCURSAL_OCA: clean_(d.sucursalOca),
+    DIRECCION_OCA: clean_(d.direccionOca),
     LOCALIDAD: clean_(d.localidad),
     PROVINCIA: clean_(d.provincia),
     CP: clean_(d.cp),
@@ -191,6 +192,7 @@ function toFront_(r) {
     domicilio: String(r.DOMICILIO || ''),
     entrecalles: String(r.ENTRECALLES || ''),
     sucursalOca: String(r.SUCURSAL_OCA || ''),
+    direccionOca: String(r.DIRECCION_OCA || ''),
     localidad: String(r.LOCALIDAD || ''),
     provincia: String(r.PROVINCIA || ''),
     cp: String(r.CP || ''),
