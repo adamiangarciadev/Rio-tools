@@ -551,6 +551,12 @@
       if (!ultimoEnvio) return;
 
       try {
+        const faltan = validarEnvioParaPDF(ultimoEnvio);
+        if (faltan.length) {
+          alert("No se puede generar el PDF. Faltan datos obligatorios: " + faltan.map(etiquetaCampoObligatorio).join(", "));
+          return;
+        }
+
         await generarPDFRotulo(ultimoEnvio);
       } catch (err) {
         console.error("No se pudo generar el PDF manualmente:", err);
@@ -643,6 +649,12 @@
         $("#resultadoCard").classList.remove("hidden");
 
         try {
+          const faltanPdf = validarEnvioParaPDF(ultimoEnvio);
+          if (faltanPdf.length) {
+            alert("El tracking se generó, pero no se puede generar el PDF. Faltan datos obligatorios: " + faltanPdf.map(etiquetaCampoObligatorio).join(", "));
+            return;
+          }
+
           await generarPDFRotulo(ultimoEnvio);
         } catch (pdfErr) {
           console.error("No se pudo generar el rótulo PDF:", pdfErr);
@@ -733,6 +745,42 @@
     if (d.tipoEnvio === "TRANSPORTE") base.push("transporte");
 
     return base.filter((k) => !String(d[k] || "").trim());
+  }
+
+  function etiquetaCampoObligatorio(campo) {
+    const labels = {
+      sucursalOrigen: "Sucursal origen",
+      tipoEnvio: "Tipo de envío",
+      responsable: "Responsable",
+      responsableCodigo: "Responsable",
+      cliente: "Cliente",
+      mail: "Mail",
+      telefono: "Teléfono",
+      dniCuil: "DNI/CUIL",
+      domicilio: "Domicilio",
+      entrecalles: "Entrecalles",
+      localidad: "Localidad",
+      provincia: "Provincia",
+      cp: "Código postal",
+      sucursalOca: "Sucursal OCA",
+      direccionOca: "Dirección OCA",
+      transporte: "Transporte"
+    };
+
+    return labels[campo] || campo;
+  }
+
+  function validarEnvioParaPDF(envio) {
+    const faltan = validarPayload({
+      ...envio,
+      responsable: envio.responsable || envio.responsableCodigo
+    });
+
+    if (!envio.idTracking) {
+      faltan.push("idTracking");
+    }
+
+    return Array.from(new Set(faltan));
   }
 
   function necesitaSarmiento(suc) {
@@ -1237,6 +1285,11 @@
   async function generarPDFRotulo(e) {
     if (!window.jspdf?.jsPDF) {
       throw new Error("No cargó la librería jsPDF");
+    }
+
+    const faltan = validarEnvioParaPDF(e);
+    if (faltan.length) {
+      throw new Error("Faltan datos obligatorios: " + faltan.map(etiquetaCampoObligatorio).join(", "));
     }
 
     const branchName = normalizarTexto(e.sucursalOrigen || e.remitenteSucursal || "");
