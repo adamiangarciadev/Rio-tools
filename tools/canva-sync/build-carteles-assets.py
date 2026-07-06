@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -8,15 +9,16 @@ from pathlib import Path
 import pdfplumber
 from pypdf import PdfReader, PdfWriter
 
-ROOT = Path(r"D:\Damian\Rio-tools")
+ROOT = Path(os.environ.get("GITHUB_WORKSPACE", r"D:\Damian\Rio-tools"))
 APP_ROOT = ROOT / "apps" / "pedido-carteleria"
 DOWNLOADS = APP_ROOT / "downloads"
 PAGE_PDFS = APP_ROOT / "page-pdfs"
 PREVIEWS = APP_ROOT / "previews"
 DESIGNS_JSON = APP_ROOT / "designs.json"
-PDFTOPPM = Path(
+LOCAL_PDFTOPPM = Path(
     r"C:\Users\usuario\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\poppler\Library\bin\pdftoppm.exe"
 )
+PDFTOPPM = shutil.which("pdftoppm") or (str(LOCAL_PDFTOPPM) if LOCAL_PDFTOPPM.exists() else "pdftoppm")
 
 PROJECTS = [
     {

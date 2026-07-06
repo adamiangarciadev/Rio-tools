@@ -1,8 +1,10 @@
 $ErrorActionPreference = "Stop"
 
-$Root = "D:\Damian\Rio-tools"
-$Node = "C:\Users\usuario\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
-$Python = "C:\Users\usuario\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+$Root = if ($env:GITHUB_WORKSPACE) { $env:GITHUB_WORKSPACE } else { "D:\Damian\Rio-tools" }
+$LocalNode = "C:\Users\usuario\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
+$LocalPython = "C:\Users\usuario\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+$Node = if (Test-Path $LocalNode) { $LocalNode } else { "node" }
+$Python = if (Test-Path $LocalPython) { $LocalPython } else { "python" }
 
 Set-Location $Root
 
