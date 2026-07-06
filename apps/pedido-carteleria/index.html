@@ -14,30 +14,45 @@
       <div class="module-topbar__title">
         <p class="eyebrow">Administracion</p>
         <h1>Pedido de Carteleria</h1>
-        <p>Modulo preparado para centralizar solicitudes de carteleria, promociones y material visual para locales.</p>
+        <p>Catalogo visual de disenos disponibles para descargar y usar en locales.</p>
       </div>
       <div class="module-topbar__spacer"></div>
     </header>
 
-    <section class="panel-grid">
-      <article class="panel">
-        <span class="state ready">Canva</span>
-        <h2>Plantilla de carteleria</h2>
-        <p>Acceso directo a la plantilla editable para piezas de local, promociones y material visual.</p>
-        <a class="template-link" href="https://www.canva.com/design/DAFoewHkos4/RFTAwL5syOTHsk2TttkRWQ/edit" target="_blank" rel="noopener noreferrer">Abrir plantilla</a>
-      </article>
-      <article class="panel">
-        <span class="state ready">Canva</span>
-        <h2>Plantilla complementaria</h2>
-        <p>Segundo formato editable para piezas alternativas, adaptaciones o pedidos especiales.</p>
-        <a class="template-link" href="https://www.canva.com/design/DAFpws5EDho/wo5AaK6_TiCiH281zab87g/edit" target="_blank" rel="noopener noreferrer">Abrir plantilla</a>
-      </article>
-      <article class="panel">
-        <span class="state beta">Flujo</span>
-        <h2>Uso recomendado</h2>
-        <p>Duplicar la plantilla en Canva, editar textos y medidas, descargar el archivo final y registrar el pedido por local.</p>
-      </article>
+    <section class="toolbar-panel" aria-label="Filtros de disenos">
+      <div class="search-box">
+        <label for="designSearch">Buscar diseno</label>
+        <input id="designSearch" type="search" placeholder="Buscar por proyecto o numero de pagina" autocomplete="off" />
+      </div>
+      <div class="segmented-control" role="tablist" aria-label="Proyecto">
+        <button class="segment active" type="button" data-project="all">Todos</button>
+        <button class="segment" type="button" data-project="carteles">28,5 x 20</button>
+        <button class="segment" type="button" data-project="a3">A3</button>
+      </div>
     </section>
+
+    <section class="gallery-shell" aria-label="Vista previa de disenos">
+      <div class="gallery-heading">
+        <div>
+          <p class="eyebrow">Disenos</p>
+          <h2>Vista previa</h2>
+        </div>
+        <p id="resultCount">Cargando disenos...</p>
+      </div>
+      <div class="design-grid" id="designGrid"></div>
+    </section>
+
+    <dialog class="preview-dialog" id="previewDialog">
+      <button class="dialog-close" type="button" id="closePreview" aria-label="Cerrar">&times;</button>
+      <figure>
+        <img id="previewImage" alt="" />
+        <figcaption>
+          <span id="previewTitle"></span>
+          <a id="previewDownload" href="#" download>Descargar PDF</a>
+        </figcaption>
+      </figure>
+    </dialog>
   </main>
+  <script src="./app.js"></script>
 </body>
 </html>

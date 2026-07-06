@@ -1,0 +1,5 @@
+tools/canva-sync/.env
+tools/canva-sync/.canva-token.json
+tools/canva-sync/canva-designs.json
+tools/canva-sync/canva-project-rows.json
+tools/canva-sync/canva-page-rows.json
