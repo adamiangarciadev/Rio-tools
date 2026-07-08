@@ -157,6 +157,7 @@
       bindDashboard();
       bindTracking();
       bindRecepcionRapida();
+      bindReimpresionRotuloGlobal();
       bindAccionesOperativasGlobal();
       toggleTipoEnvio();
       setApiStatus();
@@ -972,6 +973,13 @@
       </div>
 
       <div class="actions">
+        <button
+          class="btn primary reprint-label-action"
+          type="button"
+          data-id="${escapeHtml(x.idTracking)}"
+        >
+          Descargar rótulo PDF
+        </button>
         ${next.map((e) => `<button class="btn op-action" data-id="${escapeHtml(x.idTracking)}" data-estado="${escapeHtml(e)}">${escapeHtml(e)}</button>`).join("")}
       </div>
     </article>`;
@@ -1223,6 +1231,23 @@
     `;
   }
 
+  function renderBotonReimprimirRotulo(envio) {
+    const idTracking = envio?.idTracking || "";
+    if (!idTracking) return "";
+
+    return `
+      <div class="actions tracking-actions">
+        <button
+          class="btn primary reprint-label-action"
+          type="button"
+          data-id="${escapeHtml(idTracking)}"
+        >
+          Descargar rótulo PDF
+        </button>
+      </div>
+    `;
+  }
+
   function renderTracking(x) {
     if (esEstadoFinalSeguimiento(x.estado)) {
       $("#trackingDetalle").innerHTML = `<div class="op-card">
@@ -1235,6 +1260,8 @@
           <div><span>Seguimiento</span>El acceso por QR fue deshabilitado para este envío.</div>
           <div><span>Estado final</span>${escapeHtml(x.estado)}</div>
         </div>
+
+        ${renderBotonReimprimirRotulo(x)}
       </div>`;
       return;
     }
@@ -1262,8 +1289,45 @@
         </div>`).join("")}
       </div>
 
+      ${renderBotonReimprimirRotulo(x)}
       ${renderBotonesOperativos(x)}
     </div>`;
+  }
+
+  function bindReimpresionRotuloGlobal() {
+    document.addEventListener("click", async (ev) => {
+      const btn = ev.target.closest(".reprint-label-action");
+      if (!btn) return;
+
+      ev.preventDefault();
+
+      const idTracking = btn.dataset.id;
+      if (!idTracking) {
+        alert("Falta tracking para reimprimir el rótulo.");
+        return;
+      }
+
+      const textoOriginal = btn.textContent.trim();
+      btn.disabled = true;
+      btn.textContent = "Generando PDF...";
+
+      try {
+        const res = await api({ accion: "obtenerEnvio", idTracking, tracking: idTracking });
+
+        if (!res.ok || !res.envio) {
+          alert("No se pudo recuperar el envío para reimprimir. " + (res.error || ""));
+          return;
+        }
+
+        await generarPDFRotulo(res.envio);
+      } catch (err) {
+        console.error("No se pudo reimprimir el rótulo PDF:", err);
+        alert("No se pudo reimprimir el rótulo PDF. " + (err.message || err));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+      }
+    });
   }
 
   function bindAccionesOperativasGlobal() {
@@ -1714,7 +1778,7 @@
         doc.line(innerX, y + 40, innerX + innerW, y + 40);
 
         if (logoRio) {
-          doc.addImage(logoRio, "PNG", innerX, y + 47, 42, 23);
+          doc.addImage(logoRio, "PNG", innerX, y + 49, 42, 20.4);
         } else {
           doc.setFont("times", "italic");
           doc.setFontSize(20);
@@ -1800,7 +1864,7 @@
       doc.line(innerX, y + 35, innerX + innerW, y + 35);
 
       if (logoRio) {
-        doc.addImage(logoRio, "PNG", x + 8, y + 48, 32, 17);
+        doc.addImage(logoRio, "PNG", x + 8, y + 49, 32, 15.5);
       } else {
         doc.setFont("times", "italic");
         doc.setFontSize(15);
