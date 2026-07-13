@@ -30,7 +30,7 @@ function _crearPedidoWhatsapp(data) {
     ? sucursalRetiro
     : "ENVIO A DOMICILIO";
 
-  if (tipoEnvio === "RETIRO" && !["AVELLANEDA", "SARMIENTO", "QUILMES"].includes(sucursal)) {
+  if (tipoEnvio === "RETIRO" && !["AVELLANEDA", "CORRIENTES", "QUILMES"].includes(sucursal)) {
     return _jsonError("Sucursal de retiro no permitida");
   }
 

@@ -6,7 +6,7 @@
  * - Marca threads procesados con label
  * - Resuelve Shipnow => ENVIO A DOMICILIO + "ENVÍO SHIPNOW"
  * - Mantiene solo sucursales originales:
- *   AVELLANEDA, SARMIENTO, QUILMES
+ *   AVELLANEDA, CORRIENTES, QUILMES
  *
  * API:
  *   GET  listar, webtodo, estados, debug, log
@@ -358,8 +358,8 @@ function resolverSucursalYTipoEnvio(medioEnvio) {
     return { sucursal: "AVELLANEDA", tipoEnvio: "RETIRO" };
   }
 
-  if (t.includes("SARMIENTO")) {
-    return { sucursal: "SARMIENTO", tipoEnvio: "RETIRO" };
+  if (t.includes("CORRIENTES")) {
+    return { sucursal: "CORRIENTES", tipoEnvio: "RETIRO" };
   }
 
   if (t.includes("QUILMES")) {
@@ -487,7 +487,7 @@ function _crearPedidoWhatsapp(data) {
     ? sucursalRetiro
     : "ENVIO A DOMICILIO";
 
-  if (tipoEnvio === "RETIRO" && !["AVELLANEDA", "SARMIENTO", "QUILMES"].includes(sucursal)) {
+  if (tipoEnvio === "RETIRO" && !["AVELLANEDA", "CORRIENTES", "QUILMES"].includes(sucursal)) {
     return _jsonError("Sucursal de retiro no permitida");
   }
 

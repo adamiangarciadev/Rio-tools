@@ -203,7 +203,7 @@ function resolverSucursalYTipoEnvio(medioEnvio) {
   }
 
   if (t.includes("AVELLANEDA")) return { sucursal: "AVELLANEDA", tipoEnvio: "RETIRO" };
-  if (t.includes("SARMIENTO"))  return { sucursal: "SARMIENTO",  tipoEnvio: "RETIRO" };
+  if (t.includes("CORRIENTES"))  return { sucursal: "CORRIENTES",  tipoEnvio: "RETIRO" };
   if (t.includes("QUILMES"))    return { sucursal: "QUILMES",    tipoEnvio: "RETIRO" };
 
   // Podés sumar más sucursales acá si aparecen en el texto del medio de envío
