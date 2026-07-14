@@ -48,6 +48,35 @@ th, td {
   white-space: nowrap;
 }
 
+.envio-retiro-cell {
+  min-width: 145px;
+}
+
+.edit-envio-cell {
+  width: 88px;
+  min-width: 88px;
+  text-align: center;
+}
+
+.edit-envio-btn {
+  min-height: 30px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  background: #12323d !important;
+  color: var(--rio-text) !important;
+  border: 1px solid var(--rio-border-strong) !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  opacity: 1 !important;
+}
+
+.edit-envio-btn:hover,
+.edit-envio-btn:focus-visible,
+.edit-envio-btn:active {
+  background: #174a58 !important;
+  border-color: rgba(45, 212, 191, .62) !important;
+}
+
 tr.alerta {
   background-color: #ffe0e0;
 }

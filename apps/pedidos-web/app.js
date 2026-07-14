@@ -48,6 +48,50 @@
   ]);
 
   const LS_WHATSAPP_PEDIDOS = 'rio_pedidos_whatsapp_v1';
+  const CLAVE_EDICION_ENVIO_RETIRO_LOCAL = 'RIO2026';
+
+  const ENVIO_RETIRO_OPCIONES = [
+    {
+      label: 'RETIRO - AVELLANEDA',
+      tipo_envio: 'RETIRO',
+      sucursal_retiro: 'AVELLANEDA',
+    },
+    {
+      label: 'RETIRO - CORRIENTES',
+      tipo_envio: 'RETIRO',
+      sucursal_retiro: 'CORRIENTES',
+    },
+    {
+      label: 'RETIRO - QUILMES',
+      tipo_envio: 'RETIRO',
+      sucursal_retiro: 'QUILMES',
+    },
+    {
+      label: 'RETIRO - SARMIENTO',
+      tipo_envio: 'RETIRO',
+      sucursal_retiro: 'SARMIENTO',
+    },
+    {
+      label: 'RETIRO - WEB',
+      tipo_envio: 'RETIRO',
+      sucursal_retiro: 'WEB',
+    },
+    {
+      label: 'RETIRO - OTRO',
+      tipo_envio: 'RETIRO',
+      sucursal_retiro: 'OTRO',
+    },
+    {
+      label: 'ENVIO - SHIPNOW',
+      tipo_envio: 'ENVIO SHIPNOW',
+      sucursal_retiro: 'ENVIO A DOMICILIO',
+    },
+    {
+      label: 'ENVIO - OTRO',
+      tipo_envio: 'ENVIO',
+      sucursal_retiro: 'ENVIO A DOMICILIO',
+    },
+  ];
 
   // Cache global para buscador
   let PEDIDOS_CACHE = [];
@@ -430,6 +474,81 @@
     guardarPedidosWhatsappLS_(pedidos);
   }
 
+  function actualizarEnvioRetiroWhatsapp_(idPedido, nuevoEnvio, usuario) {
+    const pedidos = cargarPedidosWhatsapp_();
+    const idx = pedidos.findIndex(
+      (p) => String(p.id_pedido) === String(idPedido),
+    );
+    if (idx < 0) throw new Error('No se encontro el pedido de WhatsApp.');
+    pedidos[idx] = {
+      ...pedidos[idx],
+      tipo_envio: nuevoEnvio.tipo_envio,
+      sucursal_retiro: nuevoEnvio.sucursal_retiro,
+      quien_registra: usuario || pedidos[idx].quien_registra,
+      ultima_actualizacion: new Date().toISOString(),
+    };
+    guardarPedidosWhatsappLS_(pedidos);
+  }
+
+  async function editarEnvioRetiro_(p) {
+    const opcionesTexto = ENVIO_RETIRO_OPCIONES.map(
+      (op, idx) => `${idx + 1}. ${op.label}`,
+    ).join('\n');
+    const seleccion = prompt(
+      `Nuevo envio / retiro:\n${opcionesTexto}\n\nEscribi el numero de opcion`,
+    );
+    if (!seleccion) return;
+
+    const index = Number(seleccion.trim()) - 1;
+    const nuevoEnvio = ENVIO_RETIRO_OPCIONES[index];
+    if (!nuevoEnvio) {
+      alert('Opcion no valida.');
+      return;
+    }
+
+    const usuario = prompt('Quien realiza la modificacion? (nombre)');
+    if (!usuario) return;
+
+    const clave = prompt('Clave para modificar envio / retiro');
+    if (!clave) return;
+
+    if (!confirm(`Cambiar a ${nuevoEnvio.label}?`)) return;
+
+    const sucursalActual = String(p?.sucursal_retiro || '')
+      .toUpperCase()
+      .trim();
+    if (!sucursalActual) {
+      alert('Este pedido no tiene envio/retiro actual. No se puede actualizar.');
+      return;
+    }
+
+    try {
+      estadoCarga.textContent = 'Actualizando envio / retiro...';
+      if (p?.origen_local === 'whatsapp') {
+        if (clave !== CLAVE_EDICION_ENVIO_RETIRO_LOCAL) {
+          throw new Error('Clave incorrecta para modificar envio/retiro.');
+        }
+        actualizarEnvioRetiroWhatsapp_(p?.id_pedido, nuevoEnvio, usuario);
+        await cargarPedidos(false);
+      } else {
+        await postAccion({
+          accion: 'cambiarEnvioRetiro',
+          sucursal: sucursalActual,
+          id_pedido: p?.id_pedido,
+          tipo_envio: nuevoEnvio.tipo_envio,
+          sucursal_retiro: nuevoEnvio.sucursal_retiro,
+          usuario,
+          clave,
+        });
+        await cargarPedidos(true);
+      }
+    } catch (err) {
+      console.error('[RIO] Error cambiarEnvioRetiro:', err);
+      alert('Error: ' + err.message);
+      estadoCarga.textContent = 'Error al actualizar envio / retiro.';
+    }
+  }
+
   // =========================
   // ENVIO/RETIRO + ACCIONES
   // =========================
@@ -598,7 +717,7 @@
     if (!pedidos.length) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = 9;
+      td.colSpan = 10;
       td.textContent = 'No hay pedidos pendientes.';
       tr.appendChild(td);
       tablaPedidos.appendChild(tr);
@@ -642,11 +761,20 @@
         <td>${escapeHtml_(estadoTxt)}</td>
         <td class="acciones"></td>
         <td>${ultimoUsuarioHtml}</td>
-        <td>${escapeHtml_(envioRet)}</td>
+        <td class="envio-retiro-cell">${escapeHtml_(envioRet)}</td>
+        <td class="edit-envio-cell">
+          <button class="edit-envio-btn" type="button" title="Editar envio / retiro">Editar</button>
+        </td>
       `;
 
       const accionesTd = tr.querySelector('.acciones');
+      const editarEnvioBtn = tr.querySelector('.edit-envio-btn');
       const acciones = accionesDisponibles_(p);
+
+      editarEnvioBtn?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        editarEnvioRetiro_(p);
+      });
 
       if (!acciones.length) {
         accionesTd.textContent = '-';
