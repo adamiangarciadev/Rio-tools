@@ -356,6 +356,7 @@
       sucursal_retiro: sucursalPedido,
       quien_registra: usuario,
       fecha_venta: new Date().toISOString(),
+      ultima_actualizacion: new Date().toISOString(),
     };
 
     try {
@@ -560,13 +561,15 @@
         'WEB',
         id,
         cliente,
-        dni,
-        estado,
-        sucursal,
-        tipo,
-        envioRet,
-        quien,
-        remito,
+      dni,
+      estado,
+      sucursal,
+      tipo,
+      envioRet,
+      quien,
+      remito,
+      formatDateTime_(p?.fecha_venta),
+      formatDateTime_(p?.ultima_edicion || p?.ultima_actualizacion),
       ].join(' ');
 
       return texto.includes(qUpper);
@@ -594,7 +597,7 @@
     if (!pedidos.length) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = 8;
+      td.colSpan = 9;
       td.textContent = 'No hay pedidos pendientes.';
       tr.appendChild(td);
       tablaPedidos.appendChild(tr);
@@ -607,8 +610,18 @@
       const estadoTxt = String(p?.estado || '')
         .toUpperCase()
         .trim();
+      tr.classList.add('pedido-row');
+      if (estadoTxt) tr.classList.add('st-' + slugEstado_(estadoTxt));
+
       const envioRet = envioRetiroLabel(p);
       const ultimoUsuario = String(p?.quien_registra || '').trim() || '-';
+      const fechaPedido = formatDateTime_(p?.fecha_venta) || '-';
+      const fechaEdicion = formatDateTime_(
+        p?.ultima_edicion || p?.ultima_actualizacion,
+      );
+      const ultimoUsuarioHtml = fechaEdicion
+        ? `${escapeHtml_(ultimoUsuario)}<span class="cell-sub">Editado: ${escapeHtml_(fechaEdicion)}</span>`
+        : escapeHtml_(ultimoUsuario);
       const canal = String(p?.canal || '')
         .toUpperCase()
         .trim();
@@ -622,11 +635,12 @@
       tr.innerHTML = `
         <td>${escapeHtml_(canalLabel)}</td>
         <td>${p?.id_pedido ?? ''}</td>
+        <td class="date-cell">${escapeHtml_(fechaPedido)}</td>
         <td>${escapeHtml_(clienteLabel_(p))}</td>
         <td>${p?.dni ?? ''}</td>
         <td>${escapeHtml_(estadoTxt)}</td>
         <td class="acciones"></td>
-        <td>${escapeHtml_(ultimoUsuario)}</td>
+        <td>${ultimoUsuarioHtml}</td>
         <td>${escapeHtml_(envioRet)}</td>
       `;
 
@@ -725,6 +739,18 @@
     const d = new Date(v);
     if (!isNaN(d.getTime())) return d;
     return null;
+  }
+
+  function formatDateTime_(v) {
+    const d = toDate_(v);
+    if (!d) return '';
+    return new Intl.DateTimeFormat('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
   }
 
   function escapeHtml_(str) {

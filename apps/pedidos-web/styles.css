@@ -35,8 +35,102 @@ th, td {
   vertical-align: middle;
 }
 
+.date-cell {
+  white-space: nowrap;
+}
+
+.cell-sub {
+  display: block;
+  margin-top: 3px;
+  color: var(--rio-muted);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
 tr.alerta {
   background-color: #ffe0e0;
+}
+
+.pedido-row {
+  position: relative;
+  --estado-bg: rgba(17, 24, 33, .96);
+  --estado-border: rgba(148, 163, 184, .24);
+}
+
+.pedido-row > td:first-child {
+  border-left: 4px solid var(--estado-border) !important;
+}
+
+.pedido-row > td {
+  background: var(--estado-bg);
+}
+
+.pedido-row:hover > td {
+  filter: brightness(1.08);
+}
+
+.pedido-row.st-para-armar {
+  --estado-bg: rgba(37, 99, 235, .16);
+  --estado-border: #60a5fa;
+}
+
+.pedido-row.st-armando-pedido,
+.pedido-row.st-armandose {
+  --estado-bg: rgba(124, 58, 237, .18);
+  --estado-border: #a78bfa;
+}
+
+.pedido-row.st-pickeado-armado,
+.pedido-row.st-pickeado {
+  --estado-bg: rgba(79, 70, 229, .18);
+  --estado-border: #818cf8;
+}
+
+.pedido-row.st-esperando-pago {
+  --estado-bg: rgba(245, 158, 11, .18);
+  --estado-border: #fbbf24;
+}
+
+.pedido-row.st-esperando-mercaderia {
+  --estado-bg: rgba(234, 88, 12, .18);
+  --estado-border: #fb923c;
+}
+
+.pedido-row.st-controlado {
+  --estado-bg: rgba(20, 184, 166, .16);
+  --estado-border: #2dd4bf;
+}
+
+.pedido-row.st-pendiente-de-envio {
+  --estado-bg: rgba(14, 165, 233, .16);
+  --estado-border: #38bdf8;
+}
+
+.pedido-row.st-listo-para-retiro {
+  --estado-bg: rgba(34, 197, 94, .16);
+  --estado-border: #4ade80;
+}
+
+.pedido-row.st-enviado-a-sucursal {
+  --estado-bg: rgba(29, 78, 216, .18);
+  --estado-border: #3b82f6;
+}
+
+.pedido-row.st-en-sucursal {
+  --estado-bg: rgba(5, 150, 105, .18);
+  --estado-border: #10b981;
+}
+
+.pedido-row.st-enviado,
+.pedido-row.st-retirado {
+  --estado-bg: rgba(71, 85, 105, .18);
+  --estado-border: #94a3b8;
+}
+
+.pedido-row.st-cancelado {
+  --estado-bg: rgba(220, 38, 38, .18);
+  --estado-border: #f87171;
 }
 
 #estadoCarga {
