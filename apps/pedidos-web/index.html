@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <!-- Google tag (gtag.js) -->
@@ -19,7 +19,7 @@
 
 <body>
   <header class="topbar module-topbar">
-    <a href="../../index.html" class="btn ghost">← Volver</a>
+    <a href="../../index.html" class="btn ghost"><- Volver</a>
     <div class="module-topbar__title"><h1>Pedidos Web - RIO</h1></div>
     <div class="module-topbar__actions"><div class="top-bar">
       <button id="btnWhatsapp" class="btn whatsapp-btn" type="button">Cargar WhatsApp</button>
@@ -30,7 +30,7 @@
   <main>
     <div class="buscador-row">
       <label for="q" class="buscador-label">Buscar</label>
-      <input id="q" class="buscador-input" type="search" placeholder="ID, cliente, DNI, estado, canal, sucursal, envío..." autocomplete="off" />
+      <input id="q" class="buscador-input" type="search" placeholder="ID, cliente, DNI, estado, canal, sucursal, envio..." autocomplete="off" />
       <button id="btnLimpiar" class="buscador-clear" type="button">Limpiar</button>
     </div>
 
@@ -44,9 +44,9 @@
           <th>DNI</th>
           <th>Estado</th>
           <th>Acciones</th>
-          <th>Último usuario</th>
-          <th>Envío / Retiro</th>
-          <th>Editar envío</th>
+          <th>Ultimo usuario</th>
+          <th>Envio / Retiro</th>
+          <th>Editar envio</th>
         </tr>
 
 
@@ -66,7 +66,7 @@
           <p class="modal-kicker">Carga manual</p>
           <h2 id="whatsappModalTitle">Pedido de WhatsApp</h2>
         </div>
-        <button id="btnCerrarWhatsapp" class="modal-close" type="button" aria-label="Cerrar">×</button>
+        <button id="btnCerrarWhatsapp" class="modal-close" type="button" aria-label="Cerrar">X</button>
       </div>
 
       <form id="whatsappForm" class="whatsapp-form">
@@ -81,10 +81,10 @@
         </label>
 
         <label>
-          Envío / retiro
+          Envio / retiro
           <select id="wspTipoEnvio" name="tipo_envio">
             <option value="RETIRO">Retiro</option>
-            <option value="ENVÍO">Envío</option>
+            <option value="ENVIO">Envio</option>
             <option value="SHIPNOW">Shipnow</option>
           </select>
         </label>
@@ -92,7 +92,7 @@
         <label id="wspSucursalRetiroWrap">
           Sucursal de retiro
           <select id="wspSucursalRetiro" name="sucursal_retiro" required>
-            <option value="">Elegí sucursal</option>
+            <option value="">Elegi sucursal</option>
             <option value="AVELLANEDA">Avellaneda</option>
             <option value="CORRIENTES">Corrientes</option>
             <option value="QUILMES">Quilmes</option>
@@ -100,13 +100,13 @@
         </label>
 
         <label id="wspRemitoWrap">
-          Número de remito <span class="optional">(si tiene)</span>
+          Numero de remito <span class="optional">(si tiene)</span>
           <input id="wspRemito" name="remito" type="text" inputmode="numeric" />
         </label>
 
         <label>
-          Usuario
-          <input id="wspUsuario" name="usuario" type="text" placeholder="Quién carga" required />
+          Codigo de usuario
+          <input id="wspUsuario" name="usuario" type="text" inputmode="numeric" placeholder="Codigo del padron" required />
         </label>
 
         <div class="modal-actions">

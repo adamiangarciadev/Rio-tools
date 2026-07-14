@@ -49,6 +49,10 @@
 
   const LS_WHATSAPP_PEDIDOS = 'rio_pedidos_whatsapp_v1';
   const CLAVE_EDICION_ENVIO_RETIRO_LOCAL = 'RIO2026';
+  const PADRON_URLS = [
+    '../../data/ASISTENCIA_RIO%20-%20PADRON.csv',
+    '../asistencia/ASISTENCIA_RIO%20-%20PADRON.csv',
+  ];
 
   const ENVIO_RETIRO_OPCIONES = [
     {
@@ -97,6 +101,7 @@
   let PEDIDOS_CACHE = [];
   let QUERY = '';
   let guardandoWhatsapp = false;
+  let PADRON_USUARIOS = new Map();
 
   // =========================
   // FLUJO / TRANSICIONES
@@ -196,6 +201,9 @@
     whatsappForm?.addEventListener('submit', guardarPedidoWhatsapp_);
     wspTipoEnvio?.addEventListener('change', actualizarSucursalRetiroWhatsapp_);
 
+    cargarPadronUsuarios_().then((ok) => {
+      if (ok && PEDIDOS_CACHE.length) renderTabla(vistaPedidos_());
+    });
     cargarPedidos(true);
     setInterval(() => cargarPedidos(false), 30 * 1000);
   }
@@ -280,6 +288,107 @@
     }
     if (!data.ok) throw new Error(data.error || 'Error desconocido');
     return data;
+  }
+
+  async function cargarPadronUsuarios_() {
+    for (const url of PADRON_URLS) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) continue;
+        const text = await res.text();
+        const rows = parseCsv_(text);
+        const map = new Map();
+
+        rows.forEach((row) => {
+          const codigo = String(row.vendedor_id || row.id || row.codigo || '')
+            .trim();
+          const nombre = String(
+            row.apellido_nombre || row.nombre || row.vendedor_nombre || '',
+          ).trim();
+          if (codigo && nombre) map.set(codigo, nombre);
+        });
+
+        if (map.size) {
+          PADRON_USUARIOS = map;
+          console.info(`[RIO] Padron usuarios cargado: ${map.size}`);
+          return true;
+        }
+      } catch (err) {
+        console.warn('[RIO] No se pudo cargar padron desde', url, err);
+      }
+    }
+    return false;
+  }
+
+  function parseCsv_(text) {
+    const lines = String(text || '')
+      .replace(/^\uFEFF/, '')
+      .split(/\r?\n/)
+      .filter((line) => line.trim());
+    if (!lines.length) return [];
+
+    const headers = splitCsvLine_(lines[0]).map((h) => h.trim());
+    return lines.slice(1).map((line) => {
+      const values = splitCsvLine_(line);
+      return headers.reduce((row, header, index) => {
+        row[header] = values[index] || '';
+        return row;
+      }, {});
+    });
+  }
+
+  function splitCsvLine_(line) {
+    const out = [];
+    let current = '';
+    let quoted = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      const next = line[i + 1];
+      if (ch === '"' && quoted && next === '"') {
+        current += '"';
+        i++;
+      } else if (ch === '"') {
+        quoted = !quoted;
+      } else if (ch === ',' && !quoted) {
+        out.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    out.push(current);
+    return out;
+  }
+
+  async function resolverUsuarioPorCodigo_() {
+    if (!PADRON_USUARIOS.size) await cargarPadronUsuarios_();
+
+    const codigo = prompt('Codigo de usuario');
+    if (!codigo) return null;
+
+    return resolverUsuarioCodigo_(codigo);
+  }
+
+  async function resolverUsuarioCodigo_(codigo) {
+    if (!PADRON_USUARIOS.size) await cargarPadronUsuarios_();
+
+    const codigoLimpio = String(codigo || '').trim();
+    if (!codigoLimpio) return null;
+
+    const nombre = PADRON_USUARIOS.get(codigoLimpio);
+    if (!nombre) {
+      alert('Codigo no encontrado en el padron.');
+      return null;
+    }
+
+    return { codigo: codigoLimpio, nombre };
+  }
+
+  function usuarioDisplay_(valor) {
+    const raw = String(valor || '').trim();
+    if (!raw) return '-';
+    return PADRON_USUARIOS.get(raw) || raw;
   }
 
   // =========================
@@ -377,12 +486,15 @@
       document.getElementById('wspSucursalRetiro')?.value.trim().toUpperCase() ||
       '';
     const remito = document.getElementById('wspRemito')?.value.trim() || '';
-    const usuario = document.getElementById('wspUsuario')?.value.trim() || '';
+    const codigoUsuario = document.getElementById('wspUsuario')?.value.trim() || '';
 
-    if (!cliente || !usuario) {
-      alert('Completá cliente y usuario que carga.');
+    if (!cliente || !codigoUsuario) {
+      alert('Completa cliente y codigo de usuario que carga.');
       return;
     }
+
+    const usuarioPadron = await resolverUsuarioCodigo_(codigoUsuario);
+    if (!usuarioPadron) return;
 
     if (tipoEnvio === 'RETIRO' && !sucursalRetiro) {
       alert('Elegí la sucursal de retiro.');
@@ -403,7 +515,7 @@
       estado: 'PARA ARMAR',
       tipo_envio: tipoEnvio,
       sucursal_retiro: sucursalPedido,
-      quien_registra: usuario,
+      quien_registra: usuarioPadron.nombre,
       fecha_venta: new Date().toISOString(),
       ultima_actualizacion: new Date().toISOString(),
     };
@@ -418,7 +530,8 @@
         tipo_envio: tipoEnvio,
         sucursal_retiro: sucursalPedido,
         remito,
-        usuario,
+        usuario: usuarioPadron.nombre,
+        usuario_codigo: usuarioPadron.codigo,
       });
 
       const pedidoApi = data.pedido || {};
@@ -506,8 +619,8 @@
       return;
     }
 
-    const usuario = prompt('Quien realiza la modificacion? (nombre)');
-    if (!usuario) return;
+    const usuarioPadron = await resolverUsuarioPorCodigo_();
+    if (!usuarioPadron) return;
 
     const clave = prompt('Clave para modificar envio / retiro');
     if (!clave) return;
@@ -528,7 +641,7 @@
         if (clave !== CLAVE_EDICION_ENVIO_RETIRO_LOCAL) {
           throw new Error('Clave incorrecta para modificar envio/retiro.');
         }
-        actualizarEnvioRetiroWhatsapp_(p?.id_pedido, nuevoEnvio, usuario);
+        actualizarEnvioRetiroWhatsapp_(p?.id_pedido, nuevoEnvio, usuarioPadron.nombre);
         await cargarPedidos(false);
       } else {
         await postAccion({
@@ -537,7 +650,8 @@
           id_pedido: p?.id_pedido,
           tipo_envio: nuevoEnvio.tipo_envio,
           sucursal_retiro: nuevoEnvio.sucursal_retiro,
-          usuario,
+          usuario: usuarioPadron.nombre,
+          usuario_codigo: usuarioPadron.codigo,
           clave,
         });
         await cargarPedidos(true);
@@ -734,7 +848,7 @@
       if (estadoTxt) tr.classList.add('st-' + slugEstado_(estadoTxt));
 
       const envioRet = envioRetiroLabel(p);
-      const ultimoUsuario = String(p?.quien_registra || '').trim() || '-';
+      const ultimoUsuario = usuarioDisplay_(p?.quien_registra);
       const fechaPedido = formatDateTime_(p?.fecha_venta) || '-';
       const fechaEdicion = formatDateTime_(
         p?.ultima_edicion || p?.ultima_actualizacion,
@@ -806,8 +920,8 @@
             // cerrar menú al elegir
             menu.classList.remove('open');
 
-            const usuario = prompt('¿Quién realiza la acción? (nombre)');
-            if (!usuario) return;
+            const usuarioPadron = await resolverUsuarioPorCodigo_();
+            if (!usuarioPadron) return;
 
             const sucursalReal = String(p?.sucursal_retiro || '')
               .toUpperCase()
@@ -822,7 +936,7 @@
             try {
               estadoCarga.textContent = 'Actualizando...';
               if (p?.origen_local === 'whatsapp') {
-                actualizarPedidoWhatsapp_(p?.id_pedido, nuevoEstado, usuario);
+                actualizarPedidoWhatsapp_(p?.id_pedido, nuevoEstado, usuarioPadron.nombre);
                 await cargarPedidos(false);
               } else {
                 await postAccion({
@@ -830,7 +944,8 @@
                   sucursal: sucursalReal,
                   id_pedido: p?.id_pedido,
                   estado: nuevoEstado,
-                  usuario,
+                  usuario: usuarioPadron.nombre,
+                  usuario_codigo: usuarioPadron.codigo,
                 });
                 await cargarPedidos(true);
               }
