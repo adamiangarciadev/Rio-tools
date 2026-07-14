@@ -33,6 +33,14 @@
 
   // Estados que NO deben verse en Ecommerce
   const ESTADOS_OCULTOS = new Set([
+    'EN SUCURSAL',
+    'RETIRADO',
+    'ENVIADO',
+    'CANCELADO',
+    'ENTREGADO',
+  ]);
+
+  const ESTADOS_SIN_ACCIONES = new Set([
     'RETIRADO',
     'ENVIADO',
     'CANCELADO',
@@ -113,7 +121,7 @@
         QUERY = String(inputQ.value || '')
           .toUpperCase()
           .trim();
-        renderTabla(aplicarFiltroBusqueda_(PEDIDOS_CACHE, QUERY));
+        renderTabla(vistaPedidos_());
       });
     }
 
@@ -121,7 +129,7 @@
       btnLimpiar.addEventListener('click', () => {
         inputQ.value = '';
         QUERY = '';
-        renderTabla(PEDIDOS_CACHE);
+        renderTabla(vistaPedidos_());
         inputQ.focus();
       });
     }
@@ -179,16 +187,8 @@
 
       const pedidos = Array.isArray(data.pedidos) ? data.pedidos : [];
 
-      // 1) FILTRO FRONT (oculta estados finales)
-      const pedidosFiltrados = pedidos.filter((p) => {
-        const estado = String(p?.estado || '')
-          .toUpperCase()
-          .trim();
-        return !ESTADOS_OCULTOS.has(estado);
-      });
-
-      // 2) ORDEN: nuevos arriba / viejos abajo
-      pedidosFiltrados.sort((a, b) => {
+      // Orden: nuevos arriba / viejos abajo
+      pedidos.sort((a, b) => {
         const da = toDate_(a?.fecha_venta);
         const db = toDate_(b?.fecha_venta);
         if (da && db) return db - da;
@@ -208,16 +208,12 @@
 
       // Cache para buscador
       PEDIDOS_CACHE = combinarPedidos_(
-        pedidosFiltrados,
+        pedidos,
         cargarPedidosWhatsapp_(),
       );
 
       // Render con búsqueda aplicada si corresponde
-      const vista = QUERY
-        ? aplicarFiltroBusqueda_(PEDIDOS_CACHE, QUERY)
-        : PEDIDOS_CACHE;
-
-      renderTabla(vista);
+      renderTabla(vistaPedidos_());
       estadoCarga.textContent = `Actualizado: ${new Date().toLocaleTimeString()}`;
     } catch (err) {
       console.error('[RIO] Error de red:', err);
@@ -307,12 +303,21 @@
   }
 
   function combinarPedidos_(webPedidos, whatsappPedidos) {
-    return [...whatsappPedidos, ...webPedidos].filter((p) => {
+    return [...whatsappPedidos, ...webPedidos];
+  }
+
+  function ocultarEstadosDefault_(pedidos) {
+    return pedidos.filter((p) => {
       const estado = String(p?.estado || '')
         .toUpperCase()
         .trim();
       return !ESTADOS_OCULTOS.has(estado);
     });
+  }
+
+  function vistaPedidos_() {
+    if (QUERY) return aplicarFiltroBusqueda_(PEDIDOS_CACHE, QUERY);
+    return ocultarEstadosDefault_(PEDIDOS_CACHE);
   }
 
   async function guardarPedidoWhatsapp_(event) {
@@ -384,9 +389,7 @@
           },
         ],
       );
-      renderTabla(
-        QUERY ? aplicarFiltroBusqueda_(PEDIDOS_CACHE, QUERY) : PEDIDOS_CACHE,
-      );
+      renderTabla(vistaPedidos_());
       estadoCarga.textContent = 'Pedido de WhatsApp guardado en Sheets.';
       setWhatsappFormSaving_(false);
       cerrarWhatsappModal_();
@@ -406,9 +409,7 @@
       PEDIDOS_CACHE.filter((p) => p?.origen_local !== 'whatsapp'),
       pedidos,
     );
-    renderTabla(
-      QUERY ? aplicarFiltroBusqueda_(PEDIDOS_CACHE, QUERY) : PEDIDOS_CACHE,
-    );
+    renderTabla(vistaPedidos_());
     estadoCarga.textContent = 'Pedido de WhatsApp cargado localmente.';
     setWhatsappFormSaving_(false);
     cerrarWhatsappModal_();
@@ -471,7 +472,7 @@
     const estado = String(p?.estado || '')
       .toUpperCase()
       .trim();
-    if (ESTADOS_OCULTOS.has(estado)) return [];
+    if (ESTADOS_SIN_ACCIONES.has(estado)) return [];
 
     const acciones = new Set();
 
