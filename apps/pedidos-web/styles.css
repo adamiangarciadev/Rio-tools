@@ -67,7 +67,7 @@ tr.alerta {
 }
 
 .pedido-row:hover > td {
-  filter: brightness(1.08);
+  box-shadow: inset 0 0 0 999px rgba(255, 255, 255, .025);
 }
 
 .pedido-row.st-para-armar {
@@ -263,7 +263,7 @@ td:first-child:contains("MINORISTA") {
   top: 100%;
   left: 0;
   min-width: 210px;
-  background: var(--rio-surface-2);
+  background: #101821 !important;
   border: 1px solid var(--rio-border-strong);
   border-radius: 8px;
   padding: 6px;
@@ -282,14 +282,18 @@ td:first-child:contains("MINORISTA") {
   padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid rgba(148, 163, 184, .16) !important;
-  background: rgba(15, 23, 34, .98) !important;
+  background: #111d29 !important;
   color: var(--rio-text) !important;
   font-weight: 800;
+  opacity: 1 !important;
 }
 
-.dd-item:hover {
-  background: rgba(34, 199, 184, .16) !important;
+.dd-item:hover,
+.dd-item:focus-visible,
+.dd-item:active {
+  background: #183444 !important;
   border-color: rgba(45, 212, 191, .48) !important;
+  opacity: 1 !important;
 }
 
 /* Cancelado destacado */
@@ -322,11 +326,12 @@ td.acciones .dd {
   padding: 8px 10px;
   border-radius: 6px;
 
-  background: rgba(34, 199, 184, .10) !important;
+  background: #12323d !important;
   color: var(--rio-text) !important;
   border: 1px solid var(--rio-border-strong) !important;
   font-size: 13px;
   font-weight: 800;
+  opacity: 1 !important;
 }
 
 /* Menú desplegable alineado al ancho del botón */
@@ -334,8 +339,12 @@ td.acciones .dd {
   width: 100%;
   left: 0;
 }
-.dd-toggle:hover {
-  background: rgba(34, 199, 184, .16) !important;
+.dd-toggle:hover,
+.dd-toggle:focus-visible,
+.dd-toggle:active {
+  background: #174a58 !important;
+  border-color: rgba(45, 212, 191, .62) !important;
+  opacity: 1 !important;
 }
 footer {
       text-align: center;
