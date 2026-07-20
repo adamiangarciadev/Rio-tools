@@ -182,6 +182,24 @@ h1{ margin: 0; font-size: 16px; font-weight: 750; }
   border-color: rgba(77,163,255,.45);
 }
 .btn.primary:hover{ background: rgba(77,163,255,.22); }
+.btn-mini{
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  min-height: 32px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.btn-mini:hover{ background: rgba(77,163,255,.08); }
+.btn-mini.danger{
+  border-color: rgba(248,113,113,.45);
+  color: #fecaca;
+}
+.btn-mini.danger:hover{ background: rgba(248,113,113,.14); }
 .btn-ghost{
   color: var(--muted);
   text-decoration: none;

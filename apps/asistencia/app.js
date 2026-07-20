@@ -382,6 +382,20 @@
     return `${id}__${tipo}`;
   }
 
+  function eventPayload(ev){
+    return {
+      fecha_operativa: String(ev?.fecha_operativa ?? ev?.fecha ?? todayISO()).trim(),
+      sucursal: String(ev?.sucursal ?? ev?.local ?? "").trim().toUpperCase(),
+      vendedor_id: String(ev?.vendedor_id ?? ev?.id ?? "").trim(),
+      vendedor_nombre: String(ev?.vendedor_nombre ?? ev?.nombre ?? "").trim(),
+      tipo_evento: String(ev?.tipo_evento ?? ev?.tipo ?? "").trim().toUpperCase(),
+      hora_declarada: String(ev?.hora_declarada ?? ev?.hora ?? "").trim(),
+      observacion: String(ev?.observacion ?? ev?.obs ?? "").trim(),
+      timestamp_carga: String(ev?.timestamp_carga ?? ev?.timestamp ?? "").trim(),
+      rowNumber: ev?.rowNumber ?? ev?.row_number ?? ev?.fila ?? ""
+    };
+  }
+
   function esDuplicadoActual(){
     const id = norm($("vendedorId")?.value || "");
     const tipo = norm($("tipoEvento")?.value || "");
@@ -409,29 +423,29 @@
     if (!tbody) { refreshBloqueoDuplicado(); return; }
 
     if (!eventosHoy.length){
-      tbody.innerHTML = `<tr><td colspan="5" style="padding:10px; opacity:.8">Sin registros cargados hoy.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:10px; opacity:.8">Sin registros cargados hoy.</td></tr>`;
       if (hint) hint.textContent = "Sin registros hoy.";
       refreshBloqueoDuplicado();
       return;
     }
 
     // Orden por hora desc (si viene HH:MM)
-    const ordenados = eventosHoy.slice().sort((a,b) => {
-      const ha = String(a?.hora_declarada ?? a?.hora ?? "").trim();
-      const hb = String(b?.hora_declarada ?? b?.hora ?? "").trim();
+    const ordenados = eventosHoy.map((ev, index) => ({ ev, index })).sort((a,b) => {
+      const ha = String(a.ev?.hora_declarada ?? a.ev?.hora ?? "").trim();
+      const hb = String(b.ev?.hora_declarada ?? b.ev?.hora ?? "").trim();
       return hb.localeCompare(ha);
     });
 
     // marca duplicados internos (si ya existen en sheet)
     const seen = new Set();
     const dupKeys = new Set();
-    for (const ev of ordenados){
+    for (const { ev } of ordenados){
       const k = keyDupe(ev);
       if (seen.has(k)) dupKeys.add(k);
       else seen.add(k);
     }
 
-    tbody.innerHTML = ordenados.map(ev => {
+    tbody.innerHTML = ordenados.map(({ ev, index }) => {
       const hora = String(ev?.hora_declarada ?? ev?.hora ?? "—");
       const id   = String(ev?.vendedor_id ?? ev?.id ?? "—");
       const nom  = String(ev?.vendedor_nombre ?? ev?.nombre ?? "—");
@@ -449,11 +463,54 @@
           <td style="padding:8px; border-top:1px solid rgba(255,255,255,.06)">${nom}</td>
           <td style="padding:8px; border-top:1px solid rgba(255,255,255,.06)">${tipo}${warn ? " ⚠️" : ""}</td>
           <td style="padding:8px; border-top:1px solid rgba(255,255,255,.06)">${obs}</td>
+          <td style="padding:8px; border-top:1px solid rgba(255,255,255,.06)">
+            <button class="btn-mini danger" type="button" data-delete-event-index="${index}">Eliminar</button>
+          </td>
         </tr>
       `;
     }).join("");
 
+    tbody.querySelectorAll("[data-delete-event-index]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.deleteEventIndex);
+        if (Number.isInteger(index)) eliminarEventoHoy(index);
+      });
+    });
+
     refreshBloqueoDuplicado();
+  }
+
+  async function eliminarEventoHoy(index){
+    const ev = eventosHoy[index];
+    if (!ev) return;
+
+    const p = eventPayload(ev);
+    const nombre = p.vendedor_nombre || p.vendedor_id || "este vendedor";
+    const detalle = `${nombre} | ${p.tipo_evento || "REGISTRO"} ${p.hora_declarada || ""}`.trim();
+    const ok = confirm(`Eliminar este registro?\n\n${detalle}\n\nDespues podras volver a cargarlo correctamente.`);
+    if (!ok) return;
+
+    setPill("loading", "Eliminando registro...");
+    try {
+      const res = await apiPost({
+        accion: "eliminar_registro",
+        ...p,
+        device_id: ensureDeviceId()
+      });
+
+      if (!res || !res.ok) {
+        throw new Error(res?.message || res?.error || "No se pudo eliminar");
+      }
+
+      setPill("ok", "Registro eliminado");
+      toast("Registro eliminado. Ya podes cargarlo nuevamente.");
+      await cargarEventosHoy();
+      refreshBloqueoDuplicado();
+    } catch (err) {
+      console.error(err);
+      setPill("error", "Error al eliminar");
+      toast(err.message || "Error al eliminar. Revisar permisos/Deploy.");
+    }
   }
 
   async function cargarEventosHoy(){
@@ -462,7 +519,7 @@
       const suc = (localStorage.getItem(LS_SUCURSAL) || $("sucursalSelect")?.value || "").trim().toUpperCase();
       if (!suc){
         eventosHoy = [];
-        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="padding:10px; opacity:.8">Elegí una sucursal.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="padding:10px; opacity:.8">Elegí una sucursal.</td></tr>`;
         if (hint) hint.textContent = "Elegí una sucursal para ver registros.";
         refreshBloqueoDuplicado();
         return;
