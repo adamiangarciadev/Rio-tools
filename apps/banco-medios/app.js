@@ -1,8 +1,10 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbyr1LElKiXAgYRsw6b6wXLAt6SZuhlAMlWWD7qAmTarI0ATzuolqfYHlBXthzTuuyhY/exec?accion=videos";
+const API_URL = window.BANCO_MEDIOS_API_URL || "";
+const PAGE_SIZE = 8;
 
 const state = {
   items: [],
   filtered: [],
+  renderedCount: 0,
   q: "",
   local: "ESTADOS/HISTORIAS",
   marca: ""
@@ -15,11 +17,8 @@ const el = {
   local: $("#localFilter"),
   marca: $("#marcaFilter"),
   grid: $("#videoGrid"),
+  sentinel: $("#loadMoreSentinel"),
   total: $("#totalCount"),
-  modal: $("#videoModal"),
-  modalTitle: $("#modalTitle"),
-  modalFrameWrap: $("#modalFrameWrap"),
-  modalClose: $("#modalClose"),
   downloadModal: $("#downloadModal"),
   downloadTitle: $("#downloadTitle"),
   downloadMessage: $("#downloadMessage"),
@@ -30,6 +29,7 @@ const el = {
 };
 
 let activeDownload = null;
+let loadObserver = null;
 
 async function init() {
   bindEvents();
@@ -58,20 +58,8 @@ function bindEvents() {
     });
   }
 
-  if (el.modalClose) {
-    el.modalClose.addEventListener("click", closeModal);
-  }
-
   if (el.downloadClose) {
     el.downloadClose.addEventListener("click", closeDownloadModal);
-  }
-
-  if (el.modal) {
-    el.modal.addEventListener("click", (e) => {
-      if (e.target === el.modal) {
-        closeModal();
-      }
-    });
   }
 
   if (el.downloadModal) {
@@ -86,15 +74,25 @@ function bindEvents() {
     el.copyDownloadLink.addEventListener("click", copyActiveDownloadLink);
   }
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && el.modal && !el.modal.hidden) {
-      closeModal();
-    }
+  if (el.grid) {
+    el.grid.addEventListener("click", (event) => {
+      const link = event.target.closest(".js-download");
+      if (!link) return;
 
+      const item = state.filtered.find(x => String(x.id) === String(link.dataset.id));
+      if (item) {
+        showDownloadHelp(item, link.href);
+      }
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && el.downloadModal && !el.downloadModal.hidden) {
       closeDownloadModal();
     }
   });
+
+  setupLoadMoreObserver();
 }
 
 async function loadData() {
@@ -104,6 +102,16 @@ async function loadData() {
 
   if (el.total) {
     el.total.textContent = "Cargando...";
+  }
+
+  if (!API_URL) {
+    if (el.grid) {
+      el.grid.innerHTML = `<div class="empty">Falta configurar la URL de datos.</div>`;
+    }
+    if (el.total) {
+      el.total.textContent = "0 videos";
+    }
+    return;
   }
 
   try {
@@ -216,6 +224,7 @@ function applyFilters() {
     return matchQ && matchLocal && matchMarca;
   });
 
+  state.renderedCount = 0;
   renderGrid();
 }
 
@@ -226,19 +235,52 @@ function renderGrid() {
 
   if (!el.grid) return;
 
+  state.renderedCount = 0;
+  el.grid.innerHTML = "";
+
   if (!state.filtered.length) {
     el.grid.innerHTML = `<div class="empty">No se encontraron videos.</div>`;
+    setSentinelState(false);
     return;
   }
 
-  el.grid.innerHTML = state.filtered.map(item => {
+  appendNextBatch();
+}
+
+function appendNextBatch() {
+  if (!el.grid) return;
+
+  const start = state.renderedCount;
+  const nextItems = state.filtered.slice(start, start + PAGE_SIZE);
+
+  if (!nextItems.length) {
+    setSentinelState(false);
+    return;
+  }
+
+  el.grid.insertAdjacentHTML("beforeend", nextItems.map(item => {
     const downloadUrl = getDownloadUrl(item);
     const driveUrl = getDriveViewUrl(item);
+    const previewUrl = getPreviewUrl(item);
     const size = formatSize(item.sizeMB);
     const mime = getFriendlyMime(item.mime || item.nombre || "");
 
     return `
     <article class="card">
+      <div class="card-preview">
+        ${previewUrl
+          ? `
+            <iframe
+              src="${escapeHtml(previewUrl)}"
+              title="${escapeHtml(item.nombre || "Vista previa del video")}"
+              loading="lazy"
+              allow="autoplay; fullscreen"
+              allowfullscreen
+              frameborder="0">
+            </iframe>
+          `
+          : `<div class="preview-empty">Sin vista previa</div>`}
+      </div>
       <div class="card-body">
         <h3 class="card-title">${escapeHtml(item.nombre || "")}</h3>
 
@@ -261,9 +303,6 @@ function renderGrid() {
           >
             Descargar al celular
           </a>
-          <button class="btn btn-link" type="button" data-id="${escapeHtml(item.id || "")}">
-            Reproducir
-          </button>
           <a
             class="btn btn-link"
             href="${escapeHtml(driveUrl)}"
@@ -276,25 +315,39 @@ function renderGrid() {
       </div>
     </article>
   `;
-  }).join("");
+  }).join(""));
 
-  el.grid.querySelectorAll("button[data-id]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const item = state.filtered.find(x => String(x.id) === String(btn.dataset.id));
-      if (item) {
-        openModal(item);
+  state.renderedCount += nextItems.length;
+  setSentinelState(state.renderedCount < state.filtered.length);
+}
+
+function setupLoadMoreObserver() {
+  if (!el.sentinel) return;
+
+  if (!("IntersectionObserver" in window)) {
+    window.addEventListener("scroll", () => {
+      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 600;
+      if (nearBottom) appendNextBatch();
+    }, { passive: true });
+    return;
+  }
+
+  loadObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        appendNextBatch();
       }
     });
+  }, {
+    rootMargin: "600px 0px"
   });
 
-  el.grid.querySelectorAll(".js-download").forEach(link => {
-    link.addEventListener("click", (event) => {
-      const item = state.filtered.find(x => String(x.id) === String(link.dataset.id));
-      if (item) {
-        showDownloadHelp(item, link.href);
-      }
-    });
-  });
+  loadObserver.observe(el.sentinel);
+}
+
+function setSentinelState(isActive) {
+  if (!el.sentinel) return;
+  el.sentinel.hidden = !isActive;
 }
 
 function getDriveFileId(itemOrUrl = "") {
@@ -330,6 +383,12 @@ function getDriveViewUrl(item = {}) {
   const fileId = getDriveFileId(item);
   if (fileId) return `https://drive.google.com/file/d/${fileId}/view`;
   return item.url || item.previewUrl || item.downloadUrl || "#";
+}
+
+function getPreviewUrl(item = {}) {
+  const fileId = getDriveFileId(item);
+  if (fileId) return `https://drive.google.com/file/d/${fileId}/preview`;
+  return item.previewUrl || "";
 }
 
 function formatSize(sizeMB) {
@@ -396,43 +455,11 @@ async function copyActiveDownloadLink() {
   }
 }
 
-function openModal(item) {
-  if (!el.modal || !el.modalTitle || !el.modalFrameWrap) return;
-
-  el.modalTitle.textContent = item.nombre || "Video";
-
-  el.modalFrameWrap.innerHTML = item.previewUrl
-    ? `
-      <iframe
-        src="${escapeHtml(item.previewUrl)}"
-        allow="autoplay; fullscreen"
-        allowfullscreen
-        frameborder="0"
-        width="100%"
-        height="100%">
-      </iframe>
-    `
-    : `<div class="empty">Este video no tiene URL de preview.</div>`;
-
-  el.modal.hidden = false;
-  document.body.classList.add("modal-open");
-}
-
-function closeModal() {
-  if (!el.modal || !el.modalFrameWrap) return;
-
-  el.modalFrameWrap.innerHTML = "";
-  el.modal.hidden = true;
-  document.body.classList.remove("modal-open");
-}
-
 function closeDownloadModal() {
   if (!el.downloadModal) return;
 
   el.downloadModal.hidden = true;
-  if (!el.modal || el.modal.hidden) {
-    document.body.classList.remove("modal-open");
-  }
+  document.body.classList.remove("modal-open");
 }
 
 function escapeHtml(str = "") {

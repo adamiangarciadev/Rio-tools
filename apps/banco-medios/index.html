@@ -25,17 +25,8 @@
     </section>
 
     <section id="videoGrid" class="grid"></section>
+    <div id="loadMoreSentinel" class="load-more-sentinel" hidden>Cargando mas videos...</div>
   </main>
-
-  <div id="videoModal" class="modal" hidden>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modalTitle">Video</h2>
-        <button id="modalClose" class="close-btn">Cerrar</button>
-      </div>
-      <div id="modalFrameWrap" class="modal-frame"></div>
-    </div>
-  </div>
 
   <div id="downloadModal" class="modal" hidden>
     <div class="modal-content download-dialog">
@@ -59,6 +50,7 @@
     </div>
   </div>
 
+  <script src="api-config.js"></script>
   <script src="app.js"></script>
   <footer>
     RIO Tools Suite | Plataforma operativa interna 
