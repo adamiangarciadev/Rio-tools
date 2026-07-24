@@ -2,11 +2,11 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import unicodedata
 from pathlib import Path
 
 import pdfplumber
+import pypdfium2 as pdfium
 from pypdf import PdfReader, PdfWriter
 
 ROOT = Path(os.environ.get("GITHUB_WORKSPACE", r"D:\Damian\Rio-tools"))
@@ -15,10 +15,6 @@ DOWNLOADS = APP_ROOT / "downloads"
 PAGE_PDFS = APP_ROOT / "page-pdfs"
 PREVIEWS = APP_ROOT / "previews"
 DESIGNS_JSON = APP_ROOT / "designs.json"
-LOCAL_PDFTOPPM = Path(
-    r"C:\Users\usuario\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\poppler\Library\bin\pdftoppm.exe"
-)
-PDFTOPPM = shutil.which("pdftoppm") or (str(LOCAL_PDFTOPPM) if LOCAL_PDFTOPPM.exists() else "pdftoppm")
 
 PROJECTS = [
     {
@@ -78,15 +74,23 @@ def split_pdf(project: dict) -> list[Path]:
 def render_previews(project: dict) -> list[Path]:
     output_dir = PREVIEWS / project["folder"]
     reset_dir(output_dir)
-    prefix = output_dir / "page"
-    subprocess.run(
-        [str(PDFTOPPM), "-png", "-r", "72", str(project["pdf"]), str(prefix)],
-        check=True,
-    )
-    return sorted(
-        output_dir.glob("*.png"),
-        key=lambda item: int(re.search(r"(\d+)$", item.stem).group(1)),
-    )
+    document = pdfium.PdfDocument(str(project["pdf"]))
+    digits = max(2, len(str(len(document))))
+    preview_files = []
+
+    try:
+        for index in range(len(document)):
+            page = document[index]
+            bitmap = page.render(scale=1)
+            output = output_dir / f"page-{index + 1:0{digits}d}.png"
+            bitmap.to_pil().save(output, format="PNG")
+            preview_files.append(output)
+            bitmap.close()
+            page.close()
+    finally:
+        document.close()
+
+    return preview_files
 
 
 def build_manifest() -> list[dict]:
