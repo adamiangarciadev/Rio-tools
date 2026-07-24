@@ -156,7 +156,7 @@ async function main() {
     if (job.urls.length > 1) {
       console.warn(`  Canva devolvio ${job.urls.length} URLs; se guarda la primera.`);
     }
-    const outputPath = `${outputDir}/${design.fileName}`;
+    const outputPath = new URL(design.fileName, outputDir);
     const bytes = await downloadFile(job.urls[0], outputPath);
     manifest.push({
       title: design.title,
@@ -168,7 +168,7 @@ async function main() {
     console.log(`  guardado: ${outputPath} (${bytes} bytes)`);
   }
 
-  await fs.writeFile(`${outputDir}/manifest.json`, JSON.stringify(manifest, null, 2));
+  await fs.writeFile(new URL("manifest.json", outputDir), JSON.stringify(manifest, null, 2));
 }
 
 main().catch((error) => {
