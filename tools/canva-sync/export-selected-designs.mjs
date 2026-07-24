@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 const baseDir = new URL(".", import.meta.url);
 const envPath = new URL(".env", baseDir);
 const tokenPath = new URL(".canva-token.json", baseDir);
-const outputDir = "D:/Damian/Rio-tools/apps/pedido-carteleria/downloads";
+const outputDir = new URL("../../apps/pedido-carteleria/downloads/", baseDir);
 
 const selectedDesigns = [
   {

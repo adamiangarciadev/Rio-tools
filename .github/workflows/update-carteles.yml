@@ -82,7 +82,25 @@ jobs:
             throw "designs.json no contiene paginas"
           }
 
-          Write-Host "Paginas generadas: $pages"
+          $missingAssets = @(
+            $data |
+              ForEach-Object { $_.items } |
+              ForEach-Object {
+                foreach ($asset in @($_.image, $_.pdf)) {
+                  $assetPath = Join-Path "apps/pedido-carteleria" $asset
+                  if (!(Test-Path -LiteralPath $assetPath -PathType Leaf)) {
+                    $assetPath
+                  }
+                }
+              }
+          )
+
+          if ($missingAssets.Count -gt 0) {
+            $sample = ($missingAssets | Select-Object -First 10) -join "`n"
+            throw "Hay $($missingAssets.Count) assets referenciados que no existen:`n$sample"
+          }
+
+          Write-Host "Paginas generadas: $pages. Todas las imagenes y PDFs fueron validados."
 
       - name: Commit cambios generados
         shell: pwsh
