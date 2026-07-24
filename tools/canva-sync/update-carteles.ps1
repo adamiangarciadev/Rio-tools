@@ -9,6 +9,13 @@ $Python = if (Test-Path $LocalPython) { $LocalPython } else { "python" }
 Set-Location $Root
 
 & $Node "$Root\tools\canva-sync\export-selected-designs.mjs"
+if ($LASTEXITCODE -ne 0) {
+    throw "Fallo la exportacion de los diseños desde Canva (codigo $LASTEXITCODE)."
+}
+
 & $Python "$Root\tools\canva-sync\build-carteles-assets.py"
+if ($LASTEXITCODE -ne 0) {
+    throw "Fallo la generacion del catalogo de carteleria (codigo $LASTEXITCODE)."
+}
 
 Write-Host "Pedido de Carteleria actualizado correctamente."
