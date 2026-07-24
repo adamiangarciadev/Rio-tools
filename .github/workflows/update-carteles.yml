@@ -34,9 +34,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: tools/canva-sync/.canva-token.json
-          key: canva-token-${{ github.run_id }}
+          key: canva-token-v2-${{ github.run_id }}
           restore-keys: |
-            canva-token-
+            canva-token-v2-
 
       - name: Crear credenciales Canva
         shell: pwsh
