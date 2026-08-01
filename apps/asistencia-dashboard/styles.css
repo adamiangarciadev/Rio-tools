@@ -285,6 +285,96 @@ th {
   background: rgba(8, 13, 20, .38);
 }
 
+.seller-dialog {
+  width: min(480px, calc(100% - 28px));
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 12px;
+  color: var(--as-text);
+  background: #111821;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .58);
+}
+
+.seller-dialog::backdrop {
+  background: rgba(3, 7, 12, .78);
+  backdrop-filter: blur(4px);
+}
+
+.seller-dialog__card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.seller-dialog__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.seller-dialog__head h2,
+.seller-dialog__head p {
+  margin: 0;
+}
+
+.seller-dialog__head h2 {
+  font-size: 20px;
+}
+
+.seller-dialog__head p {
+  margin-top: 5px;
+  color: var(--as-muted);
+  font-size: 13px;
+}
+
+.seller-dialog__close {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--as-line);
+  border-radius: 8px;
+  color: var(--as-muted);
+  background: rgba(148, 163, 184, .08);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.seller-dialog__result {
+  min-height: 43px;
+  padding: 11px 12px;
+  border: 1px solid var(--as-line);
+  border-radius: 8px;
+  color: var(--as-muted);
+  background: var(--as-panel-2);
+  font-size: 13px;
+}
+
+.seller-dialog__result.is-found {
+  border-color: rgba(52, 211, 153, .38);
+  color: var(--as-ok);
+  background: rgba(52, 211, 153, .08);
+}
+
+.seller-dialog__result.is-error {
+  border-color: rgba(251, 113, 133, .42);
+  color: var(--as-danger);
+  background: rgba(251, 113, 133, .08);
+}
+
+.seller-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-primary {
+  border-color: rgba(34, 199, 184, .55) !important;
+  color: #031615 !important;
+  background: var(--as-primary) !important;
+}
+
 @media (max-width: 1040px) {
   .filters-panel,
   .kpi-grid,
@@ -314,5 +404,11 @@ th {
 
   .metric {
     text-align: left;
+  }
+
+  .module-topbar__actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 }

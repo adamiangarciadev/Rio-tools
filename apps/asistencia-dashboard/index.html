@@ -25,6 +25,7 @@
       <p>Mes en curso, faltas, llegadas tarde y ultimos 30 dias por empleado</p>
     </div>
     <div class="module-topbar__actions">
+      <button id="downloadSellerNumbersBtn" class="btn btn-primary" type="button">Descargar numeros de vendedora</button>
       <button id="refreshBtn" class="btn" type="button">Actualizar</button>
     </div>
   </header>
@@ -152,7 +153,29 @@
     </section>
   </main>
 
+  <dialog id="sellerNumbersDialog" class="seller-dialog" aria-labelledby="sellerNumbersTitle">
+    <form id="sellerNumbersForm" class="seller-dialog__card">
+      <div class="seller-dialog__head">
+        <div>
+          <h2 id="sellerNumbersTitle">Descargar numeros de vendedora</h2>
+          <p>Ingresa el codigo para preparar la hoja A4.</p>
+        </div>
+        <button id="closeSellerNumbersBtn" class="seller-dialog__close" type="button" aria-label="Cerrar">&times;</button>
+      </div>
+      <label for="sellerCodeInput">
+        Codigo de vendedora
+        <input id="sellerCodeInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Ejemplo: 247" required />
+      </label>
+      <div id="sellerLookupResult" class="seller-dialog__result" aria-live="polite"></div>
+      <div class="seller-dialog__actions">
+        <button id="cancelSellerNumbersBtn" class="btn" type="button">Cancelar</button>
+        <button id="generateSellerNumbersBtn" class="btn btn-primary" type="submit">Descargar PDF</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="api-config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="app.js"></script>
 </body>
 </html>

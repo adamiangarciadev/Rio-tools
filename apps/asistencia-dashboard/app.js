@@ -39,6 +39,14 @@
 
   const el = {
     refreshBtn: $("#refreshBtn"),
+    downloadSellerNumbersBtn: $("#downloadSellerNumbersBtn"),
+    sellerNumbersDialog: $("#sellerNumbersDialog"),
+    sellerNumbersForm: $("#sellerNumbersForm"),
+    sellerCodeInput: $("#sellerCodeInput"),
+    sellerLookupResult: $("#sellerLookupResult"),
+    closeSellerNumbersBtn: $("#closeSellerNumbersBtn"),
+    cancelSellerNumbersBtn: $("#cancelSellerNumbersBtn"),
+    generateSellerNumbersBtn: $("#generateSellerNumbersBtn"),
     periodFilter: $("#periodFilter"),
     monthInput: $("#monthInput"),
     branchFilter: $("#branchFilter"),
@@ -74,6 +82,14 @@
 
   function init() {
     el.refreshBtn.addEventListener("click", loadData);
+    el.downloadSellerNumbersBtn.addEventListener("click", openSellerNumbersDialog);
+    el.closeSellerNumbersBtn.addEventListener("click", closeSellerNumbersDialog);
+    el.cancelSellerNumbersBtn.addEventListener("click", closeSellerNumbersDialog);
+    el.sellerNumbersForm.addEventListener("submit", downloadSellerNumbersPdf);
+    el.sellerCodeInput.addEventListener("input", updateSellerLookup);
+    el.sellerNumbersDialog.addEventListener("click", (event) => {
+      if (event.target === el.sellerNumbersDialog) closeSellerNumbersDialog();
+    });
     el.periodFilter.addEventListener("input", () => {
       updatePeriodControls();
       loadData();
@@ -88,6 +104,158 @@
     el.monthInput.value = currentMonthValue();
     updatePeriodControls();
     loadData();
+  }
+
+  function openSellerNumbersDialog() {
+    el.sellerCodeInput.value = "";
+    setSellerLookupMessage("Escribe un codigo para buscar el nombre.");
+    el.sellerNumbersDialog.showModal();
+    window.setTimeout(() => el.sellerCodeInput.focus(), 0);
+  }
+
+  function closeSellerNumbersDialog() {
+    if (el.sellerNumbersDialog.open) el.sellerNumbersDialog.close();
+  }
+
+  function updateSellerLookup() {
+    const code = clean(el.sellerCodeInput.value);
+    if (!code) {
+      setSellerLookupMessage("Escribe un codigo para buscar el nombre.");
+      return;
+    }
+
+    const seller = findSellerByCode(code);
+    if (!seller) {
+      setSellerLookupMessage("No encontramos ese codigo en el padron.", "error");
+      return;
+    }
+
+    setSellerLookupMessage(seller.vendedorId + " - " + seller.vendedorNombre, "found");
+  }
+
+  function setSellerLookupMessage(message, type = "") {
+    el.sellerLookupResult.textContent = message;
+    el.sellerLookupResult.classList.toggle("is-found", type === "found");
+    el.sellerLookupResult.classList.toggle("is-error", type === "error");
+  }
+
+  function findSellerByCode(code) {
+    const requested = normalizeSellerCode(code);
+    const candidates = state.employees.concat(inferEmployeesFromEvents());
+    return candidates.find((seller) => normalizeSellerCode(seller.vendedorId) === requested) || null;
+  }
+
+  function normalizeSellerCode(value) {
+    const text = clean(value);
+    return /^\d+$/.test(text) ? String(Number(text)) : normalizeText(text);
+  }
+
+  function downloadSellerNumbersPdf(event) {
+    event.preventDefault();
+
+    const code = clean(el.sellerCodeInput.value);
+    const seller = findSellerByCode(code);
+    if (!seller) {
+      setSellerLookupMessage("No encontramos ese codigo en el padron.", "error");
+      el.sellerCodeInput.focus();
+      return;
+    }
+
+    if (!window.jspdf?.jsPDF) {
+      setSellerLookupMessage("No se pudo cargar el generador de PDF. Revisa la conexion e intenta otra vez.", "error");
+      return;
+    }
+
+    el.generateSellerNumbersBtn.disabled = true;
+    el.generateSellerNumbersBtn.textContent = "Preparando...";
+
+    try {
+      const doc = buildSellerNumbersPdf(seller);
+      const safeCode = seller.vendedorId.replace(/[^a-z0-9_-]+/gi, "-");
+      doc.save("numeros-vendedora-" + safeCode + ".pdf");
+      closeSellerNumbersDialog();
+    } catch (error) {
+      console.error(error);
+      setSellerLookupMessage("No se pudo generar el PDF. Intenta nuevamente.", "error");
+    } finally {
+      el.generateSellerNumbersBtn.disabled = false;
+      el.generateSellerNumbersBtn.textContent = "Descargar PDF";
+    }
+  }
+
+  function buildSellerNumbersPdf(seller) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "portrait", unit: "cm", format: "a4" });
+    const cardWidth = 9;
+    const cardHeight = 7;
+    const left = (21 - (cardWidth * 2)) / 2;
+    const top = (29.7 - (cardHeight * 4)) / 2;
+    const cards = [
+      ["PRINCIPAL", [37, 99, 235]],
+      ["LISTA 3", [14, 165, 166]],
+      ["LISTA 3", [14, 165, 166]],
+      ["LISTA 3", [14, 165, 166]],
+      ["LISTA 3", [14, 165, 166]],
+      ["LISTA 1", [249, 115, 22]],
+      ["LISTA 1", [249, 115, 22]],
+      ["LISTA 2", [139, 92, 246]]
+    ];
+
+    cards.forEach(([label, color], index) => {
+      const row = Math.floor(index / 2);
+      const column = index % 2;
+      drawSellerNumberCard(
+        doc,
+        left + (column * cardWidth),
+        top + (row * cardHeight),
+        cardWidth,
+        cardHeight,
+        label,
+        color,
+        seller.vendedorId,
+        seller.vendedorNombre
+      );
+    });
+
+    doc.setProperties({
+      title: "Numeros de vendedora " + seller.vendedorId,
+      subject: seller.vendedorNombre,
+      creator: "RIO - Asistencias"
+    });
+    return doc;
+  }
+
+  function drawSellerNumberCard(doc, x, y, width, height, label, color, code, name) {
+    doc.setDrawColor(139, 150, 165);
+    doc.setLineWidth(.02);
+    doc.setLineDashPattern([.1, .07], 0);
+    doc.rect(x, y, width, height);
+    doc.setLineDashPattern([], 0);
+
+    doc.setFillColor(...color);
+    doc.rect(x + .25, y + .25, width - .5, 1, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text(label, x + (width / 2), y + .91, { align: "center" });
+
+    doc.setTextColor(22, 32, 51);
+    doc.setFontSize(fitPdfTextSize(doc, code, width - 1.2, 61));
+    doc.text(code, x + (width / 2), y + 4.45, { align: "center" });
+
+    doc.setTextColor(102, 117, 138);
+    doc.setFontSize(fitPdfTextSize(doc, name, width - 1, 10));
+    doc.text(name, x + (width / 2), y + 5.3, { align: "center" });
+  }
+
+  function fitPdfTextSize(doc, text, maxWidthCm, preferredSize) {
+    let size = preferredSize;
+    doc.setFontSize(size);
+    while (size > 7 && doc.getTextWidth(text) > maxWidthCm) {
+      size -= 1;
+      doc.setFontSize(size);
+    }
+    return size;
   }
 
   async function loadData() {
