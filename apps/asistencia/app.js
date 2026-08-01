@@ -655,6 +655,150 @@
     input?.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
+  function abrirNumerosVendedora() {
+    const dialog = $("numerosVendedoraDialog");
+    const input = $("codigoNumerosVendedora");
+    if (!dialog || !input) return;
+    input.value = "";
+    setResultadoNumeros("Escribe un codigo para buscar el nombre.");
+    dialog.showModal();
+    setTimeout(() => input.focus(), 0);
+  }
+
+  function cerrarNumerosVendedora() {
+    const dialog = $("numerosVendedoraDialog");
+    if (dialog?.open) dialog.close();
+  }
+
+  function normalizarCodigoVendedora(value) {
+    const text = String(value || "").trim();
+    return /^\d+$/.test(text) ? String(Number(text)) : normalizeSearch(text);
+  }
+
+  function buscarVendedoraParaNumeros(code) {
+    const requested = normalizarCodigoVendedora(code);
+    for (const [id, data] of padronMap.entries()) {
+      if (data?.activo === false) continue;
+      if (normalizarCodigoVendedora(id) === requested) {
+        return { id: String(id), nombre: String(data?.nombre || "").trim() };
+      }
+    }
+    return null;
+  }
+
+  function setResultadoNumeros(message, type = "") {
+    const result = $("resultadoNumerosVendedora");
+    if (!result) return;
+    result.textContent = message;
+    result.classList.toggle("is-found", type === "found");
+    result.classList.toggle("is-error", type === "error");
+  }
+
+  function actualizarBusquedaNumeros() {
+    const code = ($("codigoNumerosVendedora")?.value || "").trim();
+    if (!code) {
+      setResultadoNumeros("Escribe un codigo para buscar el nombre.");
+      return;
+    }
+    const seller = buscarVendedoraParaNumeros(code);
+    if (!seller) {
+      setResultadoNumeros("No encontramos ese codigo en el padron.", "error");
+      return;
+    }
+    setResultadoNumeros(seller.id + " - " + seller.nombre, "found");
+  }
+
+  function descargarNumerosVendedora(event) {
+    event.preventDefault();
+    const input = $("codigoNumerosVendedora");
+    const seller = buscarVendedoraParaNumeros(input?.value || "");
+    if (!seller) {
+      setResultadoNumeros("No encontramos ese codigo en el padron.", "error");
+      input?.focus();
+      return;
+    }
+    if (!window.jspdf?.jsPDF) {
+      setResultadoNumeros("No se pudo cargar el generador de PDF. Revisa la conexion e intenta otra vez.", "error");
+      return;
+    }
+    const button = $("btnDescargarNumeros");
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Preparando...";
+    }
+    try {
+      const doc = crearPdfNumerosVendedora(seller);
+      doc.save("numeros-vendedora-" + safeNamePart(seller.id) + ".pdf");
+      cerrarNumerosVendedora();
+    } catch (error) {
+      console.error(error);
+      setResultadoNumeros("No se pudo generar el PDF. Intenta nuevamente.", "error");
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Descargar PDF";
+      }
+    }
+  }
+
+  function crearPdfNumerosVendedora(seller) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "portrait", unit: "cm", format: "a4" });
+    const cardWidth = 9;
+    const cardHeight = 7;
+    const left = (21 - (cardWidth * 2)) / 2;
+    const top = (29.7 - (cardHeight * 4)) / 2;
+    const cards = [
+      ["PRINCIPAL", [37, 99, 235]],
+      ["LISTA 3", [14, 165, 166]],
+      ["LISTA 3", [14, 165, 166]],
+      ["LISTA 3", [14, 165, 166]],
+      ["LISTA 3", [14, 165, 166]],
+      ["LISTA 1", [249, 115, 22]],
+      ["LISTA 1", [249, 115, 22]],
+      ["LISTA 2", [139, 92, 246]]
+    ];
+    cards.forEach(([label, color], index) => {
+      dibujarCartelVendedora(doc, left + ((index % 2) * cardWidth), top + (Math.floor(index / 2) * cardHeight), cardWidth, cardHeight, label, color, seller.id, seller.nombre);
+    });
+    doc.setProperties({
+      title: "Numeros de vendedora " + seller.id,
+      subject: seller.nombre,
+      creator: "RIO - Asistencia Personal"
+    });
+    return doc;
+  }
+
+  function dibujarCartelVendedora(doc, x, y, width, height, label, color, code, name) {
+    doc.setDrawColor(139, 150, 165);
+    doc.setLineWidth(.02);
+    doc.setLineDashPattern([.1, .07], 0);
+    doc.rect(x, y, width, height);
+    doc.setLineDashPattern([], 0);
+    doc.setFillColor(...color);
+    doc.rect(x + .25, y + .25, width - .5, 1, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text(label, x + (width / 2), y + .91, { align: "center" });
+    doc.setTextColor(22, 32, 51);
+    doc.setFontSize(ajustarTextoPdf(doc, code, width - 1.2, 61));
+    doc.text(code, x + (width / 2), y + 4.45, { align: "center" });
+    doc.setTextColor(102, 117, 138);
+    doc.setFontSize(ajustarTextoPdf(doc, name, width - 1, 10));
+    doc.text(name, x + (width / 2), y + 5.3, { align: "center" });
+  }
+
+  function ajustarTextoPdf(doc, text, maxWidthCm, preferredSize) {
+    let size = preferredSize;
+    doc.setFontSize(size);
+    while (size > 7 && doc.getTextWidth(text) > maxWidthCm) {
+      size -= 1;
+      doc.setFontSize(size);
+    }
+    return size;
+  }
+
   function _setVendedorUI_OK(nombre, originText = "OK en padrón") {
     $("vendedorNombre").textContent = nombre || "—";
     $("padronHint").textContent = originText;
@@ -831,6 +975,14 @@
     $("btnBuscar")?.addEventListener("click", buscarVendedor);
     $("btnGuardar")?.addEventListener("click", guardar);
     $("btnLimpiar")?.addEventListener("click", () => clearForm(true));
+    $("btnNumerosVendedora")?.addEventListener("click", abrirNumerosVendedora);
+    $("btnCerrarNumeros")?.addEventListener("click", cerrarNumerosVendedora);
+    $("btnCancelarNumeros")?.addEventListener("click", cerrarNumerosVendedora);
+    $("numerosVendedoraForm")?.addEventListener("submit", descargarNumerosVendedora);
+    $("codigoNumerosVendedora")?.addEventListener("input", actualizarBusquedaNumeros);
+    $("numerosVendedoraDialog")?.addEventListener("click", (event) => {
+      if (event.target === $("numerosVendedoraDialog")) cerrarNumerosVendedora();
+    });
 
     // ✅ Enter SOLO busca (eliminado el segundo Enter para guardar)
     $("vendedorId")?.addEventListener("keydown", async (e) => {

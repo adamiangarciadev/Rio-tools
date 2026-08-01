@@ -23,7 +23,9 @@
       <div class="brand">RIO Tools Suite</div>
       <div class="subtitle">Asistencia de Personal</div>
     </div>
-    <div class="module-topbar__spacer"></div>
+    <div class="module-topbar__actions">
+      <button id="btnNumerosVendedora" class="btn primary" type="button">Descargar numeros de vendedora</button>
+    </div>
   </header>
 
   <main class="container asistencia-layout">
@@ -134,6 +136,28 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <dialog id="numerosVendedoraDialog" class="numbers-dialog" aria-labelledby="numerosVendedoraTitle">
+    <form id="numerosVendedoraForm" class="numbers-dialog__card">
+      <div class="numbers-dialog__head">
+        <div>
+          <h2 id="numerosVendedoraTitle">Descargar numeros de vendedora</h2>
+          <p>Ingresa el codigo para preparar la hoja A4.</p>
+        </div>
+        <button id="btnCerrarNumeros" class="numbers-dialog__close" type="button" aria-label="Cerrar">&times;</button>
+      </div>
+      <label class="numbers-dialog__label" for="codigoNumerosVendedora">
+        Codigo de vendedora
+        <input id="codigoNumerosVendedora" class="input" type="text" inputmode="numeric" autocomplete="off" placeholder="Ejemplo: 247" required />
+      </label>
+      <div id="resultadoNumerosVendedora" class="numbers-dialog__result" aria-live="polite"></div>
+      <div class="numbers-dialog__actions">
+        <button id="btnCancelarNumeros" class="btn" type="button">Cancelar</button>
+        <button id="btnDescargarNumeros" class="btn primary" type="submit">Descargar PDF</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="./app.js"></script>
   <footer>
     RIO Tools Suite | Plataforma operativa interna
