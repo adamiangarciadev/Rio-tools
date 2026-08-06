@@ -36,7 +36,10 @@ jobs:
             --exclude='tmp/' \
             --exclude='output/' \
             --exclude='outputs/' \
-            --exclude='apps/ventas-clientes/ventas_csv/*.csv'
+            --exclude='apps/ventas-clientes/ventas_csv/' \
+            --exclude='apps/pedido-carteleria/downloads/' \
+            --exclude='apps/pedido-carteleria/page-pdfs/' \
+            --exclude='apps/pedido-carteleria/previews/'
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
