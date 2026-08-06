@@ -3,3 +3,10 @@ tools/canva-sync/.canva-token.json
 tools/canva-sync/canva-designs.json
 tools/canva-sync/canva-project-rows.json
 tools/canva-sync/canva-page-rows.json
+tmp/pdfs/znube-fichajes-2026-08-06.pdf
+apps/ventas-clientes/__pycache__/build_report_json.cpython-312.pyc
+tmp/pdfs/znube-page-2.png
+tools/auto-print-drive/__pycache__/monitor_drive_print.cpython-312.pyc
+/tools/auto-print-drive
+tmp/pdfs/znube-page-1.png
+tmp/pdfs/znube-page-3.png
