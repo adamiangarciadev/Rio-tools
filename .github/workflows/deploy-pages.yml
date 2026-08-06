@@ -25,10 +25,23 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: Prepare lightweight site artifact
+        run: |
+          mkdir -p .pages
+          rsync -a ./ .pages/ \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.pages/' \
+            --exclude='tools/' \
+            --exclude='tmp/' \
+            --exclude='output/' \
+            --exclude='outputs/' \
+            --exclude='apps/ventas-clientes/ventas_csv/*.csv'
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: .pages
 
   deploy:
     environment:
@@ -41,6 +54,6 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
         with:
-          timeout: 1800000
+          timeout: 600000
           error_count: 30
           reporting_interval: 10000
