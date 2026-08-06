@@ -279,6 +279,7 @@ function getClientesRango_(e) {
         email: finalized.email,
         segmento: finalized.segmento,
         fecha: item.fecha,
+        comprobante: item.comprobante || "",
         sucursal: item.sucursal,
         listaPrecio: item.listaPrecio,
         total: item.total
@@ -372,6 +373,7 @@ function exportarDatos_(e) {
         email: finalized.email,
         segmento: finalized.segmento,
         fecha: item.fecha,
+        comprobante: item.comprobante || "",
         sucursal: item.sucursal,
         listaPrecio: item.listaPrecio,
         total: item.total
@@ -457,6 +459,7 @@ function exportarSeleccion_(e) {
         email: finalized.email,
         segmento: finalized.segmento,
         fecha: item.fecha,
+        comprobante: item.comprobante || "",
         sucursal: item.sucursal,
         listaPrecio: item.listaPrecio,
         total: item.total
@@ -497,6 +500,7 @@ function mergeCsvFileIntoStore_(store, file, fileId, fileName) {
     clienteId: header.indexOf("cliente"),
     clienteNombre: header.indexOf("cliente descripcion"),
     fecha: header.indexOf("fecha"),
+    comprobante: findHeaderIndex_(header, ["comprobante", "nro comprobante", "numero comprobante", "numero de comprobante"]),
     listaPrecio: header.indexOf("lista de precio"),
     telefono: header.indexOf("telefono"),
     telefonoMovil: header.indexOf("telefono movil"),
@@ -505,6 +509,7 @@ function mergeCsvFileIntoStore_(store, file, fileId, fileName) {
   };
 
   Object.keys(idx).forEach(function(key) {
+    if (key === "comprobante") return;
     if (idx[key] < 0) throw new Error("Falta columna requerida: " + key);
   });
 
@@ -533,6 +538,7 @@ function mergeCsvFileIntoStore_(store, file, fileId, fileName) {
       clienteId: clienteId,
       clienteNombre: clienteNombre,
       fecha: Utilities.formatDate(fecha, TIMEZONE, "yyyy-MM-dd"),
+      comprobante: idx.comprobante >= 0 ? cleanStr(row[idx.comprobante]) : "",
       listaPrecio: cleanStr(row[idx.listaPrecio]),
       telefono: cleanStr(row[idx.telefono]),
       telefonoMovil: cleanStr(row[idx.telefonoMovil]),
@@ -576,11 +582,12 @@ function mergeSaleIntoStore_(store, sale) {
   client.sucursales[sale.sucursal] = (client.sucursales[sale.sucursal] || 0) + sale.total;
   if (sale.listaPrecio) client.listas[sale.listaPrecio] = true;
 
-  const compraKey = [sale.fecha, sale.sucursal, sale.listaPrecio || "-"].join("|");
+  const compraKey = [sale.fecha, sale.sucursal, sale.listaPrecio || "-", sale.comprobante || "-"].join("|");
   if (!client.compras[compraKey]) {
     client.compras[compraKey] = {
       clienteId: sale.clienteId,
       fecha: sale.fecha,
+      comprobante: sale.comprobante,
       sucursal: sale.sucursal,
       listaPrecio: sale.listaPrecio,
       telefono: sale.telefono,
@@ -699,6 +706,7 @@ function buildClientPurchases_(client) {
       clienteId: item.clienteId,
       sucursal: item.sucursal,
       fecha: item.fecha,
+      comprobante: item.comprobante || "",
       listaPrecio: item.listaPrecio,
       telefono: item.telefono,
       telefonoMovil: item.telefonoMovil,
@@ -866,6 +874,14 @@ function normalizeHeader_(value) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+function findHeaderIndex_(header, names) {
+  for (let i = 0; i < names.length; i++) {
+    const idx = header.indexOf(names[i]);
+    if (idx >= 0) return idx;
+  }
+  return -1;
 }
 
 function isClienteDescartado_(clienteId, clienteNombre) {

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d12">
+  <title>Incidentes · RIO Tools</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../../assets/rio-theme.css">
+</head>
+<body>
+  <header class="topbar module-topbar">
+    <div class="module-topbar__title">
+      <h1>Centro de incidentes</h1>
+      <p>Reportá un problema y seguí su resolución</p>
+    </div>
+    <div class="module-topbar__actions">
+      <span id="connectionBadge" class="connection-badge">Modo local</span>
+      <label class="topbar-branch" for="branch">
+        <span>Sucursal</span>
+        <select id="branch" form="incidentForm" required aria-label="Sucursal"></select>
+      </label>
+      <button id="newTicketTop" class="btn btn-primary" type="button">+ Nuevo incidente</button>
+    </div>
+  </header>
+
+  <main class="app-container">
+    <section class="welcome-row">
+      <div>
+        <p class="eyebrow">RIO · SOPORTE INTERNO</p>
+        <h2>¿Qué necesitás resolver?</h2>
+        <p>Registrá el problema con toda la información posible. El equipo responsable podrá darle seguimiento.</p>
+      </div>
+    </section>
+
+    <section class="workspace-grid">
+      <section class="panel form-panel" id="formPanel">
+        <div class="section-heading">
+          <div><p class="eyebrow">NUEVO REPORTE</p><h2>Crear incidente</h2></div>
+          <button id="closeForm" class="icon-button mobile-only" type="button" aria-label="Cerrar">×</button>
+        </div>
+
+        <div class="quick-actions" aria-label="Tipos de incidente">
+          <button class="quick-action active" type="button" data-mode="general"><span>＋</span><strong>Incidente general</strong><small>Cualquier problema</small></button>
+          <button class="quick-action" type="button" data-mode="labels"><span>🏷</span><strong>Reetiquetado</strong><small>Baja + etiquetas</small></button>
+          <button class="quick-action" type="button" data-mode="negative"><span>−</span><strong>Stock negativo</strong><small>Artículo y variante</small></button>
+        </div>
+
+        <form id="incidentForm" novalidate>
+          <div class="form-grid">
+            <label class="field field--full">
+              <span>Código de colaborador <b>*</b></span>
+              <input id="reporterCode" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Ej: 247" required>
+            </label>
+          </div>
+
+          <section id="labelsWorkflow" class="workflow-panel" hidden>
+            <div class="workflow-note"><strong>Pedido de etiquetas</strong><span>La baja es opcional. Si ingresás códigos actuales, se generará además un incidente de baja vinculado.</span></div>
+            <label class="field field--full">
+              <span>Códigos a dar de baja <em>Opcional</em></span>
+              <textarea id="labelBajas" rows="4" placeholder="Pickeá o pegá acá todos los códigos actuales"></textarea>
+              <small id="labelBajasCount">0 códigos únicos detectados</small>
+            </label>
+            <div class="variant-picker">
+              <label class="field"><span>Buscar artículo</span><input id="labelArticleSearch" placeholder="Ej: 401 o 29-4"></label>
+              <label class="field"><span>Artículo <b>*</b></span><select id="labelArticle"><option value="">Cargando equivalencias…</option></select></label>
+              <label class="field"><span>Color <b>*</b></span><select id="labelColor" disabled><option value="">Elegir artículo</option></select></label>
+              <label class="field"><span>Talle <b>*</b></span><select id="labelSize" disabled><option value="">Elegir color</option></select></label>
+              <label class="field"><span>Cantidad</span><input id="labelQuantity" type="number" min="1" max="999" value="1"></label>
+              <button id="addLabelItem" class="btn btn-secondary variant-add" type="button">Agregar etiqueta</button>
+            </div>
+            <div id="labelItems" class="workflow-items"></div>
+            <p id="equivalenceStatus" class="equivalence-status">Cargando equivalencias…</p>
+          </section>
+
+          <section id="negativeWorkflow" class="workflow-panel" hidden>
+            <div class="workflow-note"><strong>Informar stock negativo</strong><span>Elegí una combinación válida para identificar el código exacto.</span></div>
+            <div class="variant-picker variant-picker--negative">
+              <label class="field"><span>Buscar artículo</span><input id="negativeArticleSearch" placeholder="Ej: 401 o 29-4"></label>
+              <label class="field"><span>Artículo <b>*</b></span><select id="negativeArticle"><option value="">Cargando equivalencias…</option></select></label>
+              <label class="field"><span>Color <b>*</b></span><select id="negativeColor" disabled><option value="">Elegir artículo</option></select></label>
+              <label class="field"><span>Talle <b>*</b></span><select id="negativeSize" disabled><option value="">Elegir color</option></select></label>
+              <label class="field"><span>Stock que muestra el sistema</span><input id="negativeStock" type="number" max="-1" value="-1"></label>
+            </div>
+            <div id="negativeMatch" class="match-result">Seleccioná artículo, color y talle.</div>
+          </section>
+
+          <div id="generalFields" class="form-grid workflow-general">
+            <label class="field">
+              <span>Área responsable <b>*</b></span>
+              <select id="area" required>
+                <option value="">Seleccionar área</option>
+                <option>Sistemas</option>
+                <option>Stock</option>
+                <option>Precios</option>
+                <option>Logística</option>
+                <option>Pantalla</option>
+                <option>Depósitos</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Prioridad <b>*</b></span>
+              <select id="priority" required>
+                <option value="Media">Media · dificulta el trabajo</option>
+                <option value="Baja">Baja · puede esperar</option>
+                <option value="Alta">Alta · impide trabajar</option>
+                <option value="Crítica">Crítica · operación detenida o riesgo</option>
+              </select>
+            </label>
+            <label class="field field--full">
+              <span>Título breve <b>*</b></span>
+              <input id="title" maxlength="100" placeholder="Ej: El artículo 12345 figura con stock negativo" required>
+              <small><span id="titleCount">0</span>/100</small>
+            </label>
+            <label class="field field--full">
+              <span>Descripción del problema <b>*</b></span>
+              <textarea id="description" rows="6" maxlength="2000" placeholder="Contanos qué pasó, desde cuándo, qué estabas intentando hacer y cualquier mensaje de error que aparezca." required></textarea>
+              <small><span id="descriptionCount">0</span>/2000 · No incluyas contraseñas ni datos sensibles.</small>
+            </label>
+            <div class="field field--full">
+              <span>Archivos adjuntos <em>Opcional</em></span>
+              <label id="dropZone" class="drop-zone" for="attachments">
+                <input id="attachments" type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" multiple hidden>
+                <span class="upload-icon">↑</span>
+                <strong>Arrastrá archivos o hacé clic para elegir</strong>
+                <small>Imágenes, videos, PDF y documentos · máx. 10 MB por archivo</small>
+              </label>
+              <div id="attachmentList" class="attachment-list"></div>
+            </div>
+          </div>
+          <div id="formMessage" class="form-message" role="status"></div>
+          <div class="form-actions">
+            <button id="clearForm" class="btn btn-secondary" type="button">Limpiar</button>
+            <button id="submitTicket" class="btn btn-primary" type="submit">Crear incidente</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel list-panel">
+        <div class="section-heading list-heading">
+          <div><p class="eyebrow">SEGUIMIENTO</p><h2>Incidentes registrados</h2></div>
+          <button id="refreshTickets" class="icon-button" type="button" title="Actualizar">↻</button>
+        </div>
+        <div class="filters">
+          <label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="Buscar por número, título o código"></label>
+          <select id="statusFilter" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option>Abierto</option><option>En proceso</option><option>Resuelto</option><option>Cerrado</option><option>Rechazado</option></select>
+          <select id="areaFilter" aria-label="Filtrar por área"><option value="">Todas las áreas</option></select>
+        </div>
+        <div id="ticketList" class="ticket-list"></div>
+        <div id="emptyState" class="empty-state" hidden><span>✓</span><h3>No hay incidentes para mostrar</h3><p>Probá cambiando los filtros o creá un nuevo reporte.</p></div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="detailDialog" class="detail-dialog">
+    <button id="closeDetail" class="dialog-close" type="button" aria-label="Cerrar">×</button>
+    <div id="detailContent"></div>
+  </dialog>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="api-config.js"></script>
+  <script src="app.js"></script>
+  <script src="../../assets/rio-report-problem.js"></script>
+</body>
+</html>

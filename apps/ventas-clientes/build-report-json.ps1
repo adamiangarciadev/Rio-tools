@@ -62,6 +62,15 @@ function Normalize-Header {
   })
 }
 
+function Find-HeaderIndex {
+  param([array]$Headers, [array]$Names)
+  foreach ($name in $Names) {
+    $idx = [array]::IndexOf($Headers, $name)
+    if ($idx -ge 0) { return $idx }
+  }
+  return -1
+}
+
 function Normalize-Key {
   param([string]$Value)
   if ($null -eq $Value) { $Value = "" }
@@ -199,6 +208,7 @@ function Process-CsvFile {
       clienteId = [array]::IndexOf($headers, "cliente")
       clienteNombre = [array]::IndexOf($headers, "cliente descripcion")
       fecha = [array]::IndexOf($headers, "fecha")
+      comprobante = Find-HeaderIndex -Headers $headers -Names @("comprobante", "nro comprobante", "numero comprobante", "numero de comprobante")
       listaPrecio = [array]::IndexOf($headers, "lista de precio")
       telefono = [array]::IndexOf($headers, "telefono")
       telefonoMovil = [array]::IndexOf($headers, "telefono movil")
@@ -207,6 +217,7 @@ function Process-CsvFile {
     }
 
     foreach ($key in $idx.Keys) {
+      if ($key -eq "comprobante") { continue }
       if ($idx[$key] -lt 0) { throw "Falta columna requerida: $key" }
     }
 
@@ -230,6 +241,7 @@ function Process-CsvFile {
         $fecha = $fechaDt.ToString("yyyy-MM-dd")
         $periodo = $fechaDt.ToString("yyyy-MM")
         $total = Parse-Amount $row[$idx.total]
+        $comprobante = if ($idx.comprobante -ge 0) { $row[$idx.comprobante].Trim() } else { "" }
         $lista = $row[$idx.listaPrecio].Trim()
         $telefono = $row[$idx.telefono].Trim()
         $telefonoMovil = $row[$idx.telefonoMovil].Trim()
@@ -262,11 +274,12 @@ function Process-CsvFile {
         $client.sucursales[$sucursal] = (Get-MapNumber $client.sucursales $sucursal) + $total
         if ($lista) { $client.listas[$lista] = $true }
 
-        $compraKey = "$fecha|$sucursal|$(if ($lista) { $lista } else { '-' })"
+        $compraKey = "$fecha|$sucursal|$(if ($lista) { $lista } else { '-' })|$(if ($comprobante) { $comprobante } else { '-' })"
         if (-not $client.compras.ContainsKey($compraKey)) {
           $client.compras[$compraKey] = [ordered]@{
             clienteId = $clienteId
             fecha = $fecha
+            comprobante = $comprobante
             sucursal = $sucursal
             listaPrecio = $lista
             telefono = $telefono

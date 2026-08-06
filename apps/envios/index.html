@@ -87,7 +87,15 @@
           </label>
 
           <label>DNI o CUIL
-            <input id="dniCuil" name="dniCuil" required />
+            <input
+              id="dniCuil"
+              name="dniCuil"
+              inputmode="numeric"
+              autocomplete="off"
+              aria-describedby="dniCuilAyuda"
+              required
+            />
+            <span id="dniCuilAyuda" class="hint">Si ya tuvo un envío, completamos sus datos automáticamente.</span>
           </label>
 
           <label class="full field-domicilio">Domicilio completo
@@ -241,5 +249,6 @@
   </footer>
 
   <script src="app.js?v=33"></script>
+  <script src="../../assets/rio-report-problem.js"></script>
 </body>
 </html>

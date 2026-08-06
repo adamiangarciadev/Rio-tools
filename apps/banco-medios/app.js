@@ -17,7 +17,9 @@ const el = {
   local: $("#localFilter"),
   marca: $("#marcaFilter"),
   grid: $("#videoGrid"),
-  sentinel: $("#loadMoreSentinel"),
+  loadMoreWrap: $("#loadMoreWrap"),
+  loadMore: $("#loadMoreVideos"),
+  refresh: $("#refreshVideos"),
   total: $("#totalCount"),
   downloadModal: $("#downloadModal"),
   downloadTitle: $("#downloadTitle"),
@@ -29,7 +31,6 @@ const el = {
 };
 
 let activeDownload = null;
-let loadObserver = null;
 
 async function init() {
   bindEvents();
@@ -74,6 +75,16 @@ function bindEvents() {
     el.copyDownloadLink.addEventListener("click", copyActiveDownloadLink);
   }
 
+  if (el.loadMore) {
+    el.loadMore.addEventListener("click", appendNextBatch);
+  }
+
+  if (el.refresh) {
+    el.refresh.addEventListener("click", () => {
+      loadData({ refresh: true });
+    });
+  }
+
   if (el.grid) {
     el.grid.addEventListener("click", (event) => {
       const link = event.target.closest(".js-download");
@@ -91,11 +102,11 @@ function bindEvents() {
       closeDownloadModal();
     }
   });
-
-  setupLoadMoreObserver();
 }
 
-async function loadData() {
+async function loadData(options = {}) {
+  const refresh = Boolean(options.refresh);
+
   if (el.grid) {
     el.grid.innerHTML = `<div class="empty">Cargando videos...</div>`;
   }
@@ -103,6 +114,8 @@ async function loadData() {
   if (el.total) {
     el.total.textContent = "Cargando...";
   }
+
+  setLoadMoreState(false);
 
   if (!API_URL) {
     if (el.grid) {
@@ -115,7 +128,8 @@ async function loadData() {
   }
 
   try {
-    const res = await fetch(API_URL, { method: "GET" });
+    const url = refresh ? withQueryParam(API_URL, "refresh", "1") : API_URL;
+    const res = await fetch(url, { method: "GET" });
     const data = await res.json();
 
     if (!data.ok) {
@@ -240,7 +254,7 @@ function renderGrid() {
 
   if (!state.filtered.length) {
     el.grid.innerHTML = `<div class="empty">No se encontraron videos.</div>`;
-    setSentinelState(false);
+    setLoadMoreState(false);
     return;
   }
 
@@ -254,7 +268,7 @@ function appendNextBatch() {
   const nextItems = state.filtered.slice(start, start + PAGE_SIZE);
 
   if (!nextItems.length) {
-    setSentinelState(false);
+    setLoadMoreState(false);
     return;
   }
 
@@ -318,36 +332,32 @@ function appendNextBatch() {
   }).join(""));
 
   state.renderedCount += nextItems.length;
-  setSentinelState(state.renderedCount < state.filtered.length);
+  setLoadMoreState(state.renderedCount < state.filtered.length);
 }
 
-function setupLoadMoreObserver() {
-  if (!el.sentinel) return;
+function setLoadMoreState(isActive) {
+  if (!el.loadMoreWrap) return;
 
-  if (!("IntersectionObserver" in window)) {
-    window.addEventListener("scroll", () => {
-      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 600;
-      if (nearBottom) appendNextBatch();
-    }, { passive: true });
-    return;
+  el.loadMoreWrap.hidden = !isActive;
+
+  if (el.loadMore) {
+    const remaining = Math.max(state.filtered.length - state.renderedCount, 0);
+    const nextCount = Math.min(PAGE_SIZE, remaining);
+    el.loadMore.textContent = nextCount
+      ? `Cargar ${nextCount} videos mas`
+      : "No hay mas videos";
   }
-
-  loadObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        appendNextBatch();
-      }
-    });
-  }, {
-    rootMargin: "600px 0px"
-  });
-
-  loadObserver.observe(el.sentinel);
 }
 
-function setSentinelState(isActive) {
-  if (!el.sentinel) return;
-  el.sentinel.hidden = !isActive;
+function withQueryParam(url, key, value) {
+  try {
+    const nextUrl = new URL(url);
+    nextUrl.searchParams.set(key, value);
+    return nextUrl.toString();
+  } catch (error) {
+    const separator = String(url).includes("?") ? "&" : "?";
+    return `${url}${separator}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+  }
 }
 
 function getDriveFileId(itemOrUrl = "") {

@@ -45,6 +45,14 @@ body{
   font-weight:700;
 }
 
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
 .filters{
   display:grid;
   grid-template-columns:2fr 1fr 1fr;
@@ -183,15 +191,13 @@ body{
   color:var(--muted);
 }
 
-.load-more-sentinel{
+.load-more-wrap{
   margin:20px 0 4px;
   padding:16px;
   text-align:center;
-  color:var(--muted);
-  font-size:13px;
 }
 
-.load-more-sentinel[hidden]{
+.load-more-wrap[hidden]{
   display:none !important;
 }
 

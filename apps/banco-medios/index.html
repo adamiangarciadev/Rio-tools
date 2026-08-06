@@ -15,7 +15,10 @@
         <h1>Contenido para Redes/Pantallas/Estados</h1>
         <p>Videos para descargar al celular y publicar en estados, pantallas o redes.</p>
       </div>
-      <div id="totalCount" class="total module-topbar__actions">0 videos</div>
+      <div class="module-topbar__actions topbar-actions">
+        <div id="totalCount" class="total">0 videos</div>
+        <button id="refreshVideos" class="btn btn-link" type="button">Actualizar lista</button>
+      </div>
     </header>
 
     <section class="filters">
@@ -25,7 +28,9 @@
     </section>
 
     <section id="videoGrid" class="grid"></section>
-    <div id="loadMoreSentinel" class="load-more-sentinel" hidden>Cargando mas videos...</div>
+    <div id="loadMoreWrap" class="load-more-wrap" hidden>
+      <button id="loadMoreVideos" class="btn btn-link" type="button">Cargar mas videos</button>
+    </div>
   </main>
 
   <div id="downloadModal" class="modal" hidden>
@@ -55,6 +60,7 @@
   <footer>
     RIO Tools Suite | Plataforma operativa interna 
   </footer>
+  <script src="../../assets/rio-report-problem.js"></script>
 </body>
  
 </html>
