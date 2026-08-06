@@ -6,7 +6,7 @@
 
   // 👉 URL de tu Apps Script (Aplicación web, termina en /exec)
   const SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbwKpTPkHbXiojgHTi_GEV2R93uzewUNIO7R_w8khh8szSBsO0ITvADB1Gm1hwrWF_-M/exec";
+    'https://script.google.com/macros/s/AKfycbzGKHbA-H474RmyjTCd9CXrY6Tw0LpM-1K3UHDTBQiSFX6scwLoq9a5zyUE-zWIeBAB/exec';
 
   // Clave para guardar la sucursal elegida en el navegador
   const LS_SUCURSAL = "rio_sucursal_web";

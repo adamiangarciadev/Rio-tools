@@ -374,7 +374,7 @@ function _listarPedidosSucursal(sucursal, tipoEnvioFiltro) {
     const estado = String(row[idx["ESTADO"]] || "").toUpperCase();
     const tipo   = String(row[idx["TIPO_ENVIO"]] || "").toUpperCase();
 
-    const okSucursal = isWeb ? true : (suc === sucursal);
+    const okSucursal = isWeb ? true : _sucursalCoincide_(suc, sucursal);
     const okEstado = isWeb ? true : (estado !== "RETIRADO" && estado !== "CANCELADO");
     const okTipo = (!tipoEnvioFiltro || tipo === tipoEnvioFiltro);
 
@@ -384,6 +384,17 @@ function _listarPedidosSucursal(sucursal, tipoEnvioFiltro) {
   });
 
   return _jsonOk({ pedidos: result });
+}
+
+function _sucursalesEquivalentes_(sucursal) {
+  const s = String(sucursal || "").toUpperCase().trim();
+  if (s === "CORRIENTES") return ["CORRIENTES", "SARMIENTO"];
+  return [s];
+}
+
+function _sucursalCoincide_(sucursalHoja, sucursalFiltro) {
+  const sucHoja = String(sucursalHoja || "").toUpperCase().trim();
+  return _sucursalesEquivalentes_(sucursalFiltro).includes(sucHoja);
 }
 
 // ================== GET webtodo ==================
@@ -425,6 +436,7 @@ function _rowToPedido_(row, idx, i) {
   return {
     fila: i + 2,
     id_pedido: row[idx["ID_PEDIDO"]] || "",
+    fecha_venta: row[idx["FECHA_VENTA"]] || "",
     cliente: row[idx["CLIENTE"]] || "",
     dni: row[idx["DNI"]] || "",
     monto: row[idx["MONTO"]] || "",
@@ -438,11 +450,26 @@ function _rowToPedido_(row, idx, i) {
     fecha_ingreso_sucursal: row[idx["FECHA_INGRESO_SUCURSAL"]] || "",
     fecha_retiro: row[idx["FECHA_RETIRO"]] || "",
     alerta_36hs: row[idx["ALERTA_36HS"]] || "",
-    quien_registra: row[idx["QUIEN_REGISTRA"]] || ""
+    quien_registra: row[idx["QUIEN_REGISTRA"]] || "",
+    ultima_edicion: idx["ULTIMA_EDICION"] != null ? row[idx["ULTIMA_EDICION"]] || "" : ""
   };
 }
 
 // ================== POST endpoints + auditoría ==================
+
+function _ensureHeader_(sh, headerName) {
+  const lastCol = sh.getLastColumn();
+  const headers = sh
+    .getRange(1, 1, 1, lastCol)
+    .getValues()[0]
+    .map(h => String(h).trim());
+
+  const existing = headers.indexOf(headerName);
+  if (existing >= 0) return existing;
+
+  sh.getRange(1, lastCol + 1).setValue(headerName);
+  return lastCol;
+}
 
 function _marcarRecibido(data) {
   const sh       = _getSheet_();
@@ -462,7 +489,7 @@ function _marcarRecibido(data) {
     const idHoja  = String(row[idx["ID_PEDIDO"]] || "").trim();
     const sucHoja = String(row[idx["SUCURSAL_RETIRO"]] || "").toUpperCase();
 
-    if (idHoja === idPedido && sucHoja === sucursal) {
+    if (idHoja === idPedido && _sucursalCoincide_(sucHoja, sucursal)) {
       const fila = i + 1;
       const now  = new Date();
 
@@ -510,7 +537,7 @@ function _marcarRetirado(data) {
     const idHoja  = String(row[idx["ID_PEDIDO"]] || "").trim();
     const sucHoja = String(row[idx["SUCURSAL_RETIRO"]] || "").toUpperCase();
 
-    if (idHoja === idPedido && sucHoja === sucursal) {
+    if (idHoja === idPedido && _sucursalCoincide_(sucHoja, sucursal)) {
       const fila = i + 1;
       const now  = new Date();
 
@@ -565,7 +592,7 @@ function _cambiarEstado(data) {
     const idHoja  = String(row[idx["ID_PEDIDO"]] || "").trim();
     const sucHoja = String(row[idx["SUCURSAL_RETIRO"]] || "").toUpperCase();
 
-    if (idHoja === idPedido && sucHoja === sucursal) {
+    if (idHoja === idPedido && _sucursalCoincide_(sucHoja, sucursal)) {
       const fila = i + 1;
 
       const estadoAntes = String(row[idx["ESTADO"]] || "").toUpperCase().trim();
@@ -575,6 +602,9 @@ function _cambiarEstado(data) {
       if (usuario && idx["QUIEN_REGISTRA"] != null) {
         sh.getRange(fila, idx["QUIEN_REGISTRA"] + 1).setValue(usuario);
       }
+
+      const ultimaEdicionCol = _ensureHeader_(sh, "ULTIMA_EDICION");
+      sh.getRange(fila, ultimaEdicionCol + 1).setValue(new Date());
 
       _logCambioEstado_({
         accion: "cambiarEstado",

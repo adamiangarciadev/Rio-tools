@@ -1,10 +1,10 @@
-/******************************************************
+﻿/******************************************************
  * BAJADA + API PEDIDOS (TIENDANUBE -> SHEETS)
  *
  * - Importa pedidos desde Gmail (Tiendanube)
  * - Evita duplicados por CANAL + ID_PEDIDO
  * - Marca threads procesados con label
- * - Resuelve Shipnow => ENVIO A DOMICILIO + "ENVÍO SHIPNOW"
+ * - Resuelve Shipnow => ENVIO A DOMICILIO + "ENVÃO SHIPNOW"
  * - Mantiene solo sucursales originales:
  *   AVELLANEDA, CORRIENTES, QUILMES
  *
@@ -273,7 +273,7 @@ function importarPedidosDesdeGmail() {
       sh.getRange(2, 1, nuevasFilas.length, nuevasFilas[0].length).setValues(nuevasFilas);
     }
 
-    // Se etiqueta después de escribir correctamente en la hoja.
+    // Se etiqueta despuÃ©s de escribir correctamente en la hoja.
     threadsParaEtiquetar.forEach(thread => {
       label.addToThread(thread);
     });
@@ -293,7 +293,7 @@ function extraerIdPedido(text, subject) {
     /Orden\s*#\s*(\d+)/i,
     /Compra\s*#\s*(\d+)/i,
     /Pedido\s*#\s*(\d+)/i,
-    /N[úu]mero\s*de\s*pedido:\s*(\d+)/i,
+    /N[Ãºu]mero\s*de\s*pedido:\s*(\d+)/i,
     /ID\s*del\s*pedido:\s*(\d+)/i,
     /Pedido[:\s]+#?\s*(\d+)/i
   ];
@@ -319,7 +319,7 @@ function extraerMontoTotal(text) {
 function extraerCostoEnvio(text) {
   if (!text) return "";
 
-  const m = text.match(/Costos?\s+de\s+En[víi]o[:\s]*\$?\s*([\d\.\,]+)/i);
+  const m = text.match(/Costos?\s+de\s+En[vÃ­i]o[:\s]*\$?\s*([\d\.\,]+)/i);
   return m ? m[1].trim() : "";
 }
 
@@ -329,7 +329,7 @@ function extraerMedioEnvio(text) {
 }
 
 function extraerDireccionRetiro(text) {
-  const m = (text || "").match(/Direcci[oó]n de retiro:\s*(.+)/i);
+  const m = (text || "").match(/Direcci[oÃ³]n de retiro:\s*(.+)/i);
   return m ? m[1].trim() : "";
 }
 
@@ -340,8 +340,8 @@ function resolverSucursalYTipoEnvio(medioEnvio) {
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
 
-  // 1) Shipnow / Envío a domicilio
-  // Se detecta también cuando viene dentro de "Dirección de retiro".
+  // 1) Shipnow / EnvÃ­o a domicilio
+  // Se detecta tambiÃ©n cuando viene dentro de "DirecciÃ³n de retiro".
   if (
     t.includes("SHIPNOW") ||
     t.includes("GESTIONA SHIPNOW") ||
@@ -349,7 +349,7 @@ function resolverSucursalYTipoEnvio(medioEnvio) {
   ) {
     return {
       sucursal: "ENVIO A DOMICILIO",
-      tipoEnvio: "ENVÍO SHIPNOW"
+      tipoEnvio: "ENVÃO SHIPNOW"
     };
   }
 
@@ -359,7 +359,7 @@ function resolverSucursalYTipoEnvio(medioEnvio) {
     return { sucursal: "AVELLANEDA", tipoEnvio: "RETIRO" };
   }
 
-  if (t.includes("CORRIENTES")) {
+  if (t.includes("CORRIENTES") || t.includes("SARMIENTO")) {
     return { sucursal: "CORRIENTES", tipoEnvio: "RETIRO" };
   }
 
@@ -382,12 +382,12 @@ function extraerCanal(subject) {
 }
 
 function extraerMetodoPago(text) {
-  const m = (text || "").match(/M[ée]todo de Pago:\s*(.+)/i);
+  const m = (text || "").match(/M[Ã©e]todo de Pago:\s*(.+)/i);
   return m ? m[1].trim() : "";
 }
 
 function extraerEstadoTransaccion(text) {
-  const m = (text || "").match(/Estado de la transacci[oó]n:\s*(.+)/i);
+  const m = (text || "").match(/Estado de la transacci[oÃ³]n:\s*(.+)/i);
   return m ? m[1].trim() : "";
 }
 
@@ -411,7 +411,7 @@ function doGet(e) {
       const sucursal = String(params.sucursal || "").toUpperCase();
       const tipoEnvioFiltro = String(params.tipo_envio || "").toUpperCase();
 
-      if (!sucursal) return _jsonError("Falta parámetro 'sucursal'");
+      if (!sucursal) return _jsonError("Falta parÃ¡metro 'sucursal'");
 
       return _listarPedidosSucursal(sucursal, tipoEnvioFiltro);
     }
@@ -435,12 +435,12 @@ function doGet(e) {
     if (accion === "log") {
       const idPedido = String(params.id_pedido || "").trim();
 
-      if (!idPedido) return _jsonError("Falta parámetro 'id_pedido'");
+      if (!idPedido) return _jsonError("Falta parÃ¡metro 'id_pedido'");
 
       return _logPorPedido_(idPedido);
     }
 
-    return _jsonError("Acción GET no reconocida: " + accion);
+    return _jsonError("AcciÃ³n GET no reconocida: " + accion);
 
   } catch (err) {
     return _jsonError(err);
@@ -451,7 +451,7 @@ function doPost(e) {
   try {
     const raw = e.postData && e.postData.contents ? e.postData.contents : "";
 
-    if (!raw) return _jsonError("Body vacío");
+    if (!raw) return _jsonError("Body vacÃ­o");
 
     const data = JSON.parse(raw);
     const accion = data.accion || "";
@@ -462,7 +462,7 @@ function doPost(e) {
     if (accion === "cambiarEnvioRetiro") return _cambiarEnvioRetiro(data);
     if (accion === "crearPedidoWhatsapp") return _crearPedidoWhatsapp(data);
 
-    return _jsonError("Acción POST no reconocida: " + accion);
+    return _jsonError("AcciÃ³n POST no reconocida: " + accion);
 
   } catch (err) {
     return _jsonError(err);
@@ -601,7 +601,6 @@ function _listarPedidosSucursal(sucursal, tipoEnvioFiltro) {
 
   return _jsonOk({ pedidos: result });
 }
-
 function _sucursalesEquivalentes_(sucursal) {
   const s = String(sucursal || "").toUpperCase().trim();
   if (s === "CORRIENTES") return ["CORRIENTES", "SARMIENTO"];
@@ -612,7 +611,6 @@ function _sucursalCoincide_(sucursalHoja, sucursalFiltro) {
   const sucHoja = String(sucursalHoja || "").toUpperCase().trim();
   return _sucursalesEquivalentes_(sucursalFiltro).includes(sucHoja);
 }
-
 // ================== GET webtodo ==================
 
 function _webtodo(filters) {
@@ -1083,7 +1081,7 @@ function _jsonError(err) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ================== VALIDACIÓN DE HEADERS ==================
+// ================== VALIDACIÃ“N DE HEADERS ==================
 
 function _validarHeadersPedidos_(sh) {
   const required = [
@@ -1124,7 +1122,7 @@ function _validarHeadersPedidos_(sh) {
   for (let i = 0; i < required.length; i++) {
     if (headers[i] !== required[i]) {
       throw new Error(
-        "Header inválido en columna " +
+        "Header invÃ¡lido en columna " +
         (i + 1) +
         ". Esperado: '" +
         required[i] +
@@ -1136,7 +1134,7 @@ function _validarHeadersPedidos_(sh) {
   }
 }
 
-// ================== TESTS ÚTILES ==================
+// ================== TESTS ÃšTILES ==================
 
 function testImportarPedidosDesdeGmail() {
   importarPedidosDesdeGmail();
@@ -1157,3 +1155,4 @@ function testBuscarMailsPendientes() {
     Logger.log(msg.getSubject());
   });
 }
+

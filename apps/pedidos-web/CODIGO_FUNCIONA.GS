@@ -306,7 +306,7 @@ function _listarPedidosSucursal(sucursal, tipoEnvioFiltro) {
 
     // WEB: no filtra por sucursal (muestra todo)
     // Sucursal normal: filtra por la sucursal pedida
-    const okSucursal = isWeb ? true : (suc === sucursal);
+    const okSucursal = isWeb ? true : _sucursalCoincide_(suc, sucursal);
 
     const okEstado = isWeb
       ? true
@@ -339,6 +339,17 @@ function _listarPedidosSucursal(sucursal, tipoEnvioFiltro) {
   return _jsonOk({ pedidos: result });
 }
 
+function _sucursalesEquivalentes_(sucursal) {
+  const s = String(sucursal || "").toUpperCase().trim();
+  if (s === "CORRIENTES") return ["CORRIENTES", "SARMIENTO"];
+  return [s];
+}
+
+function _sucursalCoincide_(sucursalHoja, sucursalFiltro) {
+  const sucHoja = String(sucursalHoja || "").toUpperCase().trim();
+  return _sucursalesEquivalentes_(sucursalFiltro).includes(sucHoja);
+}
+
 
 function _marcarRecibido(data) {
   const sh       = _getSheet();
@@ -358,7 +369,7 @@ function _marcarRecibido(data) {
     const idHoja  = String(row[idx["ID_PEDIDO"]] || "").trim();
     const sucHoja = String(row[idx["SUCURSAL_RETIRO"]] || "").toUpperCase();
 
-    if (idHoja === idPedido && sucHoja === sucursal) {
+    if (idHoja === idPedido && _sucursalCoincide_(sucHoja, sucursal)) {
       const fila = i + 1;
       const now  = new Date();
 
@@ -391,7 +402,7 @@ function _marcarRetirado(data) {
     const idHoja  = String(row[idx["ID_PEDIDO"]] || "").trim();
     const sucHoja = String(row[idx["SUCURSAL_RETIRO"]] || "").toUpperCase();
 
-    if (idHoja === idPedido && sucHoja === sucursal) {
+    if (idHoja === idPedido && _sucursalCoincide_(sucHoja, sucursal)) {
       const fila = i + 1;
       const now  = new Date();
 
@@ -442,7 +453,7 @@ function _cambiarEstado(data) {
     const idHoja  = String(row[idx["ID_PEDIDO"]] || "").trim();
     const sucHoja = String(row[idx["SUCURSAL_RETIRO"]] || "").toUpperCase();
 
-    if (idHoja === idPedido && sucHoja === sucursal) {
+    if (idHoja === idPedido && _sucursalCoincide_(sucHoja, sucursal)) {
       const fila = i + 1;
 
       sh.getRange(fila, idx["ESTADO"] + 1).setValue(nuevo);
