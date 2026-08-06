@@ -2,7 +2,7 @@
 ;(() => {
   "use strict";
 
-  // ================== CONFIG ==================
+  // ================== CONFIG ===================
 
   // 👉 URL de tu Apps Script (Aplicación web, termina en /exec)
   const SCRIPT_URL =
