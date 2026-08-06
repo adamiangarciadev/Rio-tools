@@ -26,6 +26,15 @@ def normalize_header(value):
     return normalize_key(value)
 
 
+def find_header_index(headers, names):
+    for name in names:
+        try:
+            return headers.index(name)
+        except ValueError:
+            pass
+    return -1
+
+
 def is_discarded_client(client_id, client_name):
     client_id = normalize_key(client_id)
     client_name = normalize_key(client_name)
@@ -155,6 +164,12 @@ def process_csv(path, state):
             "clienteId": headers.index("cliente"),
             "clienteNombre": headers.index("cliente descripcion"),
             "fecha": headers.index("fecha"),
+            "comprobante": find_header_index(headers, [
+                "comprobante",
+                "nro comprobante",
+                "numero comprobante",
+                "numero de comprobante",
+            ]),
             "listaPrecio": headers.index("lista de precio"),
             "telefono": headers.index("telefono"),
             "telefonoMovil": headers.index("telefono movil"),
@@ -182,6 +197,7 @@ def process_csv(path, state):
                 date_key = date.strftime("%Y-%m-%d")
                 month_key = date.strftime("%Y-%m")
                 total = parse_amount(row[idx["total"]])
+                receipt = row[idx["comprobante"]].strip() if idx["comprobante"] >= 0 else ""
                 price_list = row[idx["listaPrecio"]].strip()
                 phone = row[idx["telefono"]].strip()
                 mobile = row[idx["telefonoMovil"]].strip()
@@ -203,11 +219,12 @@ def process_csv(path, state):
                 if price_list:
                     client["listas"].add(price_list)
 
-                purchase_key = f"{date_key}|{branch}|{price_list or '-'}"
+                purchase_key = f"{date_key}|{branch}|{price_list or '-'}|{receipt or '-'}"
                 if purchase_key not in client["compras"]:
                     client["compras"][purchase_key] = {
                         "clienteId": client_id,
                         "fecha": date_key,
+                        "comprobante": receipt,
                         "sucursal": branch,
                         "listaPrecio": price_list,
                         "telefono": phone,

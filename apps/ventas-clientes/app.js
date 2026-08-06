@@ -442,6 +442,7 @@
       <div class="purchase-row">
         <strong>${escapeHtml(formatDateShort(item.fecha))}</strong>
         <span>${escapeHtml(item.sucursal || "-")} · ${escapeHtml(item.listaPrecio || "-")}</span>
+        <span>Comp. ${escapeHtml(item.comprobante || "-")}</span>
         <strong>${formatMoney(Number(item.total || 0))}</strong>
       </div>
     `).join("");
@@ -828,6 +829,7 @@
           email: client.email || "",
           segmento: client.segmento || "",
           fecha: purchase.fecha || "",
+          comprobante: purchase.comprobante || "",
           sucursal: purchase.sucursal || "",
           listaPrecio: purchase.listaPrecio || "",
           total
@@ -966,6 +968,7 @@
           email: client.email || "",
           segmento: client.segmento || "",
           fecha: purchase.fecha || "",
+          comprobante: purchase.comprobante || "",
           sucursal: purchase.sucursal || "",
           listaPrecio: purchase.listaPrecio || "",
           total: Number(purchase.total || 0)
@@ -998,7 +1001,7 @@
     ];
     const purchaseHeaders = [
       "Cliente ID", "Nombre", "Telefono", "Telefono movil", "Telefono principal", "Email", "Segmento", "Fecha",
-      "Sucursal", "Lista precio", "Total"
+      "Comprobante", "Sucursal", "Lista precio", "Total"
     ];
     const filterHeaders = ["Filtro", "Valor"];
     const filters = options.filters || {};
@@ -1047,6 +1050,7 @@
       textCell(row.email),
       textCell(row.segmento),
       textCell(row.fecha),
+      textCell(row.comprobante),
       textCell(row.sucursal),
       textCell(row.listaPrecio),
       moneyText(row.total)

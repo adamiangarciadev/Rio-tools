@@ -749,7 +749,7 @@
     const left = (21 - (cardWidth * 2)) / 2;
     const top = (29.7 - (cardHeight * 4)) / 2;
     const cards = [
-      ["PRINCIPAL", [37, 99, 235]],
+      ["LISTA 3", [14, 165, 166]],
       ["LISTA 3", [14, 165, 166]],
       ["LISTA 3", [14, 165, 166]],
       ["LISTA 3", [14, 165, 166]],
@@ -776,17 +776,17 @@
     doc.rect(x, y, width, height);
     doc.setLineDashPattern([], 0);
     doc.setFillColor(...color);
-    doc.rect(x + .25, y + .25, width - .5, 1, "F");
-    doc.setTextColor(255, 255, 255);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(.05);
+    doc.rect(x + .25, y + .25, width - .5, 1, "FD");
+    doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(13);
     doc.text(label, x + (width / 2), y + .91, { align: "center" });
-    doc.setTextColor(22, 32, 51);
-    doc.setFontSize(ajustarTextoPdf(doc, code, width - 1.2, 61));
-    doc.text(code, x + (width / 2), y + 4.45, { align: "center" });
-    doc.setTextColor(102, 117, 138);
-    doc.setFontSize(ajustarTextoPdf(doc, name, width - 1, 10));
-    doc.text(name, x + (width / 2), y + 5.3, { align: "center" });
+    doc.setFontSize(ajustarTextoPdf(doc, code, width - .65, 104));
+    doc.text(code, x + (width / 2), y + 4.95, { align: "center" });
+    doc.setFontSize(ajustarTextoPdf(doc, name, width - .8, 11));
+    doc.text(name, x + (width / 2), y + 6.22, { align: "center" });
   }
 
   function ajustarTextoPdf(doc, text, maxWidthCm, preferredSize) {

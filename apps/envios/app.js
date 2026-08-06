@@ -529,12 +529,15 @@
     $("#tipoEnvio")?.addEventListener("change", toggleTipoEnvio);
 
     bindMayusculasFormulario();
+    bindAutocompletarClientePorDocumento();
 
     $("#btnLimpiar")?.addEventListener("click", () => {
       $("#formEnvio").reset();
       restaurarSucursalOrigenGuardada($("#sucursalOrigen"));
       toggleTipoEnvio();
       $("#resultadoCard")?.classList.add("hidden");
+      const dniAyuda = $("#dniCuilAyuda");
+      if (dniAyuda) dniAyuda.textContent = "Si ya tuvo un envío, completamos sus datos automáticamente.";
       ocultarBotonWhatsappWeb();
       ultimoEnvio = null;
     });
@@ -772,6 +775,100 @@
     if (tipo.includes("SHIPNOW") && tipo.includes("OCA")) return "SHIPNOW - SUCURSAL OCA";
     if (tipo.includes("SHIPNOW") && tipo.includes("DOMICILIO")) return "SHIPNOW - DOMICILIO";
     return tipo || "SIN TIPO";
+  }
+
+  function normalizarDocumento(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function claveDocumento(value) {
+    const documento = normalizarDocumento(value);
+    const dni = documento.length === 11 ? documento.slice(2, -1) : documento;
+    return dni.replace(/^0+/, "");
+  }
+
+  function buscarUltimoEnvioPorDocumento(documento) {
+    const documentoNormalizado = claveDocumento(documento);
+    if (!documentoNormalizado) return null;
+
+    return cache
+      .filter((envio) => claveDocumento(envio.dniCuil) === documentoNormalizado)
+      .sort((a, b) => {
+        const fechaA = new Date(a.fechaEstado || a.fecha || 0).getTime() || 0;
+        const fechaB = new Date(b.fechaEstado || b.fecha || 0).getTime() || 0;
+        return fechaB - fechaA;
+      })[0] || null;
+  }
+
+  function completarCampoSiEstaVacio(selector, value) {
+    const campo = $(selector);
+    const texto = String(value || "").trim();
+    if (!campo || !texto || campo.value.trim()) return false;
+
+    campo.value = texto;
+    return true;
+  }
+
+  async function autocompletarClientePorDocumento() {
+    const input = $("#dniCuil");
+    const ayuda = $("#dniCuilAyuda");
+    const documento = normalizarDocumento(input?.value);
+
+    if (!input || documento.length < 7) {
+      if (ayuda) ayuda.textContent = "Si ya tuvo un envío, completamos sus datos automáticamente.";
+      return;
+    }
+
+    if (!cache.length) {
+      await cargarPanel();
+    }
+
+    const envio = buscarUltimoEnvioPorDocumento(documento);
+
+    if (!envio) {
+      if (ayuda) ayuda.textContent = "Cliente nuevo: completá sus datos manualmente.";
+      return;
+    }
+
+    const campos = [
+      ["#cliente", envio.cliente],
+      ["#mail", envio.mail],
+      ["#telefono", envio.telefono],
+      ["#domicilio", envio.domicilio],
+      ["#entrecalles", envio.entrecalles],
+      ["#direccionOca", envio.direccionOca],
+      ["#localidad", envio.localidad],
+      ["#provincia", envio.provincia],
+      ["#cp", envio.cp]
+    ];
+
+    const completados = campos.reduce(
+      (total, [selector, value]) => total + Number(completarCampoSiEstaVacio(selector, value)),
+      0
+    );
+
+    if (ayuda) {
+      ayuda.textContent = completados
+        ? `Cliente encontrado: se completaron ${completados} campos.`
+        : "Cliente encontrado. Conservamos los datos que ya estaban escritos.";
+    }
+  }
+
+  function bindAutocompletarClientePorDocumento() {
+    const input = $("#dniCuil");
+    if (!input) return;
+
+    let timer = null;
+
+    input.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(autocompletarClientePorDocumento, 350);
+    });
+
+    input.addEventListener("blur", () => {
+      clearTimeout(timer);
+      autocompletarClientePorDocumento();
+    });
   }
 
   function obtenerRemitente(sucursal) {

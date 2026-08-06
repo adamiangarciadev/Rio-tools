@@ -24,7 +24,7 @@
     }
 
     .suite-shell {
-      width: min(1280px, calc(100% - 48px));
+      width: min(1480px, calc(100% - 48px));
       margin: 0 auto;
       padding: 36px 0 40px;
     }
@@ -73,15 +73,6 @@
       color: var(--rio-muted) !important;
     }
 
-    .suite-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      font-size: 12px;
-    }
-
     .suite-hero {
       display: grid;
       grid-template-columns: 1fr;
@@ -125,9 +116,13 @@
 
     .board {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 12px;
       align-items: start;
+    }
+
+    body.supervision-unlocked .board {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
     }
 
     .col {
@@ -183,6 +178,26 @@
       background: rgba(34, 199, 184, .045);
     }
 
+    .header-supervision {
+      width: auto;
+      flex: 0 0 auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .header-supervision.is-open {
+      width: min(330px, 100%);
+      padding: 12px 14px;
+      border: 1px solid var(--rio-border);
+      border-radius: var(--rio-radius);
+      background: rgba(17, 24, 33, .76);
+    }
+
+    .header-supervision .supervision-access__message:empty {
+      display: none;
+    }
+
     .supervision-access__title {
       display: flex;
       align-items: center;
@@ -215,6 +230,15 @@
     }
 
     body.supervision-unlocked .supervision-access__form {
+      display: none;
+    }
+
+    .header-supervision:not(.is-open) .supervision-access__form,
+    .header-supervision:not(.is-open) .supervision-access__message {
+      display: none;
+    }
+
+    body.supervision-unlocked #supervisionOpenButton {
       display: none;
     }
 
@@ -283,6 +307,9 @@
       .board {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+      body.supervision-unlocked .board {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
       .suite-hero {
         grid-template-columns: 1fr;
       }
@@ -298,10 +325,13 @@
         align-items: flex-start;
         flex-direction: column;
       }
-      .suite-status {
-        justify-content: flex-start;
+      .header-supervision {
+        width: 100%;
       }
       .board {
+        grid-template-columns: 1fr;
+      }
+      body.supervision-unlocked .board {
         grid-template-columns: 1fr;
       }
       .supervision-access__form {
@@ -324,10 +354,14 @@
           <p>Operacion, deposito, ecommerce y administracion en una sola plataforma.</p>
         </div>
       </div>
-      <div class="suite-status">
-        <span class="state ready">Uso interno</span>
-        <span class="state ready">Web app</span>
-        <span class="state beta">Android-ready</span>
+      <div class="supervision-access header-supervision" id="supervisionAccess">
+        <button class="btn" id="supervisionOpenButton" type="button">Supervision</button>
+        <form class="supervision-access__form" id="supervisionAccessForm">
+          <input id="supervisionAccessPass" type="password" autocomplete="current-password" placeholder="Clave de acceso" aria-label="Clave de acceso de supervisión" />
+          <button class="btn" type="submit">Ingresar</button>
+        </form>
+        <button class="btn" id="supervisionLockButton" type="button">Cerrar supervision</button>
+        <div class="supervision-access__message" id="supervisionAccessMessage"></div>
       </div>
     </header>
 
@@ -426,11 +460,6 @@
               <p class="item-desc">Generacion de archivos para altas, bajas y etiquetas por producto.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
-            <a class="item" href="./apps/remitos-deposito/" data-supervision-access>
-              <div class="item-title">Remitos Deposito <span class="arrow">-></span></div>
-              <p class="item-desc">Carga manual, numeracion por cliente e historial de remitos.</p>
-              <div class="item-meta"><span class="state beta">Nuevo</span></div>
-            </a>
           </div>
         </div>
 
@@ -455,63 +484,72 @@
               <p class="item-desc">Planillas, rotulos, manuales y recursos internos.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
-            <div class="supervision-access" id="supervisionAccess">
-              <div class="supervision-access__title">
-                <span>Acceso supervision</span>
-                <span class="state beta" id="supervisionAccessState">Bloqueado</span>
-              </div>
-              <p class="item-desc">Herramientas reservadas para usuarios autorizados.</p>
-              <form class="supervision-access__form" id="supervisionAccessForm">
-                <input id="supervisionAccessPass" type="password" autocomplete="current-password" placeholder="Clave de acceso" />
-                <button class="btn" type="submit">Desbloquear</button>
-              </form>
-              <button class="btn" id="supervisionLockButton" type="button">Bloquear acceso</button>
-              <div class="supervision-access__message" id="supervisionAccessMessage"></div>
-            </div>
-            <a class="item" href="./apps/supervisores/" data-supervision-access>
+            <a class="item" href="./apps/pedido-carteleria/">
+              <div class="item-title">Pedido de Carteleria <span class="arrow">-></span></div>
+              <p class="item-desc">Solicitud y seguimiento de carteleria para locales y campanas.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="col-head">
+            <h2>Sistemas</h2>
+            <p>Soporte y seguimiento interno.</p>
+          </div>
+          <div class="links">
+            <a class="item" href="./apps/incidentes/">
+              <div class="item-title">Mesa de Ayuda <span class="arrow">-></span></div>
+              <p class="item-desc">Solicitudes, problemas técnicos y seguimiento de soporte interno.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
+          </div>
+        </div>
+
+        <div class="col" data-supervision-access>
+          <div class="col-head">
+            <h2>Supervisores</h2>
+            <p>Control, análisis y herramientas reservadas.</p>
+          </div>
+          <div class="links">
+            <a class="item" href="./apps/supervisores/">
               <div class="item-title">Control de Asistencia <span class="arrow">-></span></div>
               <p class="item-desc">Vista diaria de asistencia para control de supervision.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
-
-            <a class="item" href="./apps/margenes/" data-supervision-access>
+            <a class="item" href="./apps/margenes/">
               <div class="item-title">Margenes <span class="arrow">-></span></div>
               <p class="item-desc">Dashboard interactivo de ventas, costos, ganancias, sucursales y proveedores.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
-            <a class="item" href="./apps/asistencia-dashboard/" data-supervision-access>
+            <a class="item" href="./apps/asistencia-dashboard/">
               <div class="item-title">Dashboard Asistencia <span class="arrow">-></span></div>
               <p class="item-desc">Control mensual de faltas, llegadas tarde y asistencia por local.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
-            <a class="item" href="./apps/check-depositos/" data-supervision-access>
+            <a class="item" href="./apps/check-depositos/">
               <div class="item-title">Check Depositos <span class="arrow">-></span></div>
               <p class="item-desc">Panel seguro para revisar, corregir y confirmar depositos.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
-            <a class="item" href="./apps/ventas-clientes/" data-supervision-access>
+            <a class="item" href="./apps/ventas-clientes/">
               <div class="item-title">Ventas por Cliente <span class="arrow">-></span></div>
               <p class="item-desc">Ranking, seguimiento y comportamiento de compra por cliente.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
-            <a class="item" href="./apps/supervisores-control/" data-supervision-access>
-              <div class="item-title">Control de Supervision <span class="arrow">-></span></div>
-              <p class="item-desc">Tareas por local, tareas globales y seguimiento documental.</p>
+            <a class="item" href="./apps/sistemas/">
+              <div class="item-title">Gestión de Incidentes <span class="arrow">-></span></div>
+              <p class="item-desc">Recepción, asignación y seguimiento de incidentes reportados por los locales.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
-            <a class="item" href="./apps/sistemas/" data-supervision-access>
-              <div class="item-title">Sistemas <span class="arrow">-></span></div>
-              <p class="item-desc">Control de remitos con diferencias y resolucion operativa.</p>
-              <div class="item-meta"><span class="state ready">Activo</span></div>
+            <a class="item" href="./apps/remitos-deposito/">
+              <div class="item-title">Remitos Deposito <span class="arrow">-></span></div>
+              <p class="item-desc">Carga manual, numeracion por cliente e historial de remitos.</p>
+              <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
-            <a class="item" href="./apps/apercibimientos/" data-supervision-access>
+            <a class="item" href="./apps/apercibimientos/">
               <div class="item-title">Apercibimientos <span class="arrow">-></span></div>
               <p class="item-desc">Gestion disciplinaria, consulta de remitos y generacion de PDF.</p>
-              <div class="item-meta"><span class="state ready">Activo</span></div>
-            </a>
-            <a class="item" href="./apps/pedido-carteleria/">
-              <div class="item-title">Pedido de Carteleria <span class="arrow">-></span></div>
-              <p class="item-desc">Solicitud y seguimiento de carteleria para locales y campanas.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
           </div>
@@ -529,33 +567,38 @@
       const form = document.getElementById("supervisionAccessForm");
       const input = document.getElementById("supervisionAccessPass");
       const message = document.getElementById("supervisionAccessMessage");
-      const state = document.getElementById("supervisionAccessState");
+      const access = document.getElementById("supervisionAccess");
+      const openButton = document.getElementById("supervisionOpenButton");
       const lockButton = document.getElementById("supervisionLockButton");
 
       function renderAccessState() {
         const unlocked = window.RioAccess?.isUnlocked();
         document.body.classList.toggle("supervision-unlocked", !!unlocked);
-        if(state) {
-          state.textContent = unlocked ? "Desbloqueado" : "Bloqueado";
-          state.className = unlocked ? "state ready" : "state beta";
-        }
         if(message) {
-          message.textContent = unlocked
-            ? "Acceso habilitado para herramientas de supervision."
-            : "Ingresar clave para mostrar herramientas reservadas.";
+          message.textContent = "";
         }
       }
+
+      openButton?.addEventListener("click", () => {
+        access?.classList.add("is-open");
+        input?.focus();
+      });
 
       form?.addEventListener("submit", (event) => {
         event.preventDefault();
         const ok = window.RioAccess?.unlock(input?.value || "");
         if(input) input.value = "";
         renderAccessState();
-        if(message && !ok) message.textContent = "Clave incorrecta.";
+        if(ok) {
+          access?.classList.remove("is-open");
+        } else if(message) {
+          message.textContent = "Clave incorrecta.";
+        }
       });
 
       lockButton?.addEventListener("click", () => {
         window.RioAccess?.lock();
+        access?.classList.remove("is-open");
         renderAccessState();
       });
 
