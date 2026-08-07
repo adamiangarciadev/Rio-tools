@@ -82,13 +82,14 @@
     $("#generalFields").hidden = mode !== "general";
     $("#labelsWorkflow").hidden = mode !== "labels";
     $("#negativeWorkflow").hidden = mode !== "negative";
+    $("#orphanCouponWorkflow").hidden = mode !== "orphan-coupon";
     $("#generalFields").querySelectorAll("input,select,textarea").forEach(node => node.disabled = mode !== "general");
     updateSubmitLabel();
     clearMessage();
   }
 
   function updateSubmitLabel() {
-    els.submit.textContent = mode === "labels" ? "Crear pedido de etiquetas" : mode === "negative" ? "Informar stock negativo" : "Crear incidente";
+    els.submit.textContent = mode === "labels" ? "Crear pedido de etiquetas" : mode === "negative" ? "Informar stock negativo" : mode === "orphan-coupon" ? "Informar cupón huérfano" : "Crear incidente";
   }
 
   async function loadEquivalences() {
@@ -228,6 +229,7 @@
       let created = [];
       if (mode === "labels") created = await createLabelTickets(common);
       else if (mode === "negative") created = [await persistTicket(createNegativePayload(common))];
+      else if (mode === "orphan-coupon") created = [await persistTicket(createOrphanCouponPayload(common))];
       else created = [await persistTicket({ ...common, area: els.area.value, priority: els.priority.value, title: els.title.value.trim(), description: els.description.value.trim() })];
       resetForm(true);
       const ids = created.map(item => item.id).join(" y ");
@@ -246,11 +248,11 @@
     const group = `REET-${Date.now()}`;
     const labelsText = labelItems.map(item => `${item.quantity} × ${item.code} | Art. ${item.article} | ${item.color} | Talle ${item.size}`).join("\n");
     if (!bajas.length) {
-      const etiquetas = await persistTicket({ ...common, area: "Precios", priority: "Alta", title: `Pedido de etiquetas (${labelItems.reduce((sum, item) => sum + item.quantity, 0)})`, description: `Etiquetas solicitadas:\n${labelsText}\n\nNo se solicitó baja de artículos.` });
+      const etiquetas = await persistTicket({ ...common, area: "Sistemas", priority: "Baja", title: "Pedido de etiquetas", description: `Etiquetas solicitadas:\n${labelsText}\n\nNo se solicitó baja de artículos.` });
       return [etiquetas];
     }
-    const baja = await persistTicket({ ...common, area: "Stock", priority: "Alta", title: `Baja de artículos para reetiquetado (${bajas.length})`, description: `Proceso vinculado: ${group}\n\nCódigos a dar de baja:\n${bajas.join("\n")}` });
-    const etiquetas = await persistTicket({ ...common, area: "Precios", priority: "Alta", title: `Pedido de etiquetas para reetiquetado (${labelItems.reduce((sum, item) => sum + item.quantity, 0)})`, description: `Proceso vinculado: ${group}\nIncidente de baja: ${baja.id}\n\nEtiquetas solicitadas:\n${labelsText}` });
+    const baja = await persistTicket({ ...common, area: "Sistemas", priority: "Baja", title: "Pedido de etiquetas", description: `Baja de artículos vinculada: ${group}\n\nCódigos a dar de baja:\n${bajas.join("\n")}` });
+    const etiquetas = await persistTicket({ ...common, area: "Sistemas", priority: "Baja", title: "Pedido de etiquetas", description: `Proceso vinculado: ${group}\nIncidente de baja: ${baja.id}\n\nEtiquetas solicitadas:\n${labelsText}` });
     return [baja, etiquetas];
   }
 
@@ -259,7 +261,18 @@
     const stock = Number($("#negativeStock").value);
     if (!variant) throw new Error("Seleccioná una combinación válida de artículo, color y talle.");
     if (!Number.isFinite(stock) || stock >= 0) throw new Error("El stock informado debe ser un número negativo.");
-    return { ...common, area: "Stock", priority: "Alta", title: `Stock negativo · ${variant.article} · ${variant.color} · Talle ${variant.size}`, description: `Código: ${variant.code}\nArtículo: ${variant.article}\nColor: ${variant.color}\nTalle: ${variant.size}\nStock mostrado por el sistema: ${stock}` };
+    return { ...common, area: "Sistemas", priority: "Baja", title: "Stock negativo", description: `Código: ${variant.code}\nArtículo: ${variant.article}\nColor: ${variant.color}\nTalle: ${variant.size}\nStock mostrado por el sistema: ${stock}` };
+  }
+
+  function createOrphanCouponPayload(common) {
+    const invoice = $("#orphanCouponInvoice").value.trim();
+    const invoiceType = $("#orphanCouponInvoiceType").value;
+    const amount = Number($("#orphanCouponAmount").value);
+    if (!invoice) throw new Error("Ingresá el número de factura del cupón.");
+    if (!invoiceType) throw new Error("Seleccioná si fue factura electrónica o factura fiscal.");
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error("Ingresá un monto de cupón válido y mayor a cero.");
+    const formattedAmount = amount.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+    return { ...common, area: "Sistemas", priority: "Media", title: "Cupón huérfano", description: `Número de factura: ${invoice}\nTipo de factura: ${invoiceType}\nMonto del cupón: ${formattedAmount}` };
   }
 
   async function persistTicket(payload) {
@@ -338,6 +351,9 @@
   function resetForm(preserveMessage = false) {
     const branch = els.branch.value; els.form.reset(); els.branch.value = branch; els.priority.value = "Media";
     labelItems = []; renderLabelItems(); updateBajasCount(); updateNegativeMatch();
+    $("#orphanCouponInvoice").value = "";
+    $("#orphanCouponInvoiceType").value = "";
+    $("#orphanCouponAmount").value = "";
     selectedFiles = []; renderSelectedFiles(); updateCounters(); if (!preserveMessage) clearMessage();
   }
   function readLocal() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); } catch { return []; } }

@@ -44,6 +44,7 @@
           <button class="quick-action active" type="button" data-mode="general"><span>＋</span><strong>Incidente general</strong><small>Cualquier problema</small></button>
           <button class="quick-action" type="button" data-mode="labels"><span>🏷</span><strong>Reetiquetado</strong><small>Baja + etiquetas</small></button>
           <button class="quick-action" type="button" data-mode="negative"><span>−</span><strong>Stock negativo</strong><small>Artículo y variante</small></button>
+          <button class="quick-action" type="button" data-mode="orphan-coupon"><span>⌁</span><strong>Cupón huérfano</strong><small>Informar código</small></button>
         </div>
 
         <form id="incidentForm" novalidate>
@@ -83,6 +84,28 @@
               <label class="field"><span>Stock que muestra el sistema</span><input id="negativeStock" type="number" max="-1" value="-1"></label>
             </div>
             <div id="negativeMatch" class="match-result">Seleccioná artículo, color y talle.</div>
+          </section>
+
+          <section id="orphanCouponWorkflow" class="workflow-panel" hidden>
+            <div class="workflow-note"><strong>Informar cupón huérfano</strong><span>Completá todos los datos para que Sistemas pueda identificarlo y resolverlo.</span></div>
+            <div class="orphan-coupon-fields">
+              <label class="field">
+                <span>Número de factura del cupón <b>*</b></span>
+                <input id="orphanCouponInvoice" autocomplete="off" maxlength="100" placeholder="Ej: 0001-00012345">
+              </label>
+              <label class="field">
+                <span>Tipo de factura <b>*</b></span>
+                <select id="orphanCouponInvoiceType">
+                  <option value="">Seleccionar tipo</option>
+                  <option value="Factura electrónica">Factura electrónica</option>
+                  <option value="Factura fiscal">Factura fiscal</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Monto del cupón <b>*</b></span>
+                <input id="orphanCouponAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="Ej: 15000,00">
+              </label>
+            </div>
           </section>
 
           <div id="generalFields" class="form-grid workflow-general">
