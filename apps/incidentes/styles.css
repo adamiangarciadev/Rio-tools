@@ -30,7 +30,7 @@
   .form-message{min-height:14px;margin-top:4px}
   .form-actions{margin-top:6px}
   .form-actions .btn{min-height:36px;padding:7px 13px}
-  .list-panel{display:flex;flex-direction:column;max-height:calc(100vh - 190px)}
+  .list-panel{display:flex;flex-direction:column;max-height:calc(100vh - 125px)}
   .list-panel .filters{grid-template-columns:1fr;gap:7px;margin-bottom:10px}
   .list-panel .filters input,.list-panel .filters select{min-height:36px;padding-top:7px;padding-bottom:7px}
   .list-panel .ticket-list{min-height:0;overflow-y:auto;padding-right:4px}

@@ -31,3 +31,5 @@ apps/ventas-clientes/ventas_csv/
 apps/pedido-carteleria/downloads/
 apps/pedido-carteleria/page-pdfs/
 apps/pedido-carteleria/previews/
+.playwright-cli/page-2026-08-07T00-41-44-643Z.yml
+*.yml
