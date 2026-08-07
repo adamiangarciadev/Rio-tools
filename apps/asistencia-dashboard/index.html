@@ -25,6 +25,7 @@
       <p>Mes en curso, faltas, llegadas tarde y ultimos 30 dias por empleado</p>
     </div>
     <div class="module-topbar__actions">
+      <button id="exportAttendanceBtn" class="btn btn-primary" type="button">Exportar asistencia</button>
       <button id="downloadSellerNumbersBtn" class="btn btn-primary" type="button">Descargar numeros de vendedora</button>
       <button id="refreshBtn" class="btn" type="button">Actualizar</button>
     </div>
@@ -153,6 +154,33 @@
     </section>
   </main>
 
+  <dialog id="exportAttendanceDialog" class="seller-dialog" aria-labelledby="exportAttendanceTitle">
+    <form id="exportAttendanceForm" class="seller-dialog__card">
+      <div class="seller-dialog__head">
+        <div>
+          <h2 id="exportAttendanceTitle">Exportar asistencia</h2>
+          <p>Selecciona un período. La exportación incluye observaciones, comprobantes y llegadas tarde.</p>
+        </div>
+        <button id="closeExportAttendanceBtn" class="seller-dialog__close" type="button" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="export-date-grid">
+        <label for="exportFromInput">
+          Desde
+          <input id="exportFromInput" type="date" required />
+        </label>
+        <label for="exportToInput">
+          Hasta
+          <input id="exportToInput" type="date" required />
+        </label>
+      </div>
+      <p id="exportAttendanceResult" class="seller-dialog__result" aria-live="polite"></p>
+      <div class="seller-dialog__actions">
+        <button id="cancelExportAttendanceBtn" class="btn" type="button">Cancelar</button>
+        <button id="generateAttendanceExportBtn" class="btn btn-primary" type="submit">Descargar Excel</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="sellerNumbersDialog" class="seller-dialog" aria-labelledby="sellerNumbersTitle">
     <form id="sellerNumbersForm" class="seller-dialog__card">
       <div class="seller-dialog__head">
@@ -175,6 +203,7 @@
   </dialog>
 
   <script src="api-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="app.js"></script>
   <script src="../../assets/rio-report-problem.js"></script>

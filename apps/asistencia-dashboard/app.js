@@ -39,6 +39,15 @@
 
   const el = {
     refreshBtn: $("#refreshBtn"),
+    exportAttendanceBtn: $("#exportAttendanceBtn"),
+    exportAttendanceDialog: $("#exportAttendanceDialog"),
+    exportAttendanceForm: $("#exportAttendanceForm"),
+    exportFromInput: $("#exportFromInput"),
+    exportToInput: $("#exportToInput"),
+    exportAttendanceResult: $("#exportAttendanceResult"),
+    closeExportAttendanceBtn: $("#closeExportAttendanceBtn"),
+    cancelExportAttendanceBtn: $("#cancelExportAttendanceBtn"),
+    generateAttendanceExportBtn: $("#generateAttendanceExportBtn"),
     downloadSellerNumbersBtn: $("#downloadSellerNumbersBtn"),
     sellerNumbersDialog: $("#sellerNumbersDialog"),
     sellerNumbersForm: $("#sellerNumbersForm"),
@@ -75,13 +84,18 @@
     holidays: [],
     expectedRows: [],
     demo: false,
-    loading: false
+    loading: false,
+    loadRequestId: 0
   };
 
   init();
 
   function init() {
     el.refreshBtn.addEventListener("click", loadData);
+    el.exportAttendanceBtn.addEventListener("click", openAttendanceExportDialog);
+    el.closeExportAttendanceBtn.addEventListener("click", closeAttendanceExportDialog);
+    el.cancelExportAttendanceBtn.addEventListener("click", closeAttendanceExportDialog);
+    el.exportAttendanceForm.addEventListener("submit", downloadAttendanceExcel);
     el.downloadSellerNumbersBtn.addEventListener("click", openSellerNumbersDialog);
     el.closeSellerNumbersBtn.addEventListener("click", closeSellerNumbersDialog);
     el.cancelSellerNumbersBtn.addEventListener("click", closeSellerNumbersDialog);
@@ -104,6 +118,28 @@
     el.monthInput.value = currentMonthValue();
     updatePeriodControls();
     loadData();
+  }
+
+  function openAttendanceExportDialog() {
+    const month = el.monthInput.value || currentMonthValue();
+    const [year, monthNumber] = month.split("-").map(Number);
+    const lastDay = new Date(year, monthNumber, 0).getDate();
+    const today = dateKey(Date.now());
+    const monthEnd = `${month}-${String(lastDay).padStart(2, "0")}`;
+    el.exportFromInput.value = `${month}-01`;
+    el.exportToInput.value = month === currentMonthValue() && today < monthEnd ? today : monthEnd;
+    setExportMessage("");
+    el.exportAttendanceDialog.showModal();
+  }
+
+  function closeAttendanceExportDialog() {
+    if (el.exportAttendanceDialog.open) el.exportAttendanceDialog.close();
+  }
+
+  function setExportMessage(message, type = "") {
+    el.exportAttendanceResult.textContent = message;
+    el.exportAttendanceResult.classList.toggle("is-error", type === "error");
+    el.exportAttendanceResult.classList.toggle("is-found", type === "ok");
   }
 
   function openSellerNumbersDialog() {
@@ -258,8 +294,167 @@
     return size;
   }
 
+  async function downloadAttendanceExcel(event) {
+    event.preventDefault();
+    const from = el.exportFromInput.value;
+    const to = el.exportToInput.value;
+
+    if (!from || !to || from > to) {
+      setExportMessage("Revisa las fechas: el inicio debe ser anterior o igual al final.", "error");
+      return;
+    }
+    if (!window.ExcelJS) {
+      setExportMessage("No se pudo cargar el generador de Excel. Revisa la conexión.", "error");
+      return;
+    }
+
+    el.generateAttendanceExportBtn.disabled = true;
+    el.generateAttendanceExportBtn.textContent = "Preparando...";
+    setExportMessage("Consultando el período seleccionado...");
+
+    try {
+      const exportData = await fetchDashboardDataForMonths(monthsBetween(from, to));
+      const events = normalizeEvents(exportData.events);
+      const employees = normalizeEmployees(exportData.padron);
+      const branches = normalizeBranches(exportData.sucursales);
+      const holidays = normalizeHolidays(exportData.feriados);
+      const days = workingDaysBetween(from, to);
+      const rows = buildExpectedRowsFromData(days, events, employees, branches, holidays)
+        .filter((row) => row.dateKey >= from && row.dateKey <= to)
+        .sort((a, b) => a.vendedorId.localeCompare(b.vendedorId, undefined, { numeric: true }) || a.dateKey.localeCompare(b.dateKey));
+
+      const workbook = buildAttendanceWorkbook(rows, from, to);
+      const buffer = await workbook.xlsx.writeBuffer();
+      downloadBlob(
+        new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+        `asistencia-${from}-a-${to}.xlsx`
+      );
+      closeAttendanceExportDialog();
+    } catch (error) {
+      console.error(error);
+      setExportMessage(error.message || "No se pudo generar la exportación.", "error");
+    } finally {
+      el.generateAttendanceExportBtn.disabled = false;
+      el.generateAttendanceExportBtn.textContent = "Descargar Excel";
+    }
+  }
+
+  function buildAttendanceWorkbook(rows, from, to) {
+    const workbook = new window.ExcelJS.Workbook();
+    workbook.creator = "RIO - Asistencias";
+    workbook.created = new Date();
+    workbook.subject = `Asistencia ${from} a ${to}`;
+
+    const detail = workbook.addWorksheet("Detalle del periodo", { views: [{ state: "frozen", ySplit: 1 }] });
+    detail.columns = attendanceExportColumns();
+    rows.forEach((row) => detail.addRow(attendanceExportRow(row)));
+    styleExportSheet(detail, "AsistenciaDetalle");
+
+    const late = workbook.addWorksheet("Llegadas tarde", { views: [{ state: "frozen", ySplit: 1 }] });
+    late.columns = attendanceExportColumns();
+    rows.filter((row) => row.status === "late")
+      .sort((a, b) => a.vendedorId.localeCompare(b.vendedorId, undefined, { numeric: true }) || a.dateKey.localeCompare(b.dateKey))
+      .forEach((row) => late.addRow(attendanceExportRow(row)));
+    styleExportSheet(late, "AsistenciaTardes");
+    late.getColumn("justificativo").eachCell((cell, rowNumber) => {
+      if (rowNumber > 1 && cell.value === "NO PRESENTÓ") {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFE4E6" } };
+        cell.font = { color: { argb: "FFBE123C" }, bold: true };
+      }
+    });
+
+    return workbook;
+  }
+
+  function attendanceExportColumns() {
+    return [
+      { header: "Fecha", key: "fecha", width: 13 },
+      { header: "Legajo", key: "legajo", width: 12 },
+      { header: "Vendedor", key: "vendedor", width: 30 },
+      { header: "Rol", key: "rol", width: 18 },
+      { header: "Local / puesto", key: "local", width: 22 },
+      { header: "Estado", key: "estado", width: 20 },
+      { header: "Hora registrada", key: "hora", width: 17 },
+      { header: "Hora esperada", key: "esperada", width: 16 },
+      { header: "Fuente", key: "fuente", width: 12 },
+      { header: "Justificativo", key: "justificativo", width: 18 },
+      { header: "Comprobante", key: "comprobante", width: 20 },
+      { header: "Observaciones", key: "observaciones", width: 45 }
+    ];
+  }
+
+  function attendanceExportRow(row) {
+    return {
+      fecha: parseDate(row.dateKey) ? new Date(parseDate(row.dateKey)) : row.fecha,
+      legajo: row.vendedorId,
+      vendedor: row.vendedorNombre,
+      rol: row.rol,
+      local: row.sucursal,
+      estado: row.statusLabel,
+      hora: row.hora,
+      esperada: row.expectedTime,
+      fuente: row.fuente,
+      justificativo: row.comprobanteUrl ? "PRESENTÓ" : "NO PRESENTÓ",
+      comprobante: row.comprobanteUrl ? { text: "Ver comprobante", hyperlink: row.comprobanteUrl } : "Sin comprobante",
+      observaciones: row.observacion
+    };
+  }
+
+  function styleExportSheet(sheet) {
+    const lastRow = Math.max(sheet.rowCount, 1);
+    sheet.autoFilter = { from: "A1", to: "L" + lastRow };
+    sheet.getRow(1).height = 26;
+    sheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF111827" } };
+    sheet.getRow(1).alignment = { vertical: "middle" };
+    sheet.getColumn("fecha").numFmt = "dd/mm/yyyy";
+    sheet.getColumn("legajo").numFmt = "@";
+    sheet.getColumn("observaciones").alignment = { wrapText: true, vertical: "top" };
+    sheet.getColumn("comprobante").font = { color: { argb: "FF2563EB" }, underline: true };
+    for (let rowNumber = 2; rowNumber <= lastRow; rowNumber += 1) {
+      if (rowNumber % 2 === 0) {
+        sheet.getRow(rowNumber).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+      }
+      sheet.getRow(rowNumber).alignment = { vertical: "top" };
+    }
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function monthsBetween(from, to) {
+    const start = new Date(Number(from.slice(0, 4)), Number(from.slice(5, 7)) - 1, 1);
+    const end = new Date(Number(to.slice(0, 4)), Number(to.slice(5, 7)) - 1, 1);
+    const months = [];
+    while (start <= end) {
+      months.push(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`);
+      start.setMonth(start.getMonth() + 1);
+    }
+    return months;
+  }
+
+  function workingDaysBetween(from, to) {
+    const start = new Date(Number(from.slice(0, 4)), Number(from.slice(5, 7)) - 1, Number(from.slice(8, 10)));
+    const end = new Date(Number(to.slice(0, 4)), Number(to.slice(5, 7)) - 1, Number(to.slice(8, 10)));
+    const days = [];
+    for (const date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+      if (date.getDay() === 0) continue;
+      const timestamp = startOfDay(date.getTime());
+      days.push({ timestamp, dateKey: dateKey(timestamp), label: formatDate(timestamp) });
+    }
+    return days;
+  }
+
   async function loadData() {
-    if (state.loading) return;
+    const requestId = ++state.loadRequestId;
 
     try {
       state.loading = true;
@@ -274,6 +469,7 @@
         state.demo = true;
       } else {
         const data = await fetchDashboardData();
+        if (requestId !== state.loadRequestId) return;
         state.events = normalizeEvents(data.events);
         state.employees = normalizeEmployees(data.padron);
         state.branches = normalizeBranches(data.sucursales);
@@ -284,6 +480,7 @@
       fillFilters();
       render();
     } catch (error) {
+      if (requestId !== state.loadRequestId) return;
       console.error(error);
       state.events = [];
       state.employees = [];
@@ -292,6 +489,7 @@
       state.expectedRows = [];
       renderEmpty(error.message || "No se pudo cargar asistencia.");
     } finally {
+      if (requestId !== state.loadRequestId) return;
       state.loading = false;
       el.refreshBtn.disabled = false;
       el.refreshBtn.textContent = "Actualizar";
@@ -335,7 +533,10 @@
   }
 
   async function fetchDashboardData() {
-    const months = monthsForCurrentPeriod();
+    return fetchDashboardDataForMonths(monthsForCurrentPeriod());
+  }
+
+  async function fetchDashboardDataForMonths(months) {
     const responses = await Promise.all(months.map((month) => {
       return fetchJson(`${API_URL}?accion=listar_asistencia&mes=${encodeURIComponent(month)}`);
     }));
@@ -401,10 +602,14 @@
   }
 
   function buildExpectedRows(days) {
-    const branchSchedule = buildBranchScheduleMap(state.branches);
-    const holidaySet = new Set(state.holidays.map((holiday) => holiday.fecha).filter(Boolean));
-    const eventMap = groupEventsByEmployeeAndDay(state.events);
-    const employees = state.employees.length ? state.employees : inferEmployeesFromEvents();
+    return buildExpectedRowsFromData(days, state.events, state.employees, state.branches, state.holidays);
+  }
+
+  function buildExpectedRowsFromData(days, eventsSource, employeesSource, branchesSource, holidaysSource) {
+    const branchSchedule = buildBranchScheduleMap(branchesSource);
+    const holidaySet = new Set(holidaysSource.map((holiday) => holiday.fecha).filter(Boolean));
+    const eventMap = groupEventsByEmployeeAndDay(eventsSource);
+    const employees = employeesSource.length ? employeesSource : inferEmployeesFromEventRows(eventsSource);
 
     return employees.flatMap((employee) => {
       if (!employee.vendedorId && !employee.vendedorNombre) return [];
@@ -469,7 +674,9 @@
       status,
       statusLabel,
       hora,
-      observacion
+      observacion,
+      comprobanteUrl: (absence || firstEntry || fallback)?.comprobanteUrl || "",
+      fuente: (absence || firstEntry || fallback)?.fuente || ""
     };
   }
 
@@ -758,7 +965,9 @@
         empleadoLabel: makeEmployeeLabel(vendedorId, vendedorNombre),
         tipoEvento,
         hora,
-        observacion: clean(row.observacion || row.obs || "")
+        observacion: clean(row.observacion || row.obs || ""),
+        comprobanteUrl: clean(row.comprobante_url || row.comprobanteUrl || row.url_comprobante || row.archivo_url || ""),
+        fuente: normalizeName(row.fuente || row.source || "EVENTOS")
       };
     }).filter((row) => (row.fecha || row.vendedorId || row.vendedorNombre) && !isExcludedBranch(row.sucursal));
   }
@@ -798,8 +1007,12 @@
   }
 
   function inferEmployeesFromEvents() {
+    return inferEmployeesFromEventRows(state.events);
+  }
+
+  function inferEmployeesFromEventRows(events) {
     const map = new Map();
-    state.events.forEach((event) => {
+    events.forEach((event) => {
       const key = event.vendedorId || `${event.vendedorNombre}-${event.sucursal}`;
       if (!key || map.has(key)) return;
       map.set(key, {
