@@ -126,18 +126,52 @@
     }
 
     .col {
+      --sector-color: #2dd4bf;
+      --sector-rgb: 45, 212, 191;
       min-height: 100%;
+      border-top: 3px solid var(--sector-color);
       background: rgba(17, 24, 33, .72) !important;
+    }
+
+    .col:nth-child(1) {
+      --sector-color: #f59e0b;
+      --sector-rgb: 245, 158, 11;
+    }
+
+    .col:nth-child(2) {
+      --sector-color: #a78bfa;
+      --sector-rgb: 167, 139, 250;
+    }
+
+    .col:nth-child(3) {
+      --sector-color: #38bdf8;
+      --sector-rgb: 56, 189, 248;
+    }
+
+    .col:nth-child(4) {
+      --sector-color: #fb7185;
+      --sector-rgb: 251, 113, 133;
+    }
+
+    .col:nth-child(5) {
+      --sector-color: #2dd4bf;
+      --sector-rgb: 45, 212, 191;
+    }
+
+    .col:nth-child(6) {
+      --sector-color: #818cf8;
+      --sector-rgb: 129, 140, 248;
     }
 
     .col-head {
       padding: 14px 16px;
       border-bottom: 1px solid var(--rio-border);
-      background: rgba(9, 13, 18, .18);
+      background: rgba(var(--sector-rgb), .07);
     }
 
     .col-head h2 {
       margin: 0;
+      color: var(--sector-color);
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .08em !important;
@@ -159,15 +193,16 @@
       padding: 15px 16px 14px;
       border-bottom: 1px solid var(--rio-border);
       text-decoration: none;
-      transition: background .16s ease, border-color .16s ease;
+      transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
     }
 
     .item:last-child {
       border-bottom: 0;
     }
 
-    .item:hover {
-      background: rgba(45, 212, 191, .08);
+    .col .item:hover {
+      background: rgba(var(--sector-rgb), .08);
+      box-shadow: inset 3px 0 0 var(--sector-color);
     }
 
     .supervision-access {
@@ -253,11 +288,6 @@
       gap: 10px;
       font-size: 14px;
       font-weight: 720;
-    }
-
-    .arrow {
-      color: var(--rio-muted);
-      font-weight: 700;
     }
 
     .item-desc {
@@ -382,22 +412,22 @@
           </div>
           <div class="links">
             <a class="item" href="./apps/entrada-mercaderia/">
-              <div class="item-title">Entrada de Mercaderia <span class="arrow">-></span></div>
+              <div class="item-title">Entrada de Mercaderia</div>
               <p class="item-desc">Ingreso por escaneo, equivalencias y control contra CSV.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/mercaderia-transito/">
-              <div class="item-title">Mercaderia en Transito <span class="arrow">-></span></div>
+              <div class="item-title">Mercaderia en Transito</div>
               <p class="item-desc">Seguimiento de remitos, archivos asociados y picking de transito.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/control-remitos-clientes/">
-              <div class="item-title">Control de Remitos <span class="arrow">-></span></div>
+              <div class="item-title">Control de Remitos</div>
               <p class="item-desc">Control y confirmacion de remitos emitidos a clientes.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/envios/">
-              <div class="item-title">Envios shipnow y transporte <span class="arrow">-></span></div>
+              <div class="item-title">Envios shipnow y transporte</div>
               <p class="item-desc">Rotulos, seguimiento interno y control operativo de envios.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
@@ -411,28 +441,28 @@
           </div>
           <div class="links">
             <a class="item" href="./apps/categorizador/">
-              <div class="item-title">Categorizador <span class="arrow">-></span></div>
+              <div class="item-title">Categorizador</div>
               <p class="item-desc">Normalizacion y categorizacion de productos para publicacion.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/pedidos-web/">
-              <div class="item-title">Pedidos Web <span class="arrow">-></span></div>
+              <div class="item-title">Pedidos Web</div>
               <p class="item-desc">Gestion y armado de pedidos desde el canal online.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <!--<a class="item" href="./apps/pedidos-dashboard/">
-              <div class="item-title">Dashboard Pedidos <span class="arrow">-></span></div>
+              <div class="item-title">Dashboard Pedidos</div>
               <p class="item-desc">Analisis interactivo del log de estados, sucursales y envios.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
             -->
             <a class="item" href="./apps/pedidos-web-locales/">
-              <div class="item-title">Pedidos Web Locales <span class="arrow">-></span></div>
+              <div class="item-title">Pedidos Web Locales</div>
               <p class="item-desc">Entrada, retiro y seguimiento de pedidos web en sucursales.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/banco-medios/">
-              <div class="item-title">Banco de Medios <span class="arrow">-></span></div>
+              <div class="item-title">Banco de Medios</div>
               <p class="item-desc">Videos oficiales para redes, pantallas, locales y mayoristas.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
@@ -446,17 +476,17 @@
           </div>
           <div class="links">
             <a class="item" href="./apps/picking-salida/">
-              <div class="item-title">Picking Salida <span class="arrow">-></span></div>
+              <div class="item-title">Picking Salida</div>
               <p class="item-desc">Preparacion por codigo de barras, validacion y guardado de salida.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/pedido-semanal/">
-              <div class="item-title">Pedido Semanal <span class="arrow">-></span></div>
+              <div class="item-title">Pedido Semanal</div>
               <p class="item-desc">Armado de pedidos por curva, historicos, talles y promociones.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/etiquetas/">
-              <div class="item-title">Generador de Etiquetas <span class="arrow">-></span></div>
+              <div class="item-title">Generador de Etiquetas</div>
               <p class="item-desc">Generacion de archivos para altas, bajas y etiquetas por producto.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
@@ -470,22 +500,22 @@
           </div>
           <div class="links">
             <a class="item" href="./apps/asistencia/">
-              <div class="item-title">Asistencia Personal <span class="arrow">-></span></div>
+              <div class="item-title">Asistencia Personal</div>
               <p class="item-desc">Registro de asistencia, faltas, permisos y novedades del personal.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/confirmacion-depositos/">
-              <div class="item-title">Depositos a Confirmar <span class="arrow">-></span></div>
+              <div class="item-title">Depositos a Confirmar</div>
               <p class="item-desc">Carga y consulta de depositos o transferencias bancarias.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/archivos-administrativos/">
-              <div class="item-title">Archivos Administrativos <span class="arrow">-></span></div>
+              <div class="item-title">Archivos Administrativos</div>
               <p class="item-desc">Planillas, rotulos, manuales y recursos internos.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/pedido-carteleria/">
-              <div class="item-title">Pedido de Carteleria <span class="arrow">-></span></div>
+              <div class="item-title">Pedido de Carteleria</div>
               <p class="item-desc">Solicitud y seguimiento de carteleria para locales y campanas.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
@@ -499,7 +529,7 @@
           </div>
           <div class="links">
             <a class="item" href="./apps/incidentes/">
-              <div class="item-title">Mesa de Ayuda <span class="arrow">-></span></div>
+              <div class="item-title">Mesa de Ayuda</div>
               <p class="item-desc">Solicitudes, problemas técnicos y seguimiento de soporte interno.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
@@ -513,42 +543,42 @@
           </div>
           <div class="links">
             <a class="item" href="./apps/supervisores/">
-              <div class="item-title">Control de Asistencia <span class="arrow">-></span></div>
+              <div class="item-title">Control de Asistencia</div>
               <p class="item-desc">Vista diaria de asistencia para control de supervision.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/margenes/">
-              <div class="item-title">Margenes <span class="arrow">-></span></div>
+              <div class="item-title">Margenes</div>
               <p class="item-desc">Dashboard interactivo de ventas, costos, ganancias, sucursales y proveedores.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/asistencia-dashboard/">
-              <div class="item-title">Dashboard Asistencia <span class="arrow">-></span></div>
+              <div class="item-title">Dashboard Asistencia</div>
               <p class="item-desc">Control mensual de faltas, llegadas tarde y asistencia por local.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
             <a class="item" href="./apps/check-depositos/">
-              <div class="item-title">Check Depositos <span class="arrow">-></span></div>
+              <div class="item-title">Check Depositos</div>
               <p class="item-desc">Panel seguro para revisar, corregir y confirmar depositos.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
             <a class="item" href="./apps/ventas-clientes/">
-              <div class="item-title">Ventas por Cliente <span class="arrow">-></span></div>
+              <div class="item-title">Ventas por Cliente</div>
               <p class="item-desc">Ranking, seguimiento y comportamiento de compra por cliente.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
             <a class="item" href="./apps/sistemas/">
-              <div class="item-title">Gestión de Incidentes <span class="arrow">-></span></div>
+              <div class="item-title">Gestión de Incidentes</div>
               <p class="item-desc">Recepción, asignación y seguimiento de incidentes reportados por los locales.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/remitos-deposito/">
-              <div class="item-title">Remitos Deposito <span class="arrow">-></span></div>
+              <div class="item-title">Remitos Deposito</div>
               <p class="item-desc">Carga manual, numeracion por cliente e historial de remitos.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
             <a class="item" href="./apps/apercibimientos/">
-              <div class="item-title">Apercibimientos <span class="arrow">-></span></div>
+              <div class="item-title">Apercibimientos</div>
               <p class="item-desc">Gestion disciplinaria, consulta de remitos y generacion de PDF.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
