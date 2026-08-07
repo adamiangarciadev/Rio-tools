@@ -51,7 +51,7 @@
 
   function bindEvents() {
     els.form.addEventListener("submit", submitIncident);
-    els.branch.addEventListener("change", saveBranch);
+    els.branch.addEventListener("change", () => { saveBranch(); renderAll(); });
     $("#newTicketTop").addEventListener("click", () => $("#formPanel").scrollIntoView({ behavior: "smooth" }));
     $("#clearForm").addEventListener("click", resetForm);
     $("#refreshTickets").addEventListener("click", loadTickets);
@@ -304,18 +304,25 @@
 
   function fillAreaFilter() {
     const current = els.areaFilter.value;
-    const areas = [...new Set(tickets.map(x => x.area).filter(Boolean))].sort();
+    const selectedBranch = normalizeBranch(els.branch.value);
+    const branchTickets = selectedBranch ? tickets.filter(ticket => normalizeBranch(ticket.branch) === selectedBranch) : [];
+    const areas = [...new Set(branchTickets.map(x => x.area).filter(Boolean))].sort();
     els.areaFilter.innerHTML = '<option value="">Todas las áreas</option>' + areas.map(x => `<option>${escapeHtml(x)}</option>`).join("");
     if (areas.includes(current)) els.areaFilter.value = current;
   }
 
   function renderTickets() {
+    const selectedBranch = normalizeBranch(els.branch.value);
+    els.list.innerHTML = "";
+    if (!selectedBranch) {
+      els.empty.hidden = true;
+      return;
+    }
     const query = normalizeText(els.search.value);
     const filtered = tickets.filter(ticket => {
       const haystack = normalizeText([ticket.id, ticket.title, ticket.description, ticket.reporterCode, ticket.branch, ticket.area].join(" "));
-      return (!query || haystack.includes(query)) && (!els.status.value || ticket.status === els.status.value) && (!els.areaFilter.value || ticket.area === els.areaFilter.value);
+      return normalizeBranch(ticket.branch) === selectedBranch && (!query || haystack.includes(query)) && (!els.status.value || ticket.status === els.status.value) && (!els.areaFilter.value || ticket.area === els.areaFilter.value);
     });
-    els.list.innerHTML = "";
     els.empty.hidden = filtered.length > 0;
     filtered.forEach(ticket => {
       const card = document.createElement("article"); card.className = "ticket-card"; card.dataset.priority = ticket.priority;
