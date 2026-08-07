@@ -24,6 +24,13 @@ function normalizeText(text) {
     .toLowerCase();
 }
 
+function getAssetUrl(path) {
+  if (window.location.hostname !== "adamiangarciadev.github.io") return path;
+
+  const cleanPath = path.replace(/^\.\//, "");
+  return `https://raw.githubusercontent.com/adamiangarciadev/Rio-tools/main/apps/pedido-carteleria/${cleanPath}`;
+}
+
 function flattenItems(projects) {
   return projects.flatMap((project) =>
     project.items.map((item) => ({
@@ -68,7 +75,7 @@ function renderCards() {
     button.addEventListener("click", () => openPreview(item));
 
     const image = document.createElement("img");
-    image.src = item.image;
+    image.src = getAssetUrl(item.image);
     image.loading = "lazy";
     image.alt = `${item.projectTitle} - pagina ${item.number}`;
 
@@ -82,7 +89,7 @@ function renderCards() {
 
     const download = document.createElement("a");
     download.className = "image-download";
-    download.href = item.pdf;
+    download.href = getAssetUrl(item.pdf);
     download.download = `${item.projectId}-pagina-${String(item.number).padStart(3, "0")}.pdf`;
     download.textContent = "Descargar PDF";
 
@@ -107,10 +114,10 @@ function renderCards() {
 }
 
 function openPreview(item) {
-  previewImage.src = item.image;
+  previewImage.src = getAssetUrl(item.image);
   previewImage.alt = `${item.projectTitle} - pagina ${item.number}`;
   previewTitle.textContent = `${item.projectTitle} - Pagina ${item.number}`;
-  previewDownload.href = item.pdf;
+  previewDownload.href = getAssetUrl(item.pdf);
   previewDownload.download = `${item.projectId}-pagina-${String(item.number).padStart(3, "0")}.pdf`;
   previewDialog.showModal();
 }
