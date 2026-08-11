@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RIO Sistemas | Objetivos de venta</title>
+  <link rel="stylesheet" href="../../assets/rio-theme.css">
+  <style>
+    body { background:radial-gradient(circle at top right,rgba(90,167,255,.10),transparent 34%),var(--rio-bg); }
+    .hidden { display:none !important; }
+    .login { min-height:100vh; display:grid; place-items:center; padding:24px; }
+    .login-card { width:min(430px,100%); padding:32px; border:1px solid var(--rio-border); border-radius:16px; background:var(--rio-surface); }
+    .brand { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+    .logo { width:48px; height:48px; display:grid; place-items:center; border-radius:12px; background:var(--rio-primary-2); color:#061017; font-weight:900; }
+    h1,p { margin-top:0; } h1 { margin-bottom:5px; font-size:1.5rem; }
+    label { display:grid; gap:7px; margin:15px 0; }
+    input { width:100%; padding:0 13px; }
+    button { padding:0 18px; }
+    .error { min-height:20px; margin-top:12px; color:var(--rio-danger); }
+    .shell { width:min(1100px,calc(100% - 32px)); margin:auto; padding:24px 0 50px; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:14px; margin-bottom:22px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .secondary { background:transparent !important; color:var(--rio-muted) !important; }
+    .summary { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:16px; }
+    .stat { padding:18px; border:1px solid var(--rio-border); border-radius:12px; background:var(--rio-surface); }
+    .stat span { color:var(--rio-muted); font-size:.78rem; text-transform:uppercase; }
+    .stat strong { display:block; margin-top:7px; font-size:1.5rem; }
+    .panel { padding:20px; border:1px solid var(--rio-border); border-radius:14px; background:var(--rio-surface); }
+    table { width:100%; border-collapse:collapse; } th,td { padding:14px 10px; text-align:right; border-bottom:1px solid var(--rio-border); } th:first-child,td:first-child { text-align:left; } th { color:var(--rio-muted); font-size:.75rem; text-transform:uppercase; }
+    .goal-input { min-width:170px; text-align:right; font-variant-numeric:tabular-nums; }
+    .message { min-height:22px; margin-top:14px; color:var(--rio-ok); }
+    @media(max-width:720px){ .summary{grid-template-columns:1fr;} header{align-items:flex-start;flex-direction:column;} .panel{padding:12px;} table{font-size:.82rem;} th,td{padding:10px 5px;} .goal-input{min-width:135px;} }
+  </style>
+</head>
+<body>
+  <main id="loginView" class="login">
+    <form id="loginForm" class="login-card">
+      <div class="brand"><div class="logo">RIO</div><div><h1>Panel de Sistemas</h1><p>Administración de objetivos</p></div></div>
+      <label>Mail<input id="email" type="email" autocomplete="username" value="sistemas@rio.com.ar" required></label>
+      <label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label>
+      <button id="loginButton" type="submit">Ingresar</button>
+      <div id="loginError" class="error"></div>
+    </form>
+  </main>
+
+  <main id="adminView" class="shell hidden">
+    <header><div><h1>Objetivos mensuales</h1><p id="period"></p></div><div class="actions"><button id="saveButton">Guardar objetivos</button><button id="logoutButton" class="secondary">Salir</button></div></header>
+    <section class="summary"><article class="stat"><span>Objetivo general</span><strong id="totalGoal"></strong></article><article class="stat"><span>Venta acumulada</span><strong id="totalSales"></strong></article><article class="stat"><span>Cumplimiento</span><strong id="totalPercent"></strong></article></section>
+    <section class="panel"><div style="overflow:auto"><table><thead><tr><th>Local</th><th>Venta acumulada</th><th>Avance</th><th>Objetivo mensual</th></tr></thead><tbody id="stores"></tbody></table></div><div id="message" class="message"></div></section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

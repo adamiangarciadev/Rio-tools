@@ -133,6 +133,18 @@
       background: rgba(17, 24, 33, .72) !important;
     }
 
+    .suite-header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .monthly-goal-button {
+      white-space: nowrap;
+    }
+
     .col:nth-child(1) {
       --sector-color: #f59e0b;
       --sector-rgb: 245, 158, 11;
@@ -355,6 +367,14 @@
         align-items: flex-start;
         flex-direction: column;
       }
+      .suite-header-actions {
+        width: 100%;
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .monthly-goal-button {
+        width: 100%;
+      }
       .header-supervision {
         width: 100%;
       }
@@ -384,14 +404,17 @@
           <p>Operacion, deposito, ecommerce y administracion en una sola plataforma.</p>
         </div>
       </div>
-      <div class="supervision-access header-supervision" id="supervisionAccess">
-        <button class="btn" id="supervisionOpenButton" type="button">Supervision</button>
-        <form class="supervision-access__form" id="supervisionAccessForm">
-          <input id="supervisionAccessPass" type="password" autocomplete="current-password" placeholder="Clave de acceso" aria-label="Clave de acceso de supervisión" />
-          <button class="btn" type="submit">Ingresar</button>
-        </form>
-        <button class="btn" id="supervisionLockButton" type="button">Cerrar supervision</button>
-        <div class="supervision-access__message" id="supervisionAccessMessage"></div>
+      <div class="suite-header-actions">
+        <a class="btn monthly-goal-button" href="./apps/objetivos-ventas/">Mi objetivo mensual</a>
+        <div class="supervision-access header-supervision" id="supervisionAccess">
+          <button class="btn" id="supervisionOpenButton" type="button">Supervision</button>
+          <form class="supervision-access__form" id="supervisionAccessForm">
+            <input id="supervisionAccessPass" type="password" autocomplete="current-password" placeholder="Clave de acceso" aria-label="Clave de acceso de supervisión" />
+            <button class="btn" type="submit">Ingresar</button>
+          </form>
+          <button class="btn" id="supervisionLockButton" type="button">Cerrar supervision</button>
+          <div class="supervision-access__message" id="supervisionAccessMessage"></div>
+        </div>
       </div>
     </header>
 
@@ -575,6 +598,11 @@
             <a class="item" href="./apps/remitos-deposito/">
               <div class="item-title">Remitos Deposito</div>
               <p class="item-desc">Carga manual, numeracion por cliente e historial de remitos.</p>
+              <div class="item-meta"><span class="state beta">Nuevo</span></div>
+            </a>
+            <a class="item" href="./apps/objetivos-ventas-sistemas/">
+              <div class="item-title">Objetivos de Venta</div>
+              <p class="item-desc">Edición mensual de objetivos comerciales por local.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
             <a class="item" href="./apps/apercibimientos/">
