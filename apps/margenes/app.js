@@ -1,6 +1,8 @@
 ;(() => {
   "use strict";
 
+  const API_URL = window.MARGENES_API_URL || "";
+
   const COLUMN_PATTERNS = {
     branch: [/^codigo$/, /^local$/, /^sucursal$/, /^locales$/],
     discontinuity: [/^discontinuidad$/],
@@ -112,6 +114,65 @@
 
     render();
     renderComparison();
+    loadDailyReport();
+  }
+
+  async function loadDailyReport() {
+    if (!API_URL) {
+      setStatus("Esperando archivos. La carga automatica queda activa al configurar api-config.js.");
+      return;
+    }
+
+    setStatus("Cargando el reporte diario desde el correo...");
+    try {
+      const url = new URL(API_URL);
+      url.searchParams.set("accion", "reporte");
+      url.searchParams.set("_", Date.now());
+      const response = await fetch(url.toString(), { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      if (!payload.ok) throw new Error(payload.error || "La API no devolvio un reporte valido.");
+
+      const rows = Array.isArray(payload.rows) ? payload.rows.map(normalizeJsonRow) : [];
+      if (!rows.length) throw new Error("El JSON diario todavia no tiene datos.");
+
+      state.rows = rows;
+      state.files = [payload.meta?.attachmentName || "correo diario"];
+      state.aggregates = buildAggregates(rows);
+      if (payload.meta?.period) els.periodInput.value = payload.meta.period;
+      setStatus(
+        `${fmtInt(rows.length)} filas cargadas automaticamente. `
+        + `Correo: ${payload.meta?.messageDate || "sin fecha"}. `
+        + `Actualizado: ${payload.meta?.updatedAt || "sin fecha"}.`
+      );
+      render();
+    } catch (error) {
+      setStatus(`No pude cargar el reporte automatico: ${error.message}. Podes usar la carga manual.`);
+    }
+  }
+
+  function normalizeJsonRow(row) {
+    const reportType = row.reportType === "locales" ? "locales" : "proveedor";
+    const cost = toNumber(row.cost);
+    const profit = toNumber(row.profit);
+    return {
+      reportType,
+      branch: text(row.branch),
+      provider: text(row.provider),
+      product: text(row.product),
+      category: text(row.category),
+      discontinuity: text(row.discontinuity),
+      qty: toNumber(row.qty),
+      cost,
+      sales: toNumber(row.sales),
+      profit,
+      margin: cost ? profit / cost : 0,
+      fileName: text(row.fileName),
+      sheetName: text(row.sheetName) || "Correo diario",
+      sourceRow: toNumber(row.sourceRow),
+      isSubtotal: Boolean(row.isSubtotal),
+      isTotal: Boolean(row.isTotal),
+    };
   }
 
   function switchTab(tab) {
@@ -575,7 +636,7 @@
   }
 
   function normalizeRawRow(raw, map, reportType, fileName, sheetName, sourceRow) {
-    const discontinuity = text(raw[map.discontinuity]);
+    const discontinuity = descriptionOnly(raw[map.discontinuity]);
     const isSubtotal = /^subtotal/i.test(discontinuity);
     const isTotal = /^total$/i.test(discontinuity) || /^total$/i.test(text(raw[map.branch]));
     const qty = toNumber(raw[map.qty]);
@@ -604,11 +665,11 @@
       };
     }
 
-    const groupValue = text(raw[map.group]);
-    const nameValue = text(raw[map.name]);
-    const provider = isSubtotal ? groupValue : (nameValue || text(raw[map.provider]) || "Sin proveedor");
-    const category = isSubtotal ? "" : (groupValue || text(raw[map.category]) || "Sin categoria");
-    const product = text(raw[map.product]) || nameValue || provider;
+    const groupValue = descriptionOnly(raw[map.group]);
+    const nameValue = descriptionOnly(raw[map.name]);
+    const provider = isSubtotal ? groupValue : (nameValue || descriptionOnly(raw[map.provider]) || "Sin proveedor");
+    const category = isSubtotal ? "" : (groupValue || descriptionOnly(raw[map.category]) || "Sin categoria");
+    const product = descriptionOnly(raw[map.product]) || nameValue || provider;
 
     return {
       reportType,
@@ -905,15 +966,16 @@
   }
 
   function buildLocalesSheet(rows) {
-    const detail = rows.map((row) => [
+    const groupedRows = groupLocalReportRows(rows);
+    const detail = groupedRows.map((row) => [
       row.branch,
       row.qty,
       round2(row.cost),
       round2(row.sales),
       round2(row.profit),
-      row.cost ? row.profit / row.cost : 0,
+      row.margin,
     ]);
-    const totals = sumRows(rows);
+    const totals = sumRows(groupedRows);
     return [
       ["REPORTE EJECUTIVO - VENTA Y GANANCIAS POR LOCALES", "", "", "", "", ""],
       [`Formato ejecutivo - Generado automaticamente - ${formatDateTimeForExport()} - Fuente: ${state.files.join(", ")}`, "", "", "", "", ""],
@@ -927,17 +989,28 @@
   }
 
   function buildProveedorSheet(rows) {
-    const detailRows = rows.filter((row) => !row.isSubtotal);
-    const body = rows.map((row) => [
-      row.discontinuity,
-      row.isSubtotal ? row.provider : row.category,
-      row.isSubtotal ? "" : row.provider,
-      row.qty,
-      round2(row.cost),
-      round2(row.sales),
-      round2(row.profit),
-      row.isSubtotal && row.cost ? row.profit / row.cost : "",
-    ]);
+    const detailRows = groupProviderReportRows(rows.filter((row) => !row.isSubtotal));
+    const body = buildProviderOrderedRows(detailRows).map((row) => row.isSubtotal
+      ? [
+        "Subtotal 2:",
+        row.provider,
+        "",
+        row.qty,
+        round2(row.cost),
+        round2(row.sales),
+        round2(row.profit),
+        row.margin,
+      ]
+      : [
+        row.discontinuity,
+        row.category,
+        row.provider,
+        row.qty,
+        round2(row.cost),
+        round2(row.sales),
+        round2(row.profit),
+        "",
+      ]);
     const totals = sumRows(detailRows);
     return [
       ["REPORTE EJECUTIVO - VENTAS Y GANANCIAS POR MARCA", "", "", "", "", "", "", ""],
@@ -949,6 +1022,96 @@
       ...body,
       ["TOTAL", "", "", totals.cantidad, round2(totals.costo), round2(totals.venta), round2(totals.ganancia), totals.margen],
     ];
+  }
+
+  function groupLocalReportRows(rows) {
+    const map = new Map();
+    rows.forEach((row) => {
+      const branch = text(row.branch) || "Sin sucursal";
+      const key = normalizeText(branch);
+      const item = map.get(key) || {
+        branch,
+        qty: 0,
+        cost: 0,
+        sales: 0,
+        profit: 0,
+        margin: 0,
+      };
+      item.qty += row.qty;
+      item.cost += row.cost;
+      item.sales += row.sales;
+      item.profit += row.profit;
+      map.set(key, item);
+    });
+    return [...map.values()]
+      .map((row) => ({ ...row, margin: row.cost ? row.profit / row.cost : 0 }))
+      .sort((a, b) => b.sales - a.sales);
+  }
+
+  function groupProviderReportRows(rows) {
+    const map = new Map();
+    rows.forEach((row) => {
+      const discontinuity = descriptionOnly(row.discontinuity);
+      const category = descriptionOnly(row.category) || "Sin grupo";
+      const provider = descriptionOnly(row.provider) || "Sin nombre";
+      const key = [discontinuity, category, provider].map(normalizeText).join("|||");
+      const item = map.get(key) || {
+        discontinuity,
+        category,
+        provider,
+        qty: 0,
+        cost: 0,
+        sales: 0,
+        profit: 0,
+        margin: 0,
+      };
+      item.qty += row.qty;
+      item.cost += row.cost;
+      item.sales += row.sales;
+      item.profit += row.profit;
+      map.set(key, item);
+    });
+    return [...map.values()]
+      .map((row) => ({ ...row, margin: row.cost ? row.profit / row.cost : 0 }))
+      .sort((a, b) => b.sales - a.sales);
+  }
+
+  function buildProviderOrderedRows(detailRows) {
+    const providers = new Map();
+    detailRows.forEach((row) => {
+      const key = normalizeText(row.provider);
+      const group = providers.get(key) || {
+        provider: row.provider,
+        rows: [],
+        qty: 0,
+        cost: 0,
+        sales: 0,
+        profit: 0,
+        margin: 0,
+      };
+      group.rows.push(row);
+      group.qty += row.qty;
+      group.cost += row.cost;
+      group.sales += row.sales;
+      group.profit += row.profit;
+      providers.set(key, group);
+    });
+
+    return [...providers.values()]
+      .map((group) => ({ ...group, margin: group.cost ? group.profit / group.cost : 0 }))
+      .sort((a, b) => b.sales - a.sales)
+      .flatMap((group) => [
+        ...group.rows.sort((a, b) => b.sales - a.sales),
+        {
+          isSubtotal: true,
+          provider: group.provider,
+          qty: group.qty,
+          cost: group.cost,
+          sales: group.sales,
+          profit: group.profit,
+          margin: group.margin,
+        },
+      ]);
   }
 
   function applyNumberFormats(sheet, startRow, intCols, moneyCols, pctCols) {
@@ -1139,6 +1302,12 @@
 
   function text(value) {
     return String(value ?? "").trim();
+  }
+
+  function descriptionOnly(value) {
+    const raw = text(value).replace(/\s+/g, " ");
+    const separator = raw.indexOf(" ");
+    return separator < 0 ? raw : raw.slice(separator + 1).trim();
   }
 
   function toNumber(value) {
