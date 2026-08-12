@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock & Ventas · RIO</title>
+  <meta name="description" content="Consulta diaria de stock y ventas por producto y local.">
+  <link rel="stylesheet" href="../../assets/rio-theme.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="container module-topbar">
+    <a href="../../index.html" class="btn back-btn">Volver</a>
+    <div class="module-topbar__title">
+      <h1>Stock & Ventas</h1>
+      <p>Foto diaria de mercadería y movimiento por local</p>
+    </div>
+    <div class="module-topbar__actions">
+      <button class="btn btn-secondary" id="importBtn" type="button">Importar CSV</button>
+      <button class="btn" id="exportBtn" type="button">Exportar vista</button>
+      <input id="fileInput" type="file" accept=".csv,text/csv" hidden>
+    </div>
+  </header>
+
+  <main class="container dashboard">
+    <section class="panel intro">
+      <div>
+        <span class="eyebrow">REPORTE ZNUBE</span>
+        <h2>Inventario claro, sin abrir planillas.</h2>
+        <p id="reportMeta">Cargando la muestra del mail…</p>
+      </div>
+      <div class="date-box">
+        <span>Fecha del reporte</span>
+        <strong id="reportDate">—</strong>
+        <small id="sourceName">Esperando datos</small>
+      </div>
+    </section>
+
+    <section class="kpi-grid" aria-label="Resumen">
+      <article class="kpi"><span>Stock disponible</span><strong id="stockKpi">—</strong><small id="stockHint">todos los locales</small></article>
+      <article class="kpi accent"><span>Unidades vendidas</span><strong id="salesKpi">—</strong><small id="salesHint">en el reporte</small></article>
+      <article class="kpi"><span>Artículos</span><strong id="articlesKpi">—</strong><small>códigos distintos</small></article>
+      <article class="kpi warning"><span>Sin stock</span><strong id="noStockKpi">—</strong><small>variantes con venta o catálogo</small></article>
+    </section>
+
+    <section class="panel filters-panel">
+      <div class="section-head">
+        <div><span class="eyebrow">FILTROS</span><h2>Encontrá exactamente lo que buscás</h2></div>
+        <button class="text-button" id="clearBtn" type="button">Limpiar filtros</button>
+      </div>
+      <div class="filters">
+        <label class="search wide">Buscar artículo<input id="search" type="search" placeholder="Código o descripción"></label>
+        <label>Local<select id="branch"><option value="">Todos los locales</option></select></label>
+        <label>Proveedor<select id="supplier"><option value="">Todos</option></select></label>
+        <label>Unidad de medida<select id="unit"><option value="">Todas</option></select></label>
+        <label>Clasificación<select id="classification"><option value="">Todas</option></select></label>
+        <label>Línea<select id="line"><option value="">Todas</option></select></label>
+        <label>Código<input id="code" type="search" placeholder="Ej. 56-650"></label>
+        <label>Grupo<select id="group"><option value="">Todos</option></select></label>
+        <label>Color<select id="color"><option value="">Todos</option></select></label>
+        <label>Talle<select id="size"><option value="">Todos</option></select></label>
+      </div>
+      <div class="quick-filters">
+        <label><input id="onlyStock" type="checkbox"> Solo con stock</label>
+        <label><input id="onlySales" type="checkbox"> Solo con ventas</label>
+        <span id="resultCount">— resultados</span>
+      </div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="section-head">
+        <div><span class="eyebrow">DETALLE</span><h2>Productos por color y talle</h2></div>
+        <label class="sort">Ordenar por<select id="sort"><option value="sales">Mayor venta</option><option value="stock">Mayor stock</option><option value="code">Código</option></select></label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Código / artículo</th><th>Proveedor</th><th>Grupo</th><th>Color</th><th>Talle</th><th class="num">Stock</th><th class="num">Venta</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="7" class="empty">Cargando datos…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pagination"><button class="btn btn-secondary" id="prevBtn" type="button">Anterior</button><span id="pageInfo">—</span><button class="btn btn-secondary" id="nextBtn" type="button">Siguiente</button></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="../../assets/rio-access.js" data-require-supervision="true"></script>
+  <script src="api-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

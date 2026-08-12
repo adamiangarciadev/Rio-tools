@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Equiparación de stock · RIO</title>
+  <meta name="description" content="Movimientos sugeridos para equilibrar stock entre sucursales.">
+  <link rel="stylesheet" href="../../assets/rio-theme.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="container module-topbar">
+    <a class="btn back-btn" href="../../index.html">Volver</a>
+    <div class="module-topbar__title"><h1>Equiparación de stock</h1><p id="dataStatus">Calculando movimientos desde el reporte diario…</p></div>
+    <div class="module-topbar__actions"><button class="btn btn-secondary" id="reloadBtn" type="button">Actualizar</button><button class="btn" id="exportBtn" type="button">Exportar movimientos</button></div>
+  </header>
+
+  <main class="container shell">
+    <section class="notice panel"><div><span class="eyebrow">CRITERIO ACTIVO</span><strong>Avellaneda 3249 + Web funcionan como un solo local</strong><p>Castelli y Lamarca conservan 2 unidades en artículos de línea. Los artículos con unidad PRO se distribuyen solo por porcentaje.</p></div><div class="report-date"><span>Reporte</span><strong id="reportDate">—</strong></div></section>
+
+    <section class="filters panel" aria-label="Filtros de equiparación">
+      <label class="wide">Buscar artículo<input id="searchInput" type="search" placeholder="Código, descripción, color o talle"></label>
+      <label>Sucursal involucrada<select id="branchSelect"><option value="">Todas las sucursales</option></select></label>
+      <label>Proveedor<select id="supplierSelect"><option value="">Todos</option></select></label>
+      <label>Unidad de medida<select id="unitSelect"><option value="">Todas</option></select></label>
+      <label>Clasificación<select id="classificationSelect"><option value="">Todas</option></select></label>
+      <label>Línea<select id="lineSelect"><option value="">Todas</option></select></label>
+      <label>Código<input id="codeInput" type="search" placeholder="Ej. 56-650"></label>
+      <label>Grupo<select id="groupSelect"><option value="">Todos</option></select></label>
+      <label>Color<select id="colorSelect"><option value="">Todos</option></select></label>
+      <label>Talle<select id="sizeSelect"><option value="">Todos</option></select></label>
+      <label>Stock total mínimo<input id="minStockInput" type="number" min="1" step="1" value="4"></label>
+      <div class="filter-actions">
+        <label class="toggle"><input id="onlyStockInput" type="checkbox"><span>Solo con stock</span></label>
+        <label class="toggle"><input id="onlySalesInput" type="checkbox"><span>Solo con ventas</span></label>
+        <label class="toggle"><input id="priorityInput" type="checkbox" checked><span>Mínimo 5 en Avellaneda 3249 + Web</span></label>
+        <button class="text-button" id="clearFiltersBtn" type="button">Limpiar filtros</button>
+      </div>
+    </section>
+
+    <section class="metric-row">
+      <article><span>Variantes revisadas</span><strong id="variantsKpi">0</strong></article>
+      <article><span>Variantes a mover</span><strong id="moveVariantsKpi">0</strong></article>
+      <article><span>Unidades a mover</span><strong id="unitsKpi">0</strong></article>
+      <article><span>Movimientos excluidos</span><strong id="excludedKpi">0</strong></article>
+    </section>
+
+    <section class="panel results-panel">
+      <div class="panel-head"><div><span class="eyebrow">PROPUESTA</span><h2>Movimientos sugeridos</h2><p id="resultLabel">Preparando resultados…</p></div><div class="panel-actions"><label class="sort-label">Ordenar por<select id="sortSelect"><option value="units">Mayor movimiento</option><option value="stock">Mayor stock</option><option value="sales">Mayor venta</option><option value="code">Código</option></select></label><button class="text-button" id="restoreBtn" type="button">Restaurar excluidos</button></div></div>
+      <div id="movesList" class="moves-list"></div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="../../assets/rio-access.js" data-require-supervision="true"></script>
+  <script src="api-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
