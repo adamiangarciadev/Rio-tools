@@ -611,11 +611,13 @@
         el.estadoCarga.textContent = `Actualizando remito ${remito}...`;
       }
       const estadoCanonico = canonEstado(nuevoEstado);
-      const accion = estadoCanonico === "RECIBIDO EN SUCURSAL"
+      const esRecepcionSucursal = estadoCanonico === "RECIBIDO EN SUCURSAL";
+      const accion = esRecepcionSucursal
         ? "marcarRecibido"
         : "actualizarEstado";
       const res = await fetch(API_URL, {
         method: "POST",
+        ...(esRecepcionSucursal ? { mode: "no-cors" } : {}),
         body: JSON.stringify({
           accion,
           remito,
@@ -624,6 +626,10 @@
           codigoPersonal
         })
       });
+      if (esRecepcionSucursal && res.type === "opaque") {
+        await cargarRemitos();
+        return;
+      }
       const data = await leerRespuestaJson(res, "No se pudo actualizar el estado");
       if (!data.ok) throw new Error(data.error || "No se pudo actualizar el estado");
       await cargarRemitos();
