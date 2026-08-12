@@ -34,3 +34,6 @@ apps/pedido-carteleria/previews/
 .playwright-cli/page-2026-08-07T00-41-44-643Z.yml
 *.yml
 apps/objetivos-ventas/ventas-dashboard.json
+apps/stock-ventas-google/appsscript.json
+apps/stock-ventas/build_sample_json.py
+apps/stock-ventas/sample-data.json
