@@ -610,10 +610,14 @@
       if (el.estadoCarga) {
         el.estadoCarga.textContent = `Actualizando remito ${remito}...`;
       }
+      const estadoCanonico = canonEstado(nuevoEstado);
+      const accion = estadoCanonico === "RECIBIDO EN SUCURSAL"
+        ? "marcarRecibido"
+        : "actualizarEstado";
       const res = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({
-          accion: "actualizarEstado",
+          accion,
           remito,
           sucursal: state.sucursal,
           nuevoEstado,
