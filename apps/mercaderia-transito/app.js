@@ -1,6 +1,7 @@
 ;(() => {
   "use strict";
-  const API_URL = "https://script.google.com/macros/s/AKfycbyHeHtA935aruQE6YsBM0lTp51_TWdNqMkz1CEfQ9Cem_uKKse9xOeRdezzD65riCaq/exec";
+  const API_LECTURA_URL = "https://script.google.com/macros/s/AKfycbyHeHtA935aruQE6YsBM0lTp51_TWdNqMkz1CEfQ9Cem_uKKse9xOeRdezzD65riCaq/exec";
+  const API_ESCRITURA_URL = "https://script.google.com/macros/s/AKfycbyjV61vxornSXgFNt10L-IohoU2Bp002flTPV7LMjCr-PFGA98rFx_sgBQbB72zfEvR/exec";
   const LS_SUCURSAL = "mercaderia_transito_sucursal";
   const CSV_FILES = ["../../data/equivalencia.csv", "../../data/equivalencia2.csv"];
   const BACKUP_ROOT_FOLDER_ID = "1HoQBiMRvflZuyLtCaJyRBWio1C5i6ofH";
@@ -176,7 +177,7 @@
   }
   async function cargarSucursales() {
     try {
-      const res = await fetch(`${API_URL}?accion=sucursales`);
+      const res = await fetch(`${API_LECTURA_URL}?accion=sucursales`);
       const data = await leerRespuestaJson(res, "No se pudieron cargar las sucursales");
       if (!data.ok) throw new Error(data.error || "Error al cargar sucursales");
       const sucursalesRaw = Array.isArray(data.sucursales) ? data.sucursales : [];
@@ -239,7 +240,7 @@
       el.estadoCarga.textContent = `Cargando remitos de ${state.sucursal}...`;
     }
     try {
-      const res = await fetch(`${API_URL}?accion=listar&sucursal=${encodeURIComponent(state.sucursal)}`);
+      const res = await fetch(`${API_LECTURA_URL}?accion=listar&sucursal=${encodeURIComponent(state.sucursal)}`);
       const data = await leerRespuestaJson(res, "No se pudieron cargar los remitos");
       if (!data.ok) throw new Error(data.error || "No se pudieron cargar los remitos");
       state.remitos = (data.remitos || []).map(normalizarRemito);
@@ -610,26 +611,16 @@
       if (el.estadoCarga) {
         el.estadoCarga.textContent = `Actualizando remito ${remito}...`;
       }
-      const estadoCanonico = canonEstado(nuevoEstado);
-      const esRecepcionSucursal = estadoCanonico === "RECIBIDO EN SUCURSAL";
-      const accion = esRecepcionSucursal
-        ? "marcarRecibido"
-        : "actualizarEstado";
-      const res = await fetch(API_URL, {
+      const res = await fetch(API_ESCRITURA_URL, {
         method: "POST",
-        ...(esRecepcionSucursal ? { mode: "no-cors" } : {}),
         body: JSON.stringify({
-          accion,
+          accion: "actualizarEstado",
           remito,
           sucursal: state.sucursal,
           nuevoEstado,
           codigoPersonal
         })
       });
-      if (esRecepcionSucursal && res.type === "opaque") {
-        await cargarRemitos();
-        return;
-      }
       const data = await leerRespuestaJson(res, "No se pudo actualizar el estado");
       if (!data.ok) throw new Error(data.error || "No se pudo actualizar el estado");
       await cargarRemitos();
@@ -648,7 +639,7 @@
       if (el.estadoCarga) {
         el.estadoCarga.textContent = `Confirmando remito ${remito}...`;
       }
-      const res = await fetch(API_URL, {
+      const res = await fetch(API_ESCRITURA_URL, {
         method: "POST",
         body: JSON.stringify({
           accion: "confirmarOk",
@@ -765,7 +756,7 @@
       const archivos = await Promise.all(
         Array.from((el.difFiles && el.difFiles.files) || []).map(fileToBase64Object)
       );
-      const res = await fetch(API_URL, {
+      const res = await fetch(API_ESCRITURA_URL, {
         method: "POST",
         body: JSON.stringify({
           accion: "guardarDiferencias",
