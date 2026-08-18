@@ -84,6 +84,9 @@
     $("#negativeWorkflow").hidden = mode !== "negative";
     $("#orphanCouponWorkflow").hidden = mode !== "orphan-coupon";
     $("#generalFields").querySelectorAll("input,select,textarea").forEach(node => node.disabled = mode !== "general");
+    const formActions = $(".form-actions");
+    if (mode === "labels") $("#labelsActions").appendChild(formActions);
+    else els.message.insertAdjacentElement("afterend", formActions);
     updateSubmitLabel();
     clearMessage();
   }
@@ -251,7 +254,7 @@
       const etiquetas = await persistTicket({ ...common, area: "Sistemas", priority: "Baja", title: "Pedido de etiquetas", description: `Etiquetas solicitadas:\n${labelsText}\n\nNo se solicitó baja de artículos.` });
       return [etiquetas];
     }
-    const baja = await persistTicket({ ...common, area: "Sistemas", priority: "Baja", title: "Pedido de etiquetas", description: `Baja de artículos vinculada: ${group}\n\nCódigos a dar de baja:\n${bajas.join("\n")}` });
+    const baja = await persistTicket({ ...common, area: "Sistemas", priority: "Baja", title: "Bajas de stock", description: `Baja de artículos vinculada: ${group}\n\nCódigos a dar de baja:\n${bajas.join("\n")}` });
     const etiquetas = await persistTicket({ ...common, area: "Sistemas", priority: "Baja", title: "Pedido de etiquetas", description: `Proceso vinculado: ${group}\nIncidente de baja: ${baja.id}\n\nEtiquetas solicitadas:\n${labelsText}` });
     return [baja, etiquetas];
   }
