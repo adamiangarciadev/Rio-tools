@@ -20,12 +20,13 @@ La suite prioriza despliegues simples, módulos aislados y automatizaciones punt
 | Operaciones | Entrada de Mercadería, Mercadería en Tránsito, Control de Remitos de Clientes, Envíos y Flete |
 | Ecommerce | Categorizador, Pedidos Web, Pedidos Web Locales, Pedidos Dashboard y Banco de Medios |
 | Depósito | Picking Salida, Pedido Semanal, Etiquetas y Remitos Depósito |
-| Administración | Asistencia, Confirmación de Depósitos, Archivos Administrativos y otras herramientas de control |
+| Administración | Asistencia, Confirmación de Depósitos, Check Depósitos, Archivos Administrativos y otras herramientas de control |
 | Comunicación visual | Pedido de Cartelería y catálogo sincronizado desde Canva |
 | Sistemas | Mesa de Ayuda para locales y Gestión de Incidentes para seguimiento interno |
-| Supervisores | Control de Asistencia, Márgenes, Dashboard de Asistencia, Check Depósitos, Ventas por Cliente, Remitos Depósito y Apercibimientos |
+| Supervisores | Control de Asistencia, Márgenes, Dashboard de Asistencia, Seguimiento de Remitos, Ventas por Cliente, Remitos Depósito y Apercibimientos |
 
 Las herramientas de la columna **Supervisores** solo se muestran después de habilitar el acceso correspondiente desde el panel principal.
+Gestión de Incidentes y Check Depósitos conservan sus áreas de Sistemas y Administración, respectivamente, pero también requieren el acceso de Supervisión.
 
 ## Cambios funcionales recientes
 
