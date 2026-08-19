@@ -10,6 +10,10 @@
 
   // Clave para guardar la sucursal elegida en el navegador
   const LS_SUCURSAL = "rio_sucursal_web";
+  const PADRON_URLS = [
+    "../../data/ASISTENCIA_RIO%20-%20PADRON.csv",
+    "../asistencia/ASISTENCIA_RIO%20-%20PADRON.csv",
+  ];
 
   // 🔧 Opcional: ocultar estado "ENVIADO" (si tu backend lo usa como estado intermedio sin acción)
   const HIDE_ENVIADO_SIMPLE = true;
@@ -21,6 +25,7 @@
   const buscarPedido = document.getElementById("buscarPedido");
   let pedidosActuales = [];
   let filtroActual = "";
+  let padronUsuarios = new Map();
 
   if (!sucursalSelect || !tablaPedidos || !estadoCarga) {
     console.error(
@@ -56,6 +61,79 @@
   }
 
   // ================== API CALLS ==================
+
+  async function cargarPadronUsuarios() {
+    for (const url of PADRON_URLS) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) continue;
+        const rows = parseCsv(await res.text());
+        const map = new Map();
+        rows.forEach((row) => {
+          const codigo = String(row.vendedor_id || row.id || row.codigo || "").trim();
+          const nombre = String(row.apellido_nombre || row.nombre || row.vendedor_nombre || "").trim();
+          if (codigo && nombre) map.set(codigo, nombre);
+        });
+        if (map.size) {
+          padronUsuarios = map;
+          return true;
+        }
+      } catch (error) {
+        console.warn("[RIO] No se pudo cargar el padrón", url, error);
+      }
+    }
+    return false;
+  }
+
+  function parseCsv(text) {
+    const lines = String(text || "").replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
+    if (!lines.length) return [];
+    const headers = splitCsvLine(lines.shift()).map((value) => value.trim());
+    return lines.map((line) => {
+      const values = splitCsvLine(line);
+      return headers.reduce((row, header, index) => {
+        row[header] = values[index] || "";
+        return row;
+      }, {});
+    });
+  }
+
+  function splitCsvLine(line) {
+    const values = [];
+    let value = "";
+    let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"' && quoted && line[i + 1] === '"') {
+        value += '"';
+        i++;
+      } else if (char === '"') quoted = !quoted;
+      else if (char === "," && !quoted) {
+        values.push(value);
+        value = "";
+      } else value += char;
+    }
+    values.push(value);
+    return values;
+  }
+
+  async function pedirVendedor() {
+    if (!padronUsuarios.size && !(await cargarPadronUsuarios())) {
+      alert("No se pudo cargar el padrón. No se permite modificar pedidos.");
+      return null;
+    }
+    const codigo = String(prompt("Código de vendedor") || "").trim();
+    if (!codigo) {
+      alert("Tenés que ingresar tu código de vendedor para modificar el pedido.");
+      return null;
+    }
+    const nombre = padronUsuarios.get(codigo);
+    if (!nombre) {
+      alert("Código de vendedor no encontrado en el padrón.");
+      return null;
+    }
+    return { codigo, nombre };
+  }
 
   async function cargarPedidos(mostrarLoading = true) {
     const sucursal = sucursalSelect.value;
@@ -102,8 +180,8 @@
     const sucursal = sucursalSelect.value;
     if (!sucursal) return;
 
-    const usuario = prompt("¿Quién recibe el pedido? (nombre)");
-    if (!usuario) return; // cancelado
+    const vendedor = await pedirVendedor();
+    if (!vendedor) return;
 
     try {
       estadoCarga.textContent = "Actualizando (recibido)...";
@@ -115,7 +193,8 @@
           accion: "marcarRecibido",
           sucursal: sucursal,
           id_pedido: idPedido,
-          usuario: usuario,
+          usuario: vendedor.nombre,
+          usuario_codigo: vendedor.codigo,
         }),
       });
 
@@ -150,8 +229,8 @@
     const sucursal = sucursalSelect.value;
     if (!sucursal) return;
 
-    const usuario = prompt("¿Quién entrega el pedido? (nombre)");
-    if (!usuario) return; // cancelado
+    const vendedor = await pedirVendedor();
+    if (!vendedor) return;
 
     try {
       estadoCarga.textContent = "Actualizando (retirado)...";
@@ -163,7 +242,8 @@
           accion: "marcarRetirado",
           sucursal: sucursal,
           id_pedido: idPedido,
-          usuario: usuario,
+          usuario: vendedor.nombre,
+          usuario_codigo: vendedor.codigo,
         }),
       });
 

@@ -39,6 +39,8 @@
 const SPREADSHEET_ID = "1nzP_vqgJ8ZP_MZZtLBWj8mynYXb2MylwJXSv8hwz9UU";
 const SHEET_NAME = "Pedidos";
 const LOG_SHEET_NAME = "Pedidos_LOG";
+const ASISTENCIA_SPREADSHEET_ID = "1IQ7azWM1GO7wMwuD9KIu0z-dchH5yixEYJBGXVfA7XI";
+const PADRON_SHEET_NAME = "PADRON";
 const CLAVE_EDICION_ENVIO_RETIRO_FALLBACK = "RIO2026";
 
 const LABEL_PROCESADO = "RIO/Pedido Importado";
@@ -52,6 +54,7 @@ const ESTADOS_VALIDOS = [
   "ESPERANDO PAGO",
   "PARA ARMAR",
   "ARMANDO PEDIDO",
+  "ARMADO",
   "PICKEADO/ARMADO",
   "CONTROLADO",
   "ENVIADO",
@@ -472,6 +475,8 @@ function doPost(e) {
 // ================== WHATSAPP ==================
 
 function _crearPedidoWhatsapp(data) {
+  const vendedor = _validarVendedorModificacion_(data);
+  if (!vendedor.ok) return _jsonError(vendedor.error);
   const sh = _getSheet_();
 
   const cliente = String(data.cliente || "").trim();
@@ -691,7 +696,44 @@ function _ensureHeader_(sh, headerName) {
 
 // ================== POST endpoints ==================
 
+function _validarVendedorModificacion_(data) {
+  const codigo = String(data && data.usuario_codigo || "").trim();
+  if (!codigo) {
+    return { ok: false, error: "Se requiere un codigo de vendedor valido para modificar pedidos" };
+  }
+
+  try {
+    const sh = SpreadsheetApp.openById(ASISTENCIA_SPREADSHEET_ID).getSheetByName(PADRON_SHEET_NAME);
+    if (!sh) return { ok: false, error: "No se pudo validar el codigo contra el padron" };
+
+    const values = sh.getDataRange().getDisplayValues();
+    if (!values.length) return { ok: false, error: "El padron esta vacio" };
+
+    const headers = values[0].map(h => String(h || "").trim().toLowerCase());
+    const idxCodigo = headers.indexOf("vendedor_id");
+    const idxNombre = headers.indexOf("apellido_nombre");
+    if (idxCodigo < 0 || idxNombre < 0) {
+      return { ok: false, error: "El padron no tiene las columnas requeridas" };
+    }
+
+    for (let i = 1; i < values.length; i++) {
+      if (String(values[i][idxCodigo] || "").trim() === codigo) {
+        const usuario = String(values[i][idxNombre] || "").trim();
+        if (!usuario) break;
+        data.usuario = usuario;
+        return { ok: true, codigo, usuario };
+      }
+    }
+  } catch (err) {
+    return { ok: false, error: "No se pudo validar el codigo contra el padron" };
+  }
+
+  return { ok: false, error: "Codigo de vendedor no encontrado en el padron" };
+}
+
 function _marcarRecibido(data) {
+  const vendedor = _validarVendedorModificacion_(data);
+  if (!vendedor.ok) return _jsonError(vendedor.error);
   const sh = _getSheet_();
 
   const idPedido = String(data.id_pedido || "").trim();
@@ -747,6 +789,8 @@ function _marcarRecibido(data) {
 }
 
 function _marcarRetirado(data) {
+  const vendedor = _validarVendedorModificacion_(data);
+  if (!vendedor.ok) return _jsonError(vendedor.error);
   const sh = _getSheet_();
 
   const idPedido = String(data.id_pedido || "").trim();
@@ -802,6 +846,8 @@ function _marcarRetirado(data) {
 }
 
 function _cambiarEstado(data) {
+  const vendedor = _validarVendedorModificacion_(data);
+  if (!vendedor.ok) return _jsonError(vendedor.error);
   const sh = _getSheet_();
 
   const idPedido = String(data.id_pedido || "").trim();
@@ -877,6 +923,8 @@ function _claveEdicionEnvioRetiro_() {
 }
 
 function _cambiarEnvioRetiro(data) {
+  const vendedor = _validarVendedorModificacion_(data);
+  if (!vendedor.ok) return _jsonError(vendedor.error);
   const clave = String(data.clave || "").trim();
   if (!clave || clave !== _claveEdicionEnvioRetiro_()) {
     return _jsonError("Clave incorrecta para modificar envio/retiro");

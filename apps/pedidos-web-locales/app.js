@@ -10,6 +10,11 @@
 
   // Clave para guardar la sucursal elegida en el navegador
   const LS_SUCURSAL = "rio_sucursal_web";
+  const PADRON_URLS = [
+    "../../data/ASISTENCIA_RIO%20-%20PADRON.csv",
+    "../asistencia/ASISTENCIA_RIO%20-%20PADRON.csv",
+  ];
+  let padronUsuarios = new Map();
 
   // Referencias a elementos del DOM
   const sucursalSelect = document.getElementById("sucursalSelect");
@@ -50,6 +55,39 @@
   }
 
   // ================== API CALLS ==================
+
+  async function cargarPadronUsuarios() {
+    for (const url of PADRON_URLS) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) continue;
+        const lines = (await res.text()).replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
+        const headers = lines.shift().split(",").map((value) => value.replace(/^"|"$/g, "").trim());
+        const map = new Map();
+        lines.forEach((line) => {
+          const values = line.split(",").map((value) => value.replace(/^"|"$/g, "").trim());
+          const row = Object.fromEntries(headers.map((header, index) => [header, values[index] || ""]));
+          const codigo = String(row.vendedor_id || row.id || row.codigo || "").trim();
+          const nombre = String(row.apellido_nombre || row.nombre || row.vendedor_nombre || "").trim();
+          if (codigo && nombre) map.set(codigo, nombre);
+        });
+        if (map.size) { padronUsuarios = map; return true; }
+      } catch (error) { console.warn("[RIO] No se pudo cargar el padrón", url, error); }
+    }
+    return false;
+  }
+
+  async function pedirVendedor() {
+    if (!padronUsuarios.size && !(await cargarPadronUsuarios())) {
+      alert("No se pudo cargar el padrón. No se permite modificar pedidos.");
+      return null;
+    }
+    const codigo = String(prompt("Código de vendedor") || "").trim();
+    if (!codigo) { alert("Tenés que ingresar tu código de vendedor para modificar el pedido."); return null; }
+    const nombre = padronUsuarios.get(codigo);
+    if (!nombre) { alert("Código de vendedor no encontrado en el padrón."); return null; }
+    return { codigo, nombre };
+  }
 
   async function cargarPedidos(mostrarLoading = true) {
     const sucursal = sucursalSelect.value;
@@ -95,8 +133,8 @@
     const sucursal = sucursalSelect.value;
     if (!sucursal) return;
 
-    const usuario = prompt("¿Quién recibe el pedido? (nombre)");
-    if (!usuario) return; // cancelado
+    const vendedor = await pedirVendedor();
+    if (!vendedor) return;
 
     try {
       estadoCarga.textContent = "Actualizando (recibido)...";
@@ -108,7 +146,8 @@
           accion: "marcarRecibido",
           sucursal: sucursal,
           id_pedido: idPedido,
-          usuario: usuario,
+          usuario: vendedor.nombre,
+          usuario_codigo: vendedor.codigo,
         }),
       });
 
@@ -143,8 +182,8 @@
     const sucursal = sucursalSelect.value;
     if (!sucursal) return;
 
-    const usuario = prompt("¿Quién entrega el pedido? (nombre)");
-    if (!usuario) return; // cancelado
+    const vendedor = await pedirVendedor();
+    if (!vendedor) return;
 
     try {
       estadoCarga.textContent = "Actualizando (retirado)...";
@@ -156,7 +195,8 @@
           accion: "marcarRetirado",
           sucursal: sucursal,
           id_pedido: idPedido,
-          usuario: usuario,
+          usuario: vendedor.nombre,
+          usuario_codigo: vendedor.codigo,
         }),
       });
 
