@@ -36,8 +36,10 @@
       <label><span>Prioridad</span><select id="priorityFilter"><option value="">Todas</option><option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option></select></label>
     </section>
 
-    <section class="panel">
+    <div class="workspace-grid">
+    <section class="panel incidents-panel">
       <div class="section-title"><div><p class="eyebrow">BANDEJA DE TRABAJO</p><h2>Incidentes recibidos</h2></div><span id="resultCount">0 incidentes</span></div>
+      <p class="resolved-hint">Los resueltos, cerrados y rechazados están ocultos. Buscalos o elegí su estado para verlos.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Incidente</th><th>Sucursal</th><th>Prioridad</th><th>Estado</th><th>Responsable</th><th>Actualizado</th></tr></thead>
@@ -46,6 +48,17 @@
         <div id="emptyState" class="empty" hidden>No hay incidentes con estos filtros.</div>
       </div>
     </section>
+    <aside class="request-sidebar" aria-label="Pedidos operativos">
+      <section class="request-panel request-panel-labels">
+        <div class="request-head"><div><p class="eyebrow">REETIQUETADO</p><h2>Pedido de etiquetas</h2></div><span id="labelsCount" class="request-count">0</span></div>
+        <div id="labelsList" class="request-list"></div><p id="labelsEmpty" class="request-empty">No hay pedidos pendientes.</p>
+      </section>
+      <section class="request-panel request-panel-removals">
+        <div class="request-head"><div><p class="eyebrow">STOCK</p><h2>Bajas</h2></div><span id="removalsCount" class="request-count">0</span></div>
+        <div id="removalsList" class="request-list"></div><p id="removalsEmpty" class="request-empty">No hay bajas pendientes.</p>
+      </section>
+    </aside>
+    </div>
   </main>
 
   <dialog id="ticketDialog">
