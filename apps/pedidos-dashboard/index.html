@@ -18,6 +18,19 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <section id="accessGate" class="access-gate" aria-labelledby="accessTitle">
+    <form id="accessForm" class="access-card">
+      <div class="access-lock" aria-hidden="true">🔒</div>
+      <h1 id="accessTitle">Dashboard protegido</h1>
+      <p>Ingresá la clave para acceder al Dashboard de Pedidos.</p>
+      <label for="accessPassword">Clave de acceso</label>
+      <input id="accessPassword" type="password" autocomplete="current-password" required autofocus />
+      <button class="btn" type="submit">Ingresar</button>
+      <p id="accessError" class="access-error" role="alert"></p>
+    </form>
+  </section>
+
+  <div id="protectedContent" class="protected-content" hidden>
   <header class="container module-topbar">
     <a href="../../index.html" class="btn back-btn">Volver</a>
     <div class="module-topbar__title">
@@ -89,7 +102,7 @@
         <div class="panel-head">
           <div>
             <h2>Tiempo en armado</h2>
-            <p id="cycleHint">Desde primer ingreso hasta primer estado armado/pickeado</p>
+            <p id="cycleHint">Desde el primer ingreso hasta el primer estado pickeado/armado</p>
           </div>
         </div>
         <div id="cycleChart" class="cycle-grid"></div>
@@ -136,6 +149,16 @@
       <article class="panel span-2">
         <div class="panel-head">
           <div>
+            <h2>Usuarios con movimientos</h2>
+            <p>Identificados contra el padron de asistencia; se conserva el dato original si no hay coincidencia segura</p>
+          </div>
+        </div>
+        <div id="userChart" class="stack-list"></div>
+      </article>
+
+      <article class="panel span-2">
+        <div class="panel-head">
+          <div>
             <h2>Pedidos medidos</h2>
             <p id="cycleTableHint">Ordenados por mayor tiempo de armado</p>
           </div>
@@ -147,9 +170,9 @@
                 <th>ID</th>
                 <th>Sucursal</th>
                 <th>Ingreso</th>
-                <th>Armado/Pickeado</th>
+                <th>Pickeado/Armado</th>
                 <th>Tiempo</th>
-                <th>Estado armado</th>
+                <th>Estado pickeado</th>
               </tr>
             </thead>
             <tbody id="cycleTable"></tbody>
@@ -184,7 +207,51 @@
       </article>
     </section>
   </main>
+  </div>
 
+  <script>
+    (() => {
+      const gate = document.getElementById("accessGate");
+      const content = document.getElementById("protectedContent");
+      const form = document.getElementById("accessForm");
+      const password = document.getElementById("accessPassword");
+      const error = document.getElementById("accessError");
+      let grantAccess;
+
+      window.PEDIDOS_DASHBOARD_ACCESS = new Promise((resolve) => {
+        grantAccess = resolve;
+      });
+
+      function unlock() {
+        try { sessionStorage.setItem("rio_pedidos_dashboard_access_v1", "ok"); } catch {}
+        gate.style.display = "none";
+        gate.hidden = true;
+        content.hidden = false;
+        content.style.display = "block";
+        grantAccess();
+      }
+
+      let unlocked = false;
+      try { unlocked = sessionStorage.getItem("rio_pedidos_dashboard_access_v1") === "ok"; } catch {}
+      if (unlocked) unlock();
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        try {
+          if (password.value === "Marketing.19") {
+            unlock();
+          } else {
+            error.textContent = "Clave incorrecta.";
+            password.value = "";
+            password.focus();
+          }
+        } catch (submitError) {
+          error.textContent = "No se pudo validar el acceso. Recargá la página.";
+          console.error(submitError);
+        }
+      });
+    })();
+  </script>
   <script src="api-config.js"></script>
   <script src="app.js"></script>
   <script src="../../assets/rio-report-problem.js"></script>

@@ -2,6 +2,10 @@
   "use strict";
 
   const API_URL = window.PEDIDOS_DASHBOARD_API_URL || "";
+  const PADRON_URL = "../../data/ASISTENCIA_RIO%20-%20PADRON.csv";
+  const USER_CANONICAL_LEGAJO = {
+    FLORENCIA: "124"
+  };
   const NORMALIZATION = {
     sucursal: {
       AVELLANEDA: ["AVELLANEDA", "AVELL", "AV", "AV2", "AV 2"],
@@ -12,8 +16,7 @@
       ENZO: [
         "ENZO",
         "E",
-        "ENZO/GABRIELA",
-        "ENZO/ANTONELLA",
+        "ENZOP",
         "ENZO RETIRO ANDREA ALVAREZ"
       ],
       FLORENCIA: [
@@ -34,15 +37,22 @@
         "FLORENMICIA",
         "FLORENCIOA",
         "FLORENCJIA"
+        ,"F,ORENCIA", "FDLOR", "FLKLR", "FLKOR", "FLLOR", "FLOERNCIA",
+        "FLOORENCIA", "FLOPR", "FLOPRENCIA", "FLORCHU", "FLORECIA",
+        "FLOREMNCIA", "FLORENC9IA", "FLORENCA", "FLORENCCIA", "FLORENCIAA",
+        "FLORENCIAI", "FLORENCIIA", "FLORENCISA", "FLORENCIUA", "FLORENCOA",
+        "FLORENXIA", "FLOREWNCIA", "FLORFENCIA", "FOLRENCIA", "FORENCIA",
+        "LFOR", "FOR"
       ],
       FRANCO: [
-        "FRANCO"
+        "FRANCO", "FRNACO", "FRSNCO"
       ],
       ROMINA: [
         "ROMINA",
         "ROMI",
         "ROM",
-        "ROMINAROMINA"
+        "ROMINAROMINA",
+        "ROMINS"
       ],
       GABRIELA: [
         "GABRIELA",
@@ -56,9 +66,27 @@
       SOLEDAD: [
         "SOLEDAD",
         "SOLE",
+        "SOL",
         "SOLER",
-        "SOLE/FLORENCIA"
-      ]
+        "SOOLE"
+      ],
+      ANGEL: ["ANGEL", "ANGEL, A MANO ESTA ANOTADO COMO 2285"],
+      ALEJANDRA: ["ALEJANDRA", "ALEJANDRA (LOCAL)"],
+      ANTONELLA: ["ANTONELLA LOPEZ"],
+      BRENDA: ["BRE", "BREN", "BRENDA", "BRENDA GARCIA"],
+      ERIKA: ["ERICA", "ERIKA"],
+      GISEL: ["GISE", "GISE LOCAL"],
+      JOEL: ["JOEL"],
+      JOHA: ["JOHA"],
+      KARINA: ["KARI", "KARINA", "KARINA SILVA"],
+      LUCIANO: ["LUCCIANO", "LUCHI", "LUCIANO", "LUCIANO."],
+      MAYRA: ["MAIRA", "MAITA", "MAYRA", "MIARA"],
+      MATIAS: ["MATI", "MATIAAS", "MATIAS", "MATIASS", "MATIASSD", "MATII"],
+      NICOLE: ["NIC0LE", "NICOLE", "NICOOLE"],
+      ORIANA: ["ORIANA"],
+      PATRICIA: ["PATRICIA ROMERO"],
+      SELENA: ["SELENA"],
+      VERONICA: ["VERONICA"]
     },
     estado: {
       "ESPERANDO MERCADERIA": ["ESPERANDO MERCA", "ESPERANDO MERCADERIA", "ESPERANDO MERCADERÍA"],
@@ -82,39 +110,8 @@
     }
   };
 
-  const USER_NOISE_VALUES = [
-    "",
-    ".",
-    "..",
-    "99",
-    "117",
-    "9999",
-    "A",
-    "ALEJANDRA LOCAL",
-    "ANTONELLA LOPEZ",
-    "COCO",
-    "DAMIAN",
-    "DAMIAN PRUEBA",
-    "GISE LOCAL",
-    "JOEL",
-    "JOHA",
-    "KARI",
-    "KARINA SILVA",
-    "LAURA LOCAL",
-    "LOCAL",
-    "LUCH",
-    "LUCHI",
-    "LUCCIANO",
-    "LUCIANO",
-    "PATO",
-    "VC"
-  ];
-
   const DONE_STATE_PATTERNS = [
-    "PICKEADO",
-    "ARMADO",
-    "LISTO PARA RETIRO",
-    "ENVIADO"
+    "PICKEADO"
   ];
 
   const DEMO_ROWS = [
@@ -242,17 +239,19 @@
     branchChart: $("#branchChart"),
     shippingChart: $("#shippingChart"),
     webChart: $("#webChart"),
+    userChart: $("#userChart"),
     cycleTable: $("#cycleTable"),
     logTable: $("#logTable")
   };
 
   const state = {
     rows: [],
+    padron: [],
     loading: false,
     demo: false
   };
 
-  init();
+  Promise.resolve(window.PEDIDOS_DASHBOARD_ACCESS).then(init);
 
   function init() {
     el.refreshBtn.addEventListener("click", loadData);
@@ -271,10 +270,12 @@
       el.refreshBtn.textContent = "Actualizando...";
 
       if (!API_URL || API_URL.includes("PEGAR_URL")) {
+        state.padron = await loadLocalPadron();
         state.rows = normalizeRows(DEMO_ROWS);
         state.demo = true;
       } else {
         const data = await fetchJson(`${API_URL}?accion=listar_log`);
+        state.padron = Array.isArray(data.padron) ? data.padron : await loadLocalPadron();
         state.rows = normalizeRows(data.data || []);
         state.demo = false;
       }
@@ -307,7 +308,7 @@
     el.activityHint.textContent = state.demo
       ? "Vista demo hasta configurar la API"
       : `${rows.length} cambios filtrados`;
-    el.cycleHint.textContent = `${cycles.length} pedidos con ingreso y armado/pickeado detectados`;
+    el.cycleHint.textContent = `${cycles.length} pedidos con ingreso y pickeado/armado detectados`;
     el.tableHint.textContent = `${sortedRows.length} movimientos visibles`;
     el.cycleTableHint.textContent = `${cycles.length} pedidos medidos`;
 
@@ -317,12 +318,13 @@
     renderStackList(el.branchChart, countBy(rows, "sucursal"), "sucursal");
     renderStackList(el.shippingChart, countBy(rows, "tipoEnvio"), "envio");
     renderStackList(el.webChart, countBy(rows, "web"), "web");
+    renderStackList(el.userChart, countBy(rows, "usuario"), "usuario");
     renderCycleTable(cycles);
     renderTable(sortedRows);
   }
 
   function renderEmpty(message) {
-    [el.cycleChart, el.dailyChart, el.stateChart, el.branchChart, el.shippingChart, el.webChart].forEach((node) => {
+    [el.cycleChart, el.dailyChart, el.stateChart, el.branchChart, el.shippingChart, el.webChart, el.userChart].forEach((node) => {
       node.innerHTML = `<div class="empty-state">${escapeHtml(message)}</div>`;
     });
     el.cycleTable.innerHTML = `<tr><td colspan="6">${escapeHtml(message)}</td></tr>`;
@@ -334,11 +336,10 @@
   }
 
   function setupDateDefaults() {
-    const dates = state.rows.map((row) => row.timestamp).filter(Boolean).sort((a, b) => a - b);
-    if (!dates.length || el.fromDate.value || el.toDate.value) return;
-
-    el.fromDate.value = toInputDate(dates[0]);
-    el.toDate.value = toInputDate(dates[dates.length - 1]);
+    if (el.fromDate.value || el.toDate.value) return;
+    const now = new Date();
+    el.fromDate.value = toInputDate(new Date(now.getFullYear(), now.getMonth(), 1).getTime());
+    el.toDate.value = toInputDate(new Date(now.getFullYear(), now.getMonth() + 1, 0).getTime());
   }
 
   function fillFilters() {
@@ -366,7 +367,7 @@
     const to = el.toDate.value ? new Date(`${el.toDate.value}T23:59:59`).getTime() : Infinity;
     const query = normalizeText(el.searchInput.value);
 
-    return state.rows
+    return getRowsUntilPicked(state.rows)
       .filter((row) => row.timestamp >= from && row.timestamp <= to)
       .filter((row) => !el.branchFilter.value || row.sucursal === el.branchFilter.value)
       .filter((row) => !el.stateFilter.value || row.estadoActual === el.stateFilter.value)
@@ -387,6 +388,22 @@
           row.detalle
         ].join(" ")).includes(query);
       });
+  }
+
+  function getRowsUntilPicked(rows) {
+    const firstPickedByOrder = new Map();
+
+    rows.forEach((row) => {
+      if (!row.idPedido || !row.timestamp || !isBuildDoneRow(row)) return;
+      const current = firstPickedByOrder.get(row.idPedido);
+      if (!current || row.timestamp < current) firstPickedByOrder.set(row.idPedido, row.timestamp);
+    });
+
+    return rows.filter((row) => {
+      if (normalizeText(row.estadoActual) === normalizeText("RETIRADO")) return false;
+      const pickedAt = firstPickedByOrder.get(row.idPedido);
+      return !pickedAt || !row.timestamp || row.timestamp <= pickedAt;
+    });
   }
 
   function renderDailyChart(rows) {
@@ -414,7 +431,7 @@
 
   function renderCycleChart(cycles) {
     if (!cycles.length) {
-      el.cycleChart.innerHTML = `<div class="empty-state">Todavia no hay pedidos con ingreso y armado/pickeado detectados.</div>`;
+      el.cycleChart.innerHTML = `<div class="empty-state">Todavia no hay pedidos con ingreso y pickeado/armado detectados.</div>`;
       return;
     }
 
@@ -530,10 +547,9 @@
         const fecha = String(row.fecha || row.fechaHora || "").trim();
         const estadoPrevio = normalizeValue(row.estadoPrevio, "estado");
         const estadoActual = normalizeValue(row.estadoActual, "estado");
-        return {
+        const normalizedRow = {
           fecha,
           timestamp: parseDate(fecha),
-          usuario: normalizeUser(row.usuario || row.modificadoPor),
           origen: clean(row.origen || row.evento),
           idPedido: clean(row.idPedido || row.id),
           sucursal: normalizeValue(row.sucursal, "sucursal"),
@@ -543,6 +559,8 @@
           web: normalizeValue(row.web, "web"),
           detalle: clean(row.detalle || row.comoSeModifico)
         };
+        normalizedRow.usuario = resolveUser(row.usuario || row.modificadoPor, normalizedRow);
+        return normalizedRow;
       })
       .filter((row) => row.fecha || row.idPedido || row.sucursal)
       .sort((a, b) => b.timestamp - a.timestamp);
@@ -685,9 +703,11 @@
     return raw.toUpperCase().replace(/\s+/g, " ");
   }
 
-  function normalizeUser(value) {
+  function resolveUser(value, row = {}) {
     const raw = clean(value);
-    if (!raw) return "OTROS";
+    if (!raw) return "SIN IDENTIFICAR";
+    const byId = state.padron.find((person) => clean(person.vendedor_id) === raw);
+    if (byId) return formatPadronUser(byId);
 
     const normalized = normalizeText(raw);
     const dictionary = NORMALIZATION.usuario;
@@ -695,44 +715,95 @@
       dictionary[key].some((variant) => normalizeText(variant) === normalized)
     ));
 
-    if (canonical) return canonical;
-    if (USER_NOISE_VALUES.some((item) => normalizeText(item) === normalized)) return "OTROS";
+    if (canonical === "SOLEDAD") return resolveSoledad(row);
 
-    const florenciaScore = similarity(normalized, normalizeText("FLORENCIA"));
-    const rominaScore = similarity(normalized, normalizeText("ROMINA"));
-    const gabrielaScore = similarity(normalized, normalizeText("GABRIELA"));
+    const forcedLegajo = canonical && USER_CANONICAL_LEGAJO[canonical];
+    const forcedPerson = forcedLegajo && state.padron.find((person) => clean(person.vendedor_id) === forcedLegajo);
+    if (forcedPerson) return formatPadronUser(forcedPerson);
 
-    if (florenciaScore >= 0.74) return "FLORENCIA";
-    if (rominaScore >= 0.78) return "ROMINA";
-    if (gabrielaScore >= 0.78) return "GABRIELA";
+    const exactName = state.padron.find((person) => normalizeText(person.apellido_nombre) === normalized);
+    if (exactName) return formatPadronUser(exactName);
 
-    return "OTROS";
+    const lookupName = canonical || raw;
+    const candidates = state.padron.filter((person) => {
+      const name = normalizeText(person.apellido_nombre);
+      const wanted = normalizeText(lookupName);
+      return name === wanted || name.startsWith(`${wanted} `);
+    });
+    const webCandidate = candidates.find((person) => normalizeText(person.sucursal_base) === "web");
+    if (webCandidate) return formatPadronUser(webCandidate);
+    if (candidates.length === 1) return formatPadronUser(candidates[0]);
+
+    return "UNKNOWN";
   }
 
-  function similarity(a, b) {
-    if (!a || !b) return 0;
-    const distance = levenshtein(a, b);
-    return 1 - (distance / Math.max(a.length, b.length));
-  }
+  function resolveSoledad(row) {
+    const movement = normalizeText([
+      row.estadoPrevio,
+      row.estadoActual,
+      row.sucursal,
+      row.detalle
+    ].join(" "));
+    const isReceivedAtBranch = movement.includes("recibido en sucursal");
+    const isRetiredFromCorrientes = movement.includes("corrientes") && (
+      movement.includes("retirado") || movement.includes("retiro")
+    );
 
-  function levenshtein(a, b) {
-    const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
-
-    for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
-    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
-
-    for (let i = 1; i <= a.length; i++) {
-      for (let j = 1; j <= b.length; j++) {
-        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j - 1] + cost
-        );
-      }
+    if (isReceivedAtBranch || isRetiredFromCorrientes) {
+      const sierra = state.padron.find((person) => clean(person.vendedor_id) === "186");
+      return sierra ? formatPadronUser(sierra) : "SOLEDAD SIERRA (#186)";
     }
 
-    return matrix[a.length][b.length];
+    const ayala = state.padron.find((person) => normalizeText(person.apellido_nombre) === "soledad ayala");
+    return ayala ? formatPadronUser(ayala) : "SOLEDAD AYALA";
+  }
+
+  function formatPadronUser(person) {
+    const legajo = clean(person.vendedor_id);
+    return legajo ? `${clean(person.apellido_nombre)} (#${legajo})` : clean(person.apellido_nombre);
+  }
+
+  async function loadLocalPadron() {
+    try {
+      const response = await fetch(PADRON_URL, { cache: "no-store" });
+      if (!response.ok) return [];
+      return parseCsv(await response.text());
+    } catch (error) {
+      console.warn("No se pudo cargar el padron local", error);
+      return [];
+    }
+  }
+
+  function parseCsv(text) {
+    const lines = String(text || "").replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
+    if (!lines.length) return [];
+    const headers = splitCsvLine(lines[0]);
+    return lines.slice(1).map((line) => {
+      const values = splitCsvLine(line);
+      return headers.reduce((row, header, index) => {
+        row[header.trim()] = clean(values[index]);
+        return row;
+      }, {});
+    });
+  }
+
+  function splitCsvLine(line) {
+    const values = [];
+    let value = "";
+    let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"' && quoted && line[i + 1] === '"') {
+        value += '"';
+        i++;
+      } else if (char === '"') quoted = !quoted;
+      else if (char === "," && !quoted) {
+        values.push(value);
+        value = "";
+      } else value += char;
+    }
+    values.push(value);
+    return values;
   }
 
   function normalizeText(value) {

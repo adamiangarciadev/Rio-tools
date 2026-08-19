@@ -12,6 +12,8 @@
 
 const SPREADSHEET_ID = "1nzP_vqgJ8ZP_MZZtLBWj8mynYXb2MylwJXSv8hwz9UU";
 const SHEET_NAME = "Pedidos_LOG";
+const ASISTENCIA_SPREADSHEET_ID = "1IQ7azWM1GO7wMwuD9KIu0z-dchH5yixEYJBGXVfA7XI";
+const PADRON_SHEET_NAME = "PADRON";
 const TIMEZONE = "America/Argentina/Buenos_Aires";
 
 function doGet(e) {
@@ -105,8 +107,39 @@ function listarLog_(e) {
   return jsonOut({
     ok: true,
     data: out,
+    padron: leerPadron_(),
     total: out.length,
     sourceRows: lastRow - 1
+  });
+}
+
+function leerPadron_() {
+  const ss = SpreadsheetApp.openById(ASISTENCIA_SPREADSHEET_ID);
+  const sh = ss.getSheetByName(PADRON_SHEET_NAME);
+  if (!sh) throw new Error("No existe la hoja " + PADRON_SHEET_NAME + " del padron de asistencia");
+
+  const rows = sh.getDataRange().getDisplayValues();
+  if (rows.length < 2) return [];
+  const headers = rows[0].map(function(value) {
+    return cleanStr(value).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  });
+
+  return rows.slice(1).map(function(row) {
+    function get(names) {
+      for (let i = 0; i < names.length; i++) {
+        const index = headers.indexOf(names[i]);
+        if (index >= 0) return cleanStr(row[index]);
+      }
+      return "";
+    }
+    return {
+      vendedor_id: get(["vendedor_id", "id", "legajo", "codigo"]),
+      apellido_nombre: get(["apellido_nombre", "vendedor_nombre", "nombre", "empleado"]),
+      sucursal_base: get(["sucursal_base", "sucursal", "local"]),
+      rol: get(["rol", "perfil", "puesto"])
+    };
+  }).filter(function(item) {
+    return item.vendedor_id && item.apellido_nombre;
   });
 }
 

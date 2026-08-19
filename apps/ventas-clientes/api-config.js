@@ -1,1 +1,1 @@
-window.VENTAS_CLIENTES_API_URL = "https://script.google.com/macros/s/AKfycbxkkp3nfv02p4e0FTYoLCkmisN48764hDmrrGIy3RMbsK3M0VZFEFOeTd4EVuVNoohf/exec";
+window.VENTAS_CLIENTES_API_URL = "https://script.google.com/macros/s/AKfycbwm9up8nNtK-EhoBP-fp7y2Av-DuhF0YjNSqOTLuhfewXGw-lOYGzzJwJPdC3xjfkLt-A/exec";

@@ -269,6 +269,32 @@ td {
   background: rgba(8, 13, 20, .38);
 }
 
+.access-gate {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at top, rgba(38, 190, 177, .12), transparent 42%);
+}
+
+.access-card {
+  width: min(100%, 410px);
+  display: grid;
+  gap: 14px;
+  padding: 32px;
+  border: 1px solid var(--dash-line);
+  border-radius: 14px;
+  background: var(--dash-panel-2);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .32);
+}
+
+.access-card h1,
+.access-card p { margin: 0; }
+.access-card label { color: var(--dash-muted); font-size: 13px; }
+.access-card input { width: 100%; }
+.access-lock { font-size: 32px; }
+.access-error { min-height: 20px; color: #ff8f8f; font-size: 13px; }
+
 @media (max-width: 1180px) {
   .filters-panel {
     grid-template-columns: repeat(4, minmax(0, 1fr));
