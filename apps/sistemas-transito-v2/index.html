@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seguimiento de Remitos</title>
+  <link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="styles.css?v=20260819-2" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="../../index.html">← Volver</a>
+    <div class="title">
+      <h1>SEGUIMIENTO DE REMITOS</h1>
+      <p>Auditoría de Mercadería en Tránsito V.2</p>
+    </div>
+    <button id="refreshBtn" type="button">Actualizar</button>
+  </header>
+
+  <main class="shell">
+    <section class="metrics" aria-label="Resumen">
+      <article><span>Remitos</span><strong id="totalRemitos">—</strong></article>
+      <article><span>Movimientos registrados</span><strong id="totalMovimientos">—</strong></article>
+      <article><span>Último movimiento</span><strong id="ultimoMovimiento">—</strong></article>
+    </section>
+
+    <section class="filters">
+      <label>Buscar remito
+        <input id="searchInput" type="search" placeholder="Ej. 0013-00020595" autocomplete="off" />
+      </label>
+      <label>Sucursal
+        <select id="branchFilter"><option value="">Todas</option></select>
+      </label>
+      <label>Estado actual
+        <select id="statusFilter"><option value="">Todos</option></select>
+      </label>
+      <span id="loadStatus" role="status"></span>
+    </section>
+
+    <section class="workspace">
+      <aside class="list-panel">
+        <div class="panel-head"><h2>Remitos</h2><span id="resultCount"></span></div>
+        <div class="bulk-actions">
+          <button id="selectVisibleBtn" type="button">Seleccionar visibles</button>
+          <button id="clearSelectionBtn" type="button" hidden>Limpiar</button>
+          <button id="bulkConfirmBtn" class="confirm-ok" type="button" disabled>CONFIRMAR SELECCIONADOS (0)</button>
+        </div>
+        <div id="remitoList" class="remito-list"></div>
+      </aside>
+
+      <article class="detail-panel" id="detailPanel">
+        <div id="emptyDetail" class="empty-detail">
+          <strong>Seleccioná un remito</strong>
+          <span>Acá vas a ver su estado y todos los movimientos registrados.</span>
+        </div>
+        <div id="detailContent" hidden>
+          <div class="detail-head">
+            <div><span class="eyebrow">Remito</span><h2 id="detailRemito"></h2></div>
+            <div class="detail-actions">
+              <span id="detailStatus" class="status-pill"></span>
+              <button id="confirmOkBtn" class="confirm-ok" type="button">DAR OK AL REMITO</button>
+            </div>
+          </div>
+          <div id="detailFacts" class="facts"></div>
+          <div class="timeline-head"><h3>Historial de movimientos</h3><button id="exportBtn" type="button">Exportar CSV</button></div>
+          <ol id="timeline" class="timeline"></ol>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script type="module" src="app.js?v=20260819-2"></script>
+</body>
+</html>

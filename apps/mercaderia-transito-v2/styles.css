@@ -1,0 +1,10 @@
+.login-shell{min-height:100vh;display:grid;place-items:center;padding:24px}
+.login-card{width:min(420px,100%);display:grid;gap:12px;padding:28px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius)}
+.login-card h1{margin:0}.login-card p{margin:0 0 8px;color:var(--muted)}
+.login-card input{width:100%;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);color:var(--text)}
+.version-pill{width:max-content;padding:6px 10px;border-radius:999px;background:#173a2a;color:#75e0a7;font-size:12px;font-weight:700}
+.form-message{min-height:20px;color:#ff9b9b}
+.is-busy{opacity:.65;pointer-events:none}
+.card.card-recibido-sucursal{border-color:#86efac!important;background:#163c2a!important;box-shadow:inset 5px 0 0 #86efac}
+.badge.recibido-sucursal{background:#86efac!important;color:#052e16!important}
+.btn-picking-trigger{margin-bottom:8px;width:100%;background:#174b3d!important;border-color:#57d6a1!important;color:#eafff7!important}

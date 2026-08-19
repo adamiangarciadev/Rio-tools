@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MERCADERÍA EN TRÁNSITO V.2</title>
+  <link rel="stylesheet" href="../mercaderia-transito/styles.css" />
+  <link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="styles.css?v=20260818-2" />
+</head>
+<body>
+  <div id="appView">
+    <header class="topbar module-topbar">
+      <a class="back-btn" href="../../index.html">← Volver</a>
+      <div class="page-title module-topbar__title">
+        <h1>MERCADERÍA EN TRÁNSITO V.2</h1>
+       
+      </div>
+      <div class="top-actions module-topbar__actions">
+        <label for="sucursalSelect">Sucursal</label>
+        <select id="sucursalSelect"></select>
+        <label for="searchRemito">Buscar</label>
+        <input id="searchRemito" type="search" placeholder="Buscar remito..." />
+        <button id="refreshBtn" class="btn secondary" type="button">Actualizar</button>
+      </div>
+    </header>
+    <main class="container">
+      <div id="estadoCarga" class="estado-carga"></div>
+      <div id="cardsWrap" class="cards"></div>
+    </main>
+  </div>
+
+  <div id="modalPdf" class="modal hidden">
+    <div class="modal-box modal-pdf-box">
+      <div class="modal-head">
+        <h2 id="pdfModalTitle">Visualizar remito</h2>
+        <button id="cerrarPdfModalBtn" class="btn ghost" type="button">&#10005;</button>
+      </div>
+      <div class="modal-body modal-pdf-body">
+        <iframe
+          id="pdfViewerFrame"
+          title="Vista previa del remito"
+          allow="autoplay"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalPicking" class="modal hidden">
+    <div class="modal-box modal-picking-box">
+      <div class="modal-head">
+        <h2>Realizar picking</h2>
+        <button id="cerrarPickingModalBtn" class="btn ghost" type="button">✕</button>
+      </div>
+      <div class="modal-body modal-picking-body">
+        <section class="picking-main">
+          <div class="picking-grid">
+            <div class="campo"><label>Remito</label><input id="pickingRemito" type="text" readonly /></div>
+            <div class="campo"><label>Sucursal final</label><input id="pickingSucursal" type="text" readonly /></div>
+            <div class="campo"><label>Código de quien realiza el picking</label><input id="pickingCodigo" type="text" inputmode="numeric" placeholder="Ej: 1234" /></div>
+          </div>
+          <div class="campo">
+            <label>Escanear mercadería</label>
+            <input id="pickingScanInput" class="scan-input" type="text" autocomplete="off" placeholder="Escaneá el código..." />
+          </div>
+          <div class="scan-meta"><span id="pickingScanCount" class="badge">0 escaneados</span><span id="pickingNoti" class="muted"></span></div>
+          <div id="pickingLastScans" class="last-scans"></div>
+          <section class="panel"><h3 class="panel-title">Conteo por artículo</h3><div id="pickingArtCounter" class="art-counter muted">Sin escaneos.</div></section>
+        </section>
+        <aside class="picking-side">
+          <div class="pick-list-head"><span>Pickeado</span><span class="muted small">Eliminar borra 1 ocurrencia</span></div>
+          <div id="pickingPickList" class="pick-list"></div>
+        </aside>
+      </div>
+      <div class="modal-actions picking-actions">
+        <button id="resetPickingBtn" class="btn secondary" type="button">Limpiar</button>
+        <button id="descargarPickingBtn" class="btn primary" type="button">Descargar TXT y guardar copia</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js?v=20260818-3"></script>
+</body>
+</html>
