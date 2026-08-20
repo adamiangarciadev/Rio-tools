@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clientes a contactar - RIO</title>
+  <meta name="description" content="Seguimiento comercial de clientes WEB pendientes de contacto." />
+  <link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <section id="accessGate" class="access-gate">
+    <form id="accessForm" class="access-card panel">
+      <span class="eyebrow">RIO · Ecommerce</span>
+      <h1>Clientes a contactar</h1>
+      <p>Ingresá la clave del equipo para consultar y actualizar el seguimiento.</p>
+      <label>Contraseña<input id="accessPassword" type="password" autocomplete="current-password" required autofocus /></label>
+      <button class="btn primary" type="submit">Ingresar</button>
+      <p id="accessError" class="form-error" role="alert"></p>
+    </form>
+  </section>
+
+  <div id="protectedContent" hidden>
+    <header class="container module-topbar">
+      <a href="../../index.html" class="btn back-btn">Volver</a>
+      <div class="module-topbar__title">
+        <h1>Clientes a contactar</h1>
+        <p>Seguimiento y limpieza de clientes WEB sin compra reciente</p>
+      </div>
+      <div class="module-topbar__actions">
+        <button id="refreshBtn" class="btn" type="button">Actualizar</button>
+        <button id="logoutBtn" class="btn" type="button">Salir</button>
+      </div>
+    </header>
+
+    <main class="container contact-shell">
+      <section class="summary-grid" aria-label="Resumen">
+        <article class="summary-card"><span>Alertados hoy</span><strong id="todayCount">0</strong></article>
+        <article class="summary-card"><span>Pendientes activos</span><strong id="pendingCount">0</strong></article>
+        <article class="summary-card"><span>Contactados (7 días)</span><strong id="contactedCount">0</strong></article>
+        <article class="summary-card"><span>Descartados</span><strong id="discardedCount">0</strong></article>
+      </section>
+
+      <section class="toolbar panel">
+        <div class="filters">
+          <label>Vista
+            <select id="viewFilter">
+              <option value="today">Enviados hoy</option>
+              <option value="active">Todos los activos</option>
+              <option value="contacted">Contactados</option>
+              <option value="discarded">Descartados</option>
+              <option value="all">Todos</option>
+            </select>
+          </label>
+          <label>Estado<select id="statusFilter"><option value="">Todos los estados</option></select></label>
+          <label class="search-label">Buscar<input id="searchInput" type="search" placeholder="Nombre, código o teléfono" /></label>
+        </div>
+        <div class="status-line"><span id="apiBadge" class="source-badge">Sin conectar</span><span id="statusText">Esperando datos.</span></div>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel list-panel">
+          <div class="panel-head"><div><h2 id="listTitle">Enviados hoy</h2><p id="listSubtitle">Clientes incluidos en el aviso diario.</p></div><strong id="visibleCount" class="count-pill">0</strong></div>
+          <div id="clientList" class="client-list"><div class="empty-state">Cargando clientes...</div></div>
+        </section>
+        <aside class="panel detail-panel">
+          <div id="emptyDetail" class="empty-state">Seleccioná un cliente para registrar el seguimiento.</div>
+          <form id="detailForm" class="detail-form" hidden>
+            <div><span class="eyebrow">Ficha de seguimiento</span><h2 id="detailName"></h2><p id="detailMeta"></p></div>
+            <div class="detail-metrics">
+              <div><span>Última compra</span><strong id="detailPurchase"></strong></div>
+              <div><span>Días sin comprar</span><strong id="detailDays"></strong></div>
+              <div><span>Último aviso</span><strong id="detailAlert"></strong></div>
+              <div><span>Último contacto</span><strong id="detailContact"></strong></div>
+            </div>
+            <label>Estado<select id="detailStatus" required></select></label>
+            <label>Observaciones<textarea id="detailNote" rows="5" maxlength="1000" placeholder="Ej.: cerró el local, llamar en septiembre..."></textarea></label>
+            <div class="form-actions"><button id="reactivateBtn" class="btn" type="button">Reactivar</button><button class="btn primary" type="submit">Guardar cambios</button></div>
+            <p id="saveStatus" class="save-status" role="status"></p>
+            <section><h3>Historial</h3><div id="eventList" class="event-list"></div></section>
+          </form>
+        </aside>
+      </section>
+    </main>
+  </div>
+  <script src="api-config.js"></script>
+  <script src="app.js"></script>
+  <script src="../../assets/rio-report-problem.js"></script>
+</body>
+</html>
