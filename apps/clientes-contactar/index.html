@@ -60,7 +60,17 @@
 
       <section class="content-grid">
         <section class="panel list-panel">
-          <div class="panel-head"><div><h2 id="listTitle">Enviados hoy</h2><p id="listSubtitle">Clientes incluidos en el aviso diario.</p></div><strong id="visibleCount" class="count-pill">0</strong></div>
+          <div class="panel-head">
+            <div><h2 id="listTitle">Enviados hoy</h2><p id="listSubtitle">Clientes incluidos en el aviso diario.</p></div>
+            <strong id="visibleCount" class="count-pill">0</strong>
+          </div>
+          <div id="clientListHeader" class="client-list-header" aria-label="Ordenar clientes">
+            <button type="button" data-sort="name">Cliente <span aria-hidden="true"></span></button>
+            <button type="button" data-sort="date">Última compra <span aria-hidden="true"></span></button>
+            <button type="button" data-sort="amount">Monto <span aria-hidden="true"></span></button>
+            <button type="button" data-sort="days">Sin compra <span aria-hidden="true"></span></button>
+            <button type="button" data-sort="status">Estado <span aria-hidden="true"></span></button>
+          </div>
           <div id="clientList" class="client-list"><div class="empty-state">Cargando clientes...</div></div>
         </section>
         <aside class="panel detail-panel">

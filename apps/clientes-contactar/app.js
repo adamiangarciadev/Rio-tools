@@ -7,8 +7,8 @@
   };
   const TERMINAL = new Set(["no_responde", "ya_no_vende", "bloqueado", "no_contactar"]);
   const $ = (id) => document.getElementById(id);
-  const el = Object.fromEntries(["accessGate","accessForm","accessPassword","accessError","protectedContent","refreshBtn","logoutBtn","todayCount","pendingCount","contactedCount","discardedCount","viewFilter","statusFilter","searchInput","apiBadge","statusText","listTitle","listSubtitle","visibleCount","clientList","emptyDetail","detailForm","detailName","detailMeta","detailPurchase","detailDays","detailAlert","detailContact","detailStatus","detailNote","reactivateBtn","saveStatus","eventList"].map((id) => [id, $(id)]));
-  const state = { token: sessionStorage.getItem("rio_clientes_contactar_token") || "", data: { clients: {}, dailyRuns: [], events: [] }, selectedId: "" };
+  const el = Object.fromEntries(["accessGate","accessForm","accessPassword","accessError","protectedContent","refreshBtn","logoutBtn","todayCount","pendingCount","contactedCount","discardedCount","viewFilter","statusFilter","searchInput","apiBadge","statusText","listTitle","listSubtitle","visibleCount","clientListHeader","clientList","emptyDetail","detailForm","detailName","detailMeta","detailPurchase","detailDays","detailAlert","detailContact","detailStatus","detailNote","reactivateBtn","saveStatus","eventList"].map((id) => [id, $(id)]));
+  const state = { token: sessionStorage.getItem("rio_clientes_contactar_token") || "", data: { clients: {}, dailyRuns: [], events: [] }, selectedId: "", sort: { key: "date", direction: "desc" } };
 
   init();
   function init() {
@@ -22,6 +22,12 @@
     el.viewFilter.addEventListener("change", render);
     el.statusFilter.addEventListener("change", render);
     el.searchInput.addEventListener("input", render);
+    el.clientListHeader.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-sort]"); if (!button) return;
+      const key = button.dataset.sort;
+      state.sort = { key, direction: state.sort.key === key && state.sort.direction === "asc" ? "desc" : "asc" };
+      render();
+    });
     el.clientList.addEventListener("click", (event) => { const row = event.target.closest("[data-client-id]"); if (row) selectClient(row.dataset.clientId); });
     el.detailForm.addEventListener("submit", saveClient);
     el.reactivateBtn.addEventListener("click", () => { el.detailStatus.value = "pendiente"; saveClient(new Event("submit")); });
@@ -66,14 +72,34 @@
       if (view === "contacted") return c.status === "contactado";
       if (view === "discarded") return TERMINAL.has(c.status);
       return true;
-    }).sort((a,b) => String(b.lastAlertAt||"").localeCompare(String(a.lastAlertAt||"")) || String(a.nombre).localeCompare(String(b.nombre),"es"));
+    }).sort(compareClients);
     const titles = { today:["Enviados hoy","Clientes incluidos en el aviso diario."], active:["Seguimiento activo","Pendientes y contactos todavía vigentes."], contacted:["Contactados","Mensajes detectados desde WhatsApp."], discarded:["Descartados","No volverán a generar alertas hasta reactivarlos."], all:["Todos los clientes","Historial completo del seguimiento."] };
-    [el.listTitle.textContent, el.listSubtitle.textContent] = titles[view]; el.visibleCount.textContent = visible.length;
+    [el.listTitle.textContent, el.listSubtitle.textContent] = titles[view]; el.visibleCount.textContent = visible.length; renderSortHeader();
     el.clientList.innerHTML = visible.length ? visible.map(clientRow).join("") : '<div class="empty-state">No hay clientes para esta vista.</div>';
     if (state.selectedId && state.data.clients[state.selectedId]) renderDetail();
   }
   function clientRow(client) {
-    return `<button type="button" class="client-row ${state.selectedId===client.clienteId?"active":""}" data-client-id="${escapeHtml(client.clienteId)}"><span class="client-identity"><strong>${escapeHtml(client.nombre)}</strong><span>${escapeHtml(client.clienteId)} · ${escapeHtml(client.telefono)}</span></span><span class="client-cell"><span>Última compra</span>${formatDate(client.ultimaCompra)}</span><span class="client-cell"><span>Sin compra</span>${Number(client.diasSinCompra||0)} días</span><span class="status-pill" data-status="${escapeHtml(client.status||"pendiente")}">${escapeHtml(STATUSES[client.status]||"Pendiente")}</span></button>`;
+    return `<button type="button" class="client-row ${state.selectedId===client.clienteId?"active":""}" data-client-id="${escapeHtml(client.clienteId)}"><span class="client-identity"><strong>${escapeHtml(client.nombre)}</strong><span>${escapeHtml(client.clienteId)} · ${escapeHtml(client.telefono)}</span></span><span class="client-cell">${formatDate(client.ultimaCompra)}</span><span class="client-cell purchase-amount">${formatMoney(client.ultimaCompraMonto)}</span><span class="client-cell">${Number(client.diasSinCompra||0)} días</span><span class="status-pill" data-status="${escapeHtml(client.status||"pendiente")}">${escapeHtml(STATUSES[client.status]||"Pendiente")}</span></button>`;
+  }
+  function compareClients(a, b) {
+    const values = {
+      name: [normalize(a.nombre), normalize(b.nombre)],
+      date: [String(a.ultimaCompra || ""), String(b.ultimaCompra || "")],
+      amount: [Number(a.ultimaCompraMonto || 0), Number(b.ultimaCompraMonto || 0)],
+      days: [Number(a.diasSinCompra || 0), Number(b.diasSinCompra || 0)],
+      status: [normalize(STATUSES[a.status] || a.status), normalize(STATUSES[b.status] || b.status)]
+    };
+    const [left, right] = values[state.sort.key] || values.date;
+    const result = typeof left === "number" ? left - right : String(left).localeCompare(String(right), "es");
+    return (state.sort.direction === "asc" ? result : -result) || String(a.nombre).localeCompare(String(b.nombre), "es");
+  }
+  function renderSortHeader() {
+    el.clientListHeader.querySelectorAll("[data-sort]").forEach((button) => {
+      const active = button.dataset.sort === state.sort.key;
+      button.classList.toggle("active", active);
+      button.querySelector("span").textContent = active ? (state.sort.direction === "asc" ? "▲" : "▼") : "";
+      button.setAttribute("aria-pressed", String(active));
+    });
   }
   function selectClient(id) { state.selectedId = id; render(); renderDetail(); }
   function renderDetail() {
