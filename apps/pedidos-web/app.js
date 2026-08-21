@@ -104,62 +104,19 @@
   let PADRON_USUARIOS = new Map();
 
   // =========================
-  // FLUJO / TRANSICIONES
+  // ESTADOS DISPONIBLES
   // =========================
   // IMPORTANTE:
-  // - Las claves tienen que coincidir EXACTO con lo que viene en la columna ESTADO.
-  // - "CANCELADO" se agrega siempre desde accionesDisponibles_().
-  // - "PENDIENTE DE ENVIO" debe existir también en ESTADOS_VALIDOS del Apps Script backend.
-  const TRANSICIONES_BASE = {
-    'ESPERANDO PAGO': ['ARMANDO PEDIDO', 'CANCELADO'],
-
-    'PARA ARMAR': ['ARMANDO PEDIDO'],
-
-    'ARMANDO PEDIDO': ['ARMADO', 'PICKEADO/ARMADO', 'ESPERANDO MERCADERIA'],
-
-    ARMADO: ['PICKEADO/ARMADO', 'ESPERANDO MERCADERIA'],
-
-    'PICKEADO/ARMADO': ['CONTROLADO', 'ESPERANDO MERCADERIA'],
-
-    'ESPERANDO MERCADERIA': [
-      'ARMANDO PEDIDO',
-      'ARMADO',
-      'PICKEADO/ARMADO',
-      'CONTROLADO',
-    ],
-
-    CONTROLADO: [
-      'ESPERANDO PAGO',
-      'PENDIENTE DE ENVIO',
-      'LISTO PARA RETIRO',
-      'ENVIADO A SUCURSAL',
-      'EN SUCURSAL',
-      'ENVIADO',
-      'RETIRADO',
-    ],
-
-    'PENDIENTE DE ENVIO': [
-      'ENVIADO',
-      'LISTO PARA RETIRO',
-      'ENVIADO A SUCURSAL',
-      'EN SUCURSAL',
-      'RETIRADO',
-    ],
-
-    'LISTO PARA RETIRO': ['ENVIADO A SUCURSAL', 'EN SUCURSAL', 'RETIRADO'],
-    'ENVIADO A SUCURSAL': ['EN SUCURSAL', 'RETIRADO'],
-    'EN SUCURSAL': ['RETIRADO'],
-  };
-
-  const ORDEN_BOTONES = [
+  // No hay progresividad: mientras el pedido no esté ARMADO se ofrecen todos
+  // los estados operativos. Al cerrarlo como ARMADO se eliminan los anteriores.
+  const ESTADOS_DISPONIBLES = [
+    'PARA ARMAR',
     'ARMANDO PEDIDO',
+    'PEDIDO CON FALTANTES',
+    'ESPERANDO MERCADERÍA',
     'ARMADO',
-    'PICKEADO/ARMADO',
-    'ESPERANDO MERCADERIA',
+    'PICKEADO',
     'CONTROLADO',
-    'ESPERANDO PAGO',
-    'PENDIENTE DE ENVIO',
-    'LISTO PARA RETIRO',
     'ENVIADO A SUCURSAL',
     'EN SUCURSAL',
     'ENVIADO',
@@ -715,48 +672,18 @@
       .trim();
     if (ESTADOS_SIN_ACCIONES.has(estado)) return [];
 
-    const acciones = new Set();
+    const indiceArmado = ESTADOS_DISPONIBLES.indexOf('ARMADO');
+    const estadosCerrados = new Set(ESTADOS_DISPONIBLES.slice(indiceArmado));
+    // Compatibilidad con pedidos que quedaron guardados con el nombre anterior.
+    estadosCerrados.add('PICKEADO/ARMADO');
+    const esPedidoCerrado = estadosCerrados.has(estado);
 
-    const base = TRANSICIONES_BASE[estado] || [];
-    base.forEach((x) => acciones.add(x));
-
-    // CANCELADO siempre disponible, salvo que el pedido ya esté oculto/finalizado.
-    acciones.add('CANCELADO');
-
-    // Ajuste dinámico desde CONTROLADO / PENDIENTE DE ENVIO:
-    // Si es envío a domicilio / Shipnow, priorizamos ENVIADO.
-    // Si es retiro, priorizamos retiro/sucursal.
-    if (estado === 'CONTROLADO' || estado === 'PENDIENTE DE ENVIO') {
-      if (esShipnow_(p)) {
-        acciones.add('ENVIADO');
-        acciones.delete('LISTO PARA RETIRO');
-        acciones.delete('ENVIADO A SUCURSAL');
-        acciones.delete('EN SUCURSAL');
-        acciones.delete('RETIRADO');
-      } else {
-        acciones.add('PENDIENTE DE ENVIO');
-        acciones.add('LISTO PARA RETIRO');
-        acciones.add('ENVIADO A SUCURSAL');
-        acciones.add('EN SUCURSAL');
-        acciones.add('RETIRADO');
-        acciones.delete('ENVIADO');
-      }
-    }
-
-    // No permitir setear "PARA ARMAR" desde la web
-    acciones.delete('PARA ARMAR');
-
-    const arr = Array.from(acciones);
-    arr.sort((a, b) => {
-      const ia = ORDEN_BOTONES.indexOf(a);
-      const ib = ORDEN_BOTONES.indexOf(b);
-
-      const aa = ia === -1 ? 999 : ia;
-      const bb = ib === -1 ? 999 : ib;
-
-      return aa - bb;
+    return ESTADOS_DISPONIBLES.filter((opcion, indice) => {
+      if (opcion === estado) return false;
+      if (esPedidoCerrado) return indice >= indiceArmado;
+      // PARA ARMAR es el estado inicial y no se vuelve a ofrecer luego de salir de él.
+      return opcion !== 'PARA ARMAR';
     });
-    return arr;
   }
 
   // =========================

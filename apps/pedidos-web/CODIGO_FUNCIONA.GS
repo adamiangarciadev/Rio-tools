@@ -35,18 +35,18 @@ const GMAIL_QUERY = 'from:(hola+ventas@tiendanube.com) subject:("ha realizado la
 // ================== ESTADOS (CATÁLOGO) ==================
 
 const ESTADOS_VALIDOS = [
-  "ESPERANDO PAGO",
   "PARA ARMAR",
-  "ARMANDOSE",
+  "ARMANDO PEDIDO",
+  "PEDIDO CON FALTANTES",
+  "ESPERANDO MERCADERÍA",
+  "ARMADO",
   "PICKEADO",
   "CONTROLADO",
-  "ENVIADO",
   "ENVIADO A SUCURSAL",
   "EN SUCURSAL",
-  "LISTO PARA RETIRO",
+  "ENVIADO",
   "RETIRADO",
-  "CANCELADO",
-  "ESPERANDO MERCADERIA"
+  "CANCELADO"
 ];
 
 function _estadoValido(estado) {
@@ -126,7 +126,7 @@ function importarPedidosDesdeGmail() {
       // - Si no => ESPERANDO PAGO
       const estadoPagoUpper = String(estadoPago || "").toUpperCase();
       const pagado = estadoPagoUpper.includes("PAGO RECIBIDO") || estadoPagoUpper.includes("APROBADO");
-      const estadoInicial = pagado ? "PARA ARMAR" : "ESPERANDO PAGO";
+      const estadoInicial = "PARA ARMAR";
 
       nuevasFilas.push([
         idPedido,        // A ID_PEDIDO
