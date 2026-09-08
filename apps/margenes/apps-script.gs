@@ -199,7 +199,7 @@ function parseMargenesCsv_(csvText, attachmentName) {
   for (let rowIndex = 4; rowIndex < matrix.length; rowIndex++) {
     const raw = matrix[rowIndex] || [];
     const rawProviderCell = cleanMargenes_(raw[0]);
-    const providerCell = descriptionMargenes_(raw[0]);
+    const providerCell = canonicalProviderMargenes_(descriptionMargenes_(raw[0]));
     const classificationCell = descriptionMargenes_(raw[4]);
     const groupCell = descriptionMargenes_(raw[9]);
     if (/^total general$/i.test(rawProviderCell)) break;
@@ -350,13 +350,30 @@ function normalizeMargenes_(value) {
 }
 
 function cleanMargenes_(value) {
-  return String(value == null ? "" : value).trim();
+  return repairMojibakeMargenes_(String(value == null ? "" : value)).trim();
+}
+
+function repairMojibakeMargenes_(value) {
+  const replacements = {
+    "Ã": "Á", "Ã‰": "É", "Ã": "Í", "Ã“": "Ó", "Ãš": "Ú", "Ãœ": "Ü", "Ã‘": "Ñ",
+    "Ã¡": "á", "Ã©": "é", "Ã­": "í", "Ã³": "ó", "Ãº": "ú", "Ã¼": "ü", "Ã±": "ñ",
+    "Â¿": "¿", "Â¡": "¡", "Â°": "°", "Âº": "º", "Âª": "ª", "Â": ""
+  };
+  return Object.keys(replacements).reduce(function(textValue, broken) {
+    return textValue.split(broken).join(replacements[broken]);
+  }, value);
 }
 
 function descriptionMargenes_(value) {
   const raw = cleanMargenes_(value).replace(/\s+/g, " ");
   const separator = raw.indexOf(" ");
   return separator < 0 ? raw : raw.substring(separator + 1).trim();
+}
+
+function canonicalProviderMargenes_(value) {
+  const raw = cleanMargenes_(value).replace(/\s+/g, " ");
+  const normalized = normalizeMargenes_(raw);
+  return normalized === "KOURY" || normalized === "MARCELA KOURY" ? "MARCELA KOURY" : raw;
 }
 
 function margenesJson_(obj) {

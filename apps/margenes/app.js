@@ -667,7 +667,7 @@
 
     const groupValue = descriptionOnly(raw[map.group]);
     const nameValue = descriptionOnly(raw[map.name]);
-    const provider = isSubtotal ? groupValue : (nameValue || descriptionOnly(raw[map.provider]) || "Sin proveedor");
+    const provider = canonicalProviderName(isSubtotal ? groupValue : (nameValue || descriptionOnly(raw[map.provider]))) || "Sin proveedor";
     const category = isSubtotal ? "" : (groupValue || descriptionOnly(raw[map.category]) || "Sin categoria");
     const product = descriptionOnly(raw[map.product]) || nameValue || provider;
 
@@ -1051,9 +1051,12 @@
   function groupProviderReportRows(rows) {
     const map = new Map();
     rows.forEach((row) => {
-      const discontinuity = descriptionOnly(row.discontinuity);
-      const category = descriptionOnly(row.category) || "Sin grupo";
-      const provider = descriptionOnly(row.provider) || "Sin nombre";
+      // These fields were already cleaned while importing the raw report.
+      // Stripping the first token again here truncated multi-word values in the export
+      // (for example, "CLASS LIFE" became "LIFE").
+      const discontinuity = text(row.discontinuity);
+      const category = text(row.category) || "Sin grupo";
+      const provider = canonicalProviderName(row.provider) || "Sin nombre";
       const key = [discontinuity, category, provider].map(normalizeText).join("|||");
       const item = map.get(key) || {
         discontinuity,
@@ -1301,13 +1304,32 @@
   }
 
   function text(value) {
-    return String(value ?? "").trim();
+    return repairMojibake(String(value ?? "")).trim();
+  }
+
+  function repairMojibake(value) {
+    const replacements = {
+      "Ã": "Á", "Ã‰": "É", "Ã": "Í", "Ã“": "Ó", "Ãš": "Ú", "Ãœ": "Ü", "Ã‘": "Ñ",
+      "Ã¡": "á", "Ã©": "é", "Ã­": "í", "Ã³": "ó", "Ãº": "ú", "Ã¼": "ü", "Ã±": "ñ",
+      "Â¿": "¿", "Â¡": "¡", "Â°": "°", "Âº": "º", "Âª": "ª", "Â": "",
+    };
+    return Object.entries(replacements).reduce(
+      (textValue, [broken, fixed]) => textValue.split(broken).join(fixed),
+      value
+    );
   }
 
   function descriptionOnly(value) {
     const raw = text(value).replace(/\s+/g, " ");
     const separator = raw.indexOf(" ");
     return separator < 0 ? raw : raw.slice(separator + 1).trim();
+  }
+
+  function canonicalProviderName(value) {
+    const raw = text(value).replace(/\s+/g, " ");
+    return normalizeText(raw) === "koury" || normalizeText(raw) === "marcela koury"
+      ? "MARCELA KOURY"
+      : raw;
   }
 
   function toNumber(value) {
