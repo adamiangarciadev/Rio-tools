@@ -85,3 +85,14 @@ test('administration tools require access and become available after authenticat
     assert.ok(boot(profile,'entrada-mercaderia',true).redirect);
   }
  });
+
+test('stock equalization requires BOTH depot and supervisor session, including direct entry',()=>{
+  for(const branch of ['','AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB','DEPOSITO','ADMINISTRACION']){
+    for(const unlocked of [false,true]){
+      const allowed=branch==='DEPOSITO'&&unlocked;
+      const {api,redirect}=boot(branch,'revision-stock',unlocked);
+      assert.equal(api.canUse({slug:'revision-stock'}),allowed,`${branch}/${unlocked}`);
+      assert.equal(redirect==='',allowed);
+    }
+  }
+});

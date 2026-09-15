@@ -27,6 +27,7 @@
   const webOnlyApps = new Set(['pedidos-web','clientes-contactar','pedidos-dashboard','categorizador']);
   const localOrdersProfiles = new Set(['AV2','CORRIENTES','QUILMES']);
   const inProfile = slug => {
+    if (slug === 'revision-stock') return branch === 'DEPOSITO' && !!window.RioAccess?.isUnlocked();
     if (profileApps[branch] && !profileApps[branch].includes(slug)) return false;
     if (!localProfiles.has(branch)) return true;
     if (webOnlyApps.has(slug)) return false;

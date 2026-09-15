@@ -222,5 +222,13 @@ window.RioCatalog = [
     "area": "E-commerce",
     "areaId": "1",
     "restricted": false
+  },
+  {
+    "slug": "revision-stock",
+    "name": "Equiparación de Stock",
+    "description": "Revisá el stock por local y elegí los movimientos para equilibrar la mercadería.",
+    "area": "Depósito",
+    "areaId": "2",
+    "restricted": true
   }
 ];
