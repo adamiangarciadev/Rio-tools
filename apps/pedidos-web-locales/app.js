@@ -91,11 +91,23 @@
     }
   }
 
+  function solicitarCodigoVendedor(accion) {
+    const valor = prompt(`Código de vendedor de quien ${accion} el pedido`);
+    if (valor === null) return null;
+    const codigo = valor.trim();
+    if (!codigo) return null;
+    if (!/^\d+$/.test(codigo)) {
+      alert("Ingresá tu código numérico de vendedor, no tu nombre. El servidor validará que esté habilitado.");
+      return null;
+    }
+    return codigo;
+  }
+
   async function marcarRecibido(idPedido) {
     const sucursal = sucursalSelect.value;
     if (!sucursal) return;
 
-    const usuario = prompt("¿Quién recibe el pedido? (nombre)");
+    const usuario = solicitarCodigoVendedor("recibe");
     if (!usuario) return; // cancelado
 
     try {
@@ -109,6 +121,7 @@
           sucursal: sucursal,
           id_pedido: idPedido,
           usuario: usuario,
+          usuario_codigo: usuario,
         }),
       });
 
@@ -143,7 +156,7 @@
     const sucursal = sucursalSelect.value;
     if (!sucursal) return;
 
-    const usuario = prompt("¿Quién entrega el pedido? (nombre)");
+    const usuario = solicitarCodigoVendedor("entrega");
     if (!usuario) return; // cancelado
 
     try {
@@ -157,6 +170,7 @@
           sucursal: sucursal,
           id_pedido: idPedido,
           usuario: usuario,
+          usuario_codigo: usuario,
         }),
       });
 
