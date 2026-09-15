@@ -10,7 +10,8 @@
     { name: "CORRIENTES", url: "https://drive.google.com/file/d/1QD2f-MXv-jQV7h66wPixstFAQQUAsWc3/view?usp=drive_link" },
     { name: "SARMIENTO",  url: "https://drive.google.com/file/d/1IXMQvd-zQdqum8vwUCULcuHVzDRoVLCh/view?usp=drive_link" },
     { name: "CASTELLI",   url: "https://drive.google.com/file/d/1ogZ-uf169U5FItay1lrV3kSyRP74Opil/view?usp=drive_link" },
-    // { name: "DEPÓSITO", url: "PEGAR_LINK" },
+    { name: "PUEYRREDON", url: "" },
+    { name: "WEB", url: "" },
   ];
 
   const $ = (id) => document.getElementById(id);
@@ -48,15 +49,15 @@
     sel.selectedIndex = -1;
 
     sel.addEventListener("change", () => {
-      const ok = sel.selectedIndex >= 0;
+      const ok = !!PLANILLAS.find(p => p.name === sel.value)?.url;
       btn.disabled = !ok;
-      if (hint) hint.textContent = ok ? "Listo para descargar." : "Elegí una sucursal para habilitar la descarga.";
+      if (hint) hint.textContent = ok ? "Listo para descargar." : "Todavía no hay una planilla diaria disponible para este local.";
     });
 
     btn.addEventListener("click", () => {
       const suc = sel.value;
       const item = PLANILLAS.find((x) => x.name === suc);
-      if (!item) return;
+      if (!item?.url) return;
 
       // descarga directa (Drive)
       const direct = toDirectDownload(item.url);
@@ -66,5 +67,16 @@
     });
   }
 
-  document.addEventListener("DOMContentLoaded", initPlanillasUI);
+  function initTarjetasUI() {
+    const branch = window.RioContext?.branch;
+    const files = {AV2:'avellaneda',NAZCA:'nazca',QUILMES:'quilmes',CORRIENTES:'corrientes',LAMARCA:'lamarca',SARMIENTO:'sarmiento',PUEYRREDON:'pueyrredon',CASTELLI:'castelli',WEB:'web'};
+    const file = files[branch];
+    if (!file) return;
+    $("tarjetasLocal").textContent = `${window.RioContext.label(branch)} · 10 tarjetas por hoja`;
+    const link = $("tarjetasDescargar");
+    link.href = `tarjetas/rio-tarjetas-${file}-a4.pdf`;
+    link.download = `rio-tarjetas-${file}-a4.pdf`;
+    $("panel-tarjetas").hidden = false;
+  }
+  document.addEventListener("DOMContentLoaded", () => {initPlanillasUI();initTarjetasUI();});
 })();

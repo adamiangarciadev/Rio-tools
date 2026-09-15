@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>RIO Sistemas | Objetivos de venta</title>
-  <link rel="stylesheet" href="../../assets/rio-theme.css">
+  <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef">
   <style>
     body { background:radial-gradient(circle at top right,rgba(90,167,255,.10),transparent 34%),var(--rio-bg); }
     .hidden { display:none !important; }
@@ -31,11 +31,18 @@
     .message { min-height:22px; margin-top:14px; color:var(--rio-ok); }
     @media(max-width:720px){ .summary{grid-template-columns:1fr;} header{align-items:flex-start;flex-direction:column;} .panel{padding:12px;} table{font-size:.82rem;} th,td{padding:10px 5px;} .goal-input{min-width:135px;} }
   </style>
+<link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef">
+<link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0">
+<link rel="stylesheet" href="../../assets/rio-identity.css?v=c9458779b8">
+<link rel="stylesheet" href="../../assets/rio-objectives.css?v=c5f37bbb1f">
+<script src="../../assets/rio-access.js?v=935accae1e" data-require-supervision="true"></script>
+<script src="../../assets/rio-context.js?v=8b59f5d8a2"></script>
+<link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
 </head>
-<body>
+<body class="rio-app" data-rio-app="objetivos-ventas-sistemas">
   <main id="loginView" class="login">
     <form id="loginForm" class="login-card">
-      <div class="brand"><div class="logo">RIO</div><div><h1>Panel de Sistemas</h1><p>Administración de objetivos</p></div></div>
+      <div class="brand"><img src="../../assets/identity/rio-logo-coral.svg" alt="RÍO Lencería" width="74" height="58"><div><h1>Panel de Sistemas</h1><p>Administración de objetivos</p></div></div>
       <label>Mail<input id="email" type="email" autocomplete="username" value="sistemas@rio.com.ar" required></label>
       <label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label>
       <button id="loginButton" type="submit">Ingresar</button>
@@ -48,6 +55,8 @@
     <section class="summary"><article class="stat"><span>Objetivo general</span><strong id="totalGoal"></strong></article><article class="stat"><span>Venta acumulada</span><strong id="totalSales"></strong></article><article class="stat"><span>Cumplimiento</span><strong id="totalPercent"></strong></article></section>
     <section class="panel"><div style="overflow:auto"><table><thead><tr><th>Local</th><th>Venta acumulada</th><th>Avance</th><th>Objetivo mensual</th></tr></thead><tbody id="stores"></tbody></table></div><div id="message" class="message"></div></section>
   </main>
-  <script src="./app.js"></script>
+  <script src="./app.js?v=6a11740726"></script>
+<script src="../../assets/app-catalog.js?v=fd52fc724b"></script>
+<script src="../../assets/app-shell.js?v=420f7666a0"></script>
 </body>
 </html>

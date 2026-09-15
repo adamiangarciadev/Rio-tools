@@ -1,0 +1,14 @@
+.rio-bank-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.rio-bank-toolbar h2{margin:0}
+.rio-bank-list{display:grid;gap:10px}
+.rio-bank-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;border:1px solid #e6dcd6;border-radius:10px;background:#fff;color:#302b2a}
+.rio-bank-item strong{min-width:0;overflow-wrap:anywhere;font-size:14px}
+.rio-bank-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.rio-bank-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 12px;border:1px solid #dbc9bf;border-radius:8px;text-decoration:none;color:#302b2a;font-size:13px;font-weight:600}
+.rio-bank-actions a:hover{background:#fff0ea;border-color:#ff5959}
+.rio-bank-actions a:focus-visible{outline:3px solid #ff5959;outline-offset:3px}
+.rio-bank-note{font-size:12px;color:#70655f;line-height:1.6;margin-bottom:0}
+dialog.rio-bank-dialog{box-sizing:border-box;width:min(760px,calc(100% - 32px));max-height:85dvh;padding:24px;border:1px solid #e6dcd6;border-radius:16px;background:#faf8f6;color:#302b2a;overflow:auto}
+.rio-bank-dialog::backdrop{background:rgba(30,25,23,.48)}
+.rio-bank-dialog .rio-bank-toolbar{position:sticky;top:-24px;background:#faf8f6;padding-block:12px;z-index:1}
+@media(max-width:600px){.rio-bank-item{align-items:flex-start;flex-direction:column;gap:12px}.rio-bank-actions{width:100%}.rio-bank-actions a{flex:1}.rio-bank-dialog{padding:16px}.rio-bank-dialog .rio-bank-toolbar{top:-16px}}

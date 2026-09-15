@@ -12,8 +12,7 @@
 }
 
 body {
-  background:
-    linear-gradient(180deg, rgba(34, 199, 184, .04), transparent 280px),
+  background:linear-gradient(180deg, rgba(34, 199, 184, .04), transparent 280px),
     var(--sales-bg);
 }
 
@@ -30,7 +29,7 @@ body {
 
 .panel,
 .summary-card {
-  background: var(--sales-panel) !important;
+  background:var(--sales-panel) !important;
   border: 1px solid var(--sales-line) !important;
   border-radius: 8px !important;
 }
@@ -70,8 +69,8 @@ input {
   padding: 0 11px;
   border: 1px solid var(--sales-line);
   border-radius: 8px;
-  background: rgba(8, 13, 20, .55);
-  color: var(--sales-text);
+  background:rgba(8, 13, 20, .55);
+  color:var(--sales-text);
   font-size: 12px;
   font-weight: 800;
 }
@@ -98,7 +97,7 @@ input {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  color: var(--sales-muted);
+  color:var(--sales-muted);
   font-size: 13px;
 }
 
@@ -111,29 +110,29 @@ input {
   padding: 4px 9px;
   border: 1px solid var(--sales-line);
   border-radius: 999px;
-  color: var(--sales-muted);
+  color:var(--sales-muted);
   font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
 }
 
 .source-badge[data-state="ok"] {
-  color: var(--sales-ok);
+  color:var(--sales-ok);
   border-color: rgba(52, 211, 153, .45);
-  background: rgba(52, 211, 153, .08);
+  background:rgba(52, 211, 153, .08);
 }
 
 .source-badge[data-state="empty"],
 .source-badge[data-state="loading"] {
-  color: var(--sales-warn);
+  color:var(--sales-warn);
   border-color: rgba(245, 158, 11, .45);
-  background: rgba(245, 158, 11, .08);
+  background:rgba(245, 158, 11, .08);
 }
 
 .source-badge[data-state="error"] {
-  color: var(--sales-danger);
+  color:var(--sales-danger);
   border-color: rgba(251, 113, 133, .45);
-  background: rgba(251, 113, 133, .08);
+  background:rgba(251, 113, 133, .08);
 }
 
 .summary-grid {
@@ -149,13 +148,13 @@ input {
 }
 
 .summary-card span {
-  color: var(--sales-muted);
+  color:var(--sales-muted);
   font-size: 12px;
   font-weight: 760;
 }
 
 .summary-card strong {
-  color: var(--sales-text);
+  color:var(--sales-text);
   font-size: clamp(22px, 2.2vw, 30px);
   line-height: 1;
 }
@@ -205,7 +204,7 @@ input {
   padding: 4px;
   border: 1px solid var(--sales-line);
   border-radius: 8px;
-  background: rgba(8, 13, 20, .72);
+  background:rgba(8, 13, 20, .72);
 }
 
 .mini-tab {
@@ -215,7 +214,7 @@ input {
 }
 
 .mini-tab.active {
-  background: rgba(34, 199, 184, .22) !important;
+  background:rgba(34, 199, 184, .22) !important;
   border-color: rgba(34, 199, 184, .48) !important;
 }
 
@@ -229,7 +228,7 @@ table {
   width: 100%;
   min-width: 980px;
   border-collapse: collapse;
-  background: var(--sales-panel-2) !important;
+  background:var(--sales-panel-2) !important;
 }
 
 th,
@@ -244,15 +243,15 @@ th {
   position: sticky;
   top: 0;
   z-index: 1;
-  color: var(--sales-muted);
-  background: #0d141d;
+  color:var(--sales-muted);
+  background:#f3f6f9;
   font-size: 11px;
   font-weight: 850;
   text-transform: uppercase;
 }
 
 td {
-  color: var(--sales-text);
+  color:var(--sales-text);
   font-size: 13px;
 }
 
@@ -261,11 +260,11 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: rgba(34, 199, 184, .055);
+  background:rgba(34, 199, 184, .055);
 }
 
 tbody tr.active {
-  background: rgba(34, 199, 184, .10);
+  background:rgba(34, 199, 184, .10);
 }
 
 .client-button {
@@ -275,7 +274,7 @@ tbody tr.active {
   justify-content: start;
   gap: 4px;
   border: 0 !important;
-  background: transparent !important;
+  background:transparent !important;
   text-align: left;
 }
 
@@ -291,7 +290,7 @@ tbody tr.active {
   grid-template-columns: none;
   align-items: center;
   gap: 7px;
-  color: var(--sales-muted) !important;
+  color:var(--sales-muted) !important;
   cursor: pointer;
 }
 
@@ -304,39 +303,39 @@ tbody tr.active {
 
 .selection-text {
   margin-top: 6px !important;
-  color: var(--sales-primary) !important;
+  color:var(--sales-primary) !important;
   font-size: 12px !important;
   font-weight: 760;
 }
 
 .client-button strong {
-  color: var(--sales-text);
+  color:var(--sales-text);
   font-size: 14px;
 }
 
 .client-button span {
-  color: var(--sales-muted);
+  color:var(--sales-muted);
   font-size: 12px;
 }
 
 .segment-pill[data-segment="nuevo"] {
-  color: var(--sales-primary);
+  color:var(--sales-primary);
   border-color: rgba(34, 199, 184, .42);
 }
 
 .segment-pill[data-segment="frecuente-alto"],
 .segment-pill[data-segment="habitual"] {
-  color: var(--sales-ok);
+  color:var(--sales-ok);
   border-color: rgba(52, 211, 153, .42);
 }
 
 .segment-pill[data-segment="espaciado-alto"] {
-  color: var(--sales-warn);
+  color:var(--sales-warn);
   border-color: rgba(245, 158, 11, .42);
 }
 
 .segment-pill[data-segment="inactivo"] {
-  color: var(--sales-danger);
+  color:var(--sales-danger);
   border-color: rgba(251, 113, 133, .42);
 }
 
@@ -370,12 +369,12 @@ tbody tr.active {
   padding: 10px;
   border: 1px solid var(--sales-line);
   border-radius: 8px;
-  background: rgba(8, 13, 20, .45);
+  background:rgba(8, 13, 20, .45);
 }
 
 .metric span {
   display: block;
-  color: var(--sales-muted);
+  color:var(--sales-muted);
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -384,7 +383,7 @@ tbody tr.active {
 .metric strong {
   display: block;
   margin-top: 5px;
-  color: var(--sales-text);
+  color:var(--sales-text);
   font-size: 16px;
   overflow-wrap: anywhere;
 }
@@ -404,7 +403,7 @@ tbody tr.active {
   padding: 9px;
   border: 1px solid var(--sales-line);
   border-radius: 8px;
-  background: rgba(8, 13, 20, .45);
+  background:rgba(8, 13, 20, .45);
   font-size: 12px;
 }
 
@@ -414,7 +413,7 @@ tbody tr.active {
 }
 
 .purchase-row span {
-  color: var(--sales-muted);
+  color:var(--sales-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -423,7 +422,7 @@ tbody tr.active {
 .empty-state,
 .empty-cell {
   padding: 18px;
-  color: var(--sales-muted);
+  color:var(--sales-muted);
   text-align: center;
 }
 
@@ -443,7 +442,7 @@ tbody tr.active {
 .export-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(3, 7, 12, .72);
+  background:rgba(3, 7, 12, .72);
 }
 
 .export-modal__card {
@@ -468,7 +467,7 @@ tbody tr.active {
 
 .export-modal__head p {
   margin: 4px 0 0;
-  color: var(--sales-muted);
+  color:var(--sales-muted);
   font-size: 13px;
 }
 
@@ -486,8 +485,8 @@ tbody tr.active {
   padding: 11px 12px;
   border: 1px solid rgba(34, 199, 184, .22);
   border-radius: 8px;
-  background: rgba(34, 199, 184, .07);
-  color: var(--sales-muted);
+  background:rgba(34, 199, 184, .07);
+  color:var(--sales-muted);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -527,3 +526,6 @@ tbody tr.active {
     width: 100%;
   }
 }
+
+/* Workspace redesign: ventas-clientes */
+.rio-app .sales-shell .filters{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.rio-app .filters>*{min-width:0}.rio-app .content-grid{grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:24px}.rio-app .content-grid>*{min-width:0}.rio-app .panel-head{flex-wrap:wrap;background:transparent}.rio-app .view-actions{background:#eee7f7;grid-template-columns:repeat(4,minmax(0,1fr));width:100%}.rio-app .detail-panel{top:88px}.rio-app .purchase-row{padding:14px}@media(max-width:1150px){.rio-app .content-grid{grid-template-columns:minmax(0,1fr)}.rio-app .detail-panel{position:static}}

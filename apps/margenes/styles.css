@@ -17,8 +17,8 @@
 body {
   min-width: 320px;
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background:var(--bg);
+  color:var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
@@ -39,8 +39,8 @@ body {
   min-height: 40px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: rgba(17, 24, 33, .96);
-  color: var(--muted);
+  background:rgba(17, 24, 33, .96);
+  color:var(--muted);
   padding: 9px 13px;
   cursor: pointer;
   font-weight: 800;
@@ -48,9 +48,9 @@ body {
 }
 
 .tab-btn.is-active {
-  background: rgba(34, 199, 184, .14);
+  background:rgba(34, 199, 184, .14);
   border-color: rgba(34, 199, 184, .55);
-  color: var(--text);
+  color:var(--text);
 }
 
 .tab-panel { display: none; }
@@ -60,16 +60,16 @@ body {
   min-height: 38px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: rgba(34, 199, 184, .1);
-  color: var(--text);
+  background:rgba(34, 199, 184, .1);
+  color:var(--text);
   padding: 9px 12px;
   cursor: pointer;
   font-weight: 700;
 }
 
 .btn:hover { border-color: rgba(34, 199, 184, .45); }
-.btn.primary { background: var(--primary); color: #061017; border-color: var(--primary); }
-.btn.danger { background: rgba(251, 113, 133, .11); color: #fecdd3; }
+.btn.primary { background:var(--primary); color:#061017; border-color: var(--primary); }
+.btn.danger { background:rgba(251, 113, 133, .11); color:#81222e; }
 .btn.small { min-height: 32px; padding: 6px 10px; font-size: 12px; }
 
 .upload-panel,
@@ -77,7 +77,7 @@ body {
 .kpi {
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: rgba(17, 24, 33, .96);
+  background:rgba(17, 24, 33, .96);
 }
 
 .upload-panel {
@@ -96,12 +96,12 @@ body {
   padding: 18px;
   border: 1px dashed rgba(148, 163, 184, .34);
   border-radius: 8px;
-  background: rgba(9, 13, 18, .32);
+  background:rgba(9, 13, 18, .32);
 }
 
 .dropzone.is-dragging {
   border-color: var(--primary);
-  background: rgba(34, 199, 184, .08);
+  background:rgba(34, 199, 184, .08);
 }
 
 .dropzone input {
@@ -120,7 +120,7 @@ body {
 .dropzone span,
 .status,
 .panel-head span {
-  color: var(--muted);
+  color:var(--muted);
   font-size: 13px;
 }
 
@@ -143,8 +143,8 @@ select {
   min-height: 40px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: #0d131a;
-  color: var(--text);
+  background:#f3f6f9;
+  color:var(--text);
   padding: 9px 10px;
   outline: 0;
 }
@@ -171,7 +171,7 @@ select:focus {
   padding: 16px;
   border: 1px dashed rgba(148, 163, 184, .34);
   border-radius: 8px;
-  background: rgba(9, 13, 18, .32);
+  background:rgba(9, 13, 18, .32);
   cursor: pointer;
 }
 
@@ -180,7 +180,7 @@ select:focus {
 }
 
 .file-card span {
-  color: var(--muted);
+  color:var(--muted);
   font-size: 12px;
   text-transform: uppercase;
 }
@@ -223,7 +223,7 @@ select:focus {
 }
 
 .kpi span {
-  color: var(--muted);
+  color:var(--muted);
   font-size: 12px;
   text-transform: uppercase;
   font-weight: 800;
@@ -296,8 +296,8 @@ th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #101821;
-  color: #cbd5e1;
+  background:#f3f6f9;
+  color:#5c5269;
   font-size: 11px;
   text-transform: uppercase;
 }
@@ -308,12 +308,12 @@ th.num {
   font-variant-numeric: tabular-nums;
 }
 
-.margin-good { color: var(--green); }
-.margin-mid { color: var(--amber); }
-.margin-bad { color: var(--red); }
-.diff-good { color: var(--green); }
-.diff-bad { color: var(--red); }
-.diff-flat { color: var(--muted); }
+.margin-good { color:var(--green); }
+.margin-mid { color:var(--amber); }
+.margin-bad { color:var(--red); }
+.diff-good { color:var(--green); }
+.diff-bad { color:var(--red); }
+.diff-flat { color:var(--muted); }
 
 .hidden-view { display: none !important; }
 
@@ -333,3 +333,6 @@ th.num {
   th,
   td { padding: 9px 10px; }
 }
+
+/* Workspace redesign: margenes */
+.rio-app .upload-panel{background:#fff!important;border:1px solid var(--rio-border);border-radius:14px;padding:24px}.rio-app .kpi{background:#fff!important;border-color:var(--rio-border);padding:20px}.rio-app .kpi-grid{gap:18px}.rio-app .controls{gap:18px}.rio-app .dashboard-grid,.rio-app .tables-grid{gap:24px}.rio-app .chart-box{padding:14px}.rio-app .panel-head{padding:12px 0;background:transparent}

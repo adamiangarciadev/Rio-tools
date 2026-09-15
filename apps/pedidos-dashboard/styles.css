@@ -1,13 +1,13 @@
 :root {
-  --dash-bg: #090d12;
-  --dash-panel: rgba(17, 24, 33, .92);
-  --dash-panel-2: rgba(13, 20, 29, .9);
-  --dash-line: rgba(148, 163, 184, .16);
-  --dash-text: #edf3fa;
-  --dash-muted: #94a3b8;
-  --dash-primary: #22c7b8;
-  --dash-blue: #5aa7ff;
-  --dash-warn: #f59e0b;
+  --dash-bg: #faf8f6;
+  --dash-panel: #ffffff;
+  --dash-panel-2: #faf3ef;
+  --dash-line: #e2d6ce;
+  --dash-text: #302b2a;
+  --dash-muted: #6a5d57;
+  --dash-primary: #b83f36;
+  --dash-blue: #365e91;
+  --dash-warn: #99530c;
 }
 
 body {
@@ -131,9 +131,9 @@ select {
 
 .day-bar__bar {
   min-height: 4px;
-  border: 1px solid rgba(34, 199, 184, .34);
+  border: 1px solid #c54138;
   border-radius: 6px 6px 3px 3px;
-  background: linear-gradient(180deg, rgba(34, 199, 184, .85), rgba(90, 167, 255, .76));
+  background: #d64e43;
 }
 
 .day-bar__value,
@@ -210,7 +210,7 @@ select {
   height: 9px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(8, 13, 20, .84);
+  background: #eee4de;
   border: 1px solid var(--dash-line);
 }
 
@@ -266,7 +266,7 @@ td {
   color: var(--dash-muted);
   border: 1px dashed var(--dash-line);
   border-radius: 8px;
-  background: rgba(8, 13, 20, .38);
+  background: #faf3ef;
 }
 
 .access-gate {
@@ -293,7 +293,7 @@ td {
 .access-card label { color: var(--dash-muted); font-size: 13px; }
 .access-card input { width: 100%; }
 .access-lock { font-size: 32px; }
-.access-error { min-height: 20px; color: #ff8f8f; font-size: 13px; }
+.access-error { min-height: 20px; color: #a02626; font-size: 13px; }
 
 @media (max-width: 1180px) {
   .filters-panel {
@@ -308,3 +308,20 @@ td {
     grid-template-columns: 1fr;
   }
 }
+
+/* Workspace redesign: pedidos-dashboard */
+.rio-app .filters-panel{grid-template-columns:repeat(4,minmax(0,1fr));padding:22px;gap:16px}.rio-app .filters-panel label{min-width:0;display:grid;gap:8px}.rio-app .dashboard-grid{gap:24px}.rio-app .panel-head{padding:12px 0;background:transparent}.rio-app .cycle-grid{gap:18px}
+
+/* Light RÍO palette: scoped to this dashboard. */
+.rio-app[data-rio-app="pedidos-dashboard"]{color:var(--dash-text);background:var(--dash-bg)}
+.rio-app[data-rio-app="pedidos-dashboard"] .stack-row__top{color:var(--dash-text)}
+.rio-app[data-rio-app="pedidos-dashboard"] .cycle-card h3{color:var(--dash-text)}
+.rio-app[data-rio-app="pedidos-dashboard"] .day-bar__value{color:var(--dash-text);font-size:12px;font-weight:700}
+.rio-app[data-rio-app="pedidos-dashboard"] .day-bar__label{color:var(--dash-muted);font-size:12px}
+.rio-app[data-rio-app="pedidos-dashboard"] th{background:#f4e9e2!important;color:#5a4940!important}
+.rio-app[data-rio-app="pedidos-dashboard"] td{color:var(--dash-text);background:#fff}
+.rio-app[data-rio-app="pedidos-dashboard"] tbody tr:nth-child(even) td{background:#fcf8f5}
+.rio-app[data-rio-app="pedidos-dashboard"] tbody tr:hover td{background:#ffebe5}
+.rio-app[data-rio-app="pedidos-dashboard"] .stack-row__track{border:0}
+
+.rio-app[data-rio-app="pedidos-dashboard"] .stack-row__label{white-space:normal;overflow-wrap:anywhere}

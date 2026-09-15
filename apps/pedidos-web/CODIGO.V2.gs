@@ -46,18 +46,18 @@ const GMAIL_QUERY =
 // ================== ESTADOS (CATÁLOGO) ==================
 
 const ESTADOS_VALIDOS = [
+  "ESPERANDO PAGO",
   "PARA ARMAR",
-  "ARMANDO PEDIDO",
-  "PEDIDO CON FALTANTES",
-  "ESPERANDO MERCADERÍA",
-  "ARMADO",
+  "ARMANDOSE",
   "PICKEADO",
   "CONTROLADO",
+  "ENVIADO",
   "ENVIADO A SUCURSAL",
   "EN SUCURSAL",
-  "ENVIADO",
+  "LISTO PARA RETIRO",
   "RETIRADO",
-  "CANCELADO"
+  "CANCELADO",
+  "ESPERANDO MERCADERIA"
 ];
 
 function _estadoValido(estado) {
@@ -181,7 +181,7 @@ function importarPedidosDesdeGmail() {
 
       const estadoPagoUpper = String(estadoPago || "").toUpperCase();
       const pagado = estadoPagoUpper.includes("PAGO RECIBIDO") || estadoPagoUpper.includes("APROBADO");
-      const estadoInicial = "PARA ARMAR";
+      const estadoInicial = pagado ? "PARA ARMAR" : "ESPERANDO PAGO";
 
       nuevasFilas.push([
         String(idPedido).trim(), // A

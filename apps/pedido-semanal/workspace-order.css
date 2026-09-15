@@ -1,0 +1,63 @@
+/* Order workspace: compact controls, persistent search, contained product cards. */
+.rio-app[data-rio-app="pedido-semanal"]{--order-top:68px}
+.rio-app[data-rio-app="pedido-semanal"] .rio-module-heading{padding-top:18px!important;padding-bottom:12px!important;min-height:0;margin-bottom:0}
+.rio-app[data-rio-app="pedido-semanal"] .rio-section-nav{display:none}
+.rio-app .module-control-panel{padding:14px 16px!important;margin:0 auto 16px!important}
+.rio-app .module-control-panel .meta{display:grid;grid-template-columns:170px minmax(200px,1fr) minmax(200px,1fr) 150px;gap:10px 16px;align-items:center}
+.rio-app .module-control-panel .meta>label{grid-column:1;grid-row:1}
+.rio-app .module-control-panel .kpi{grid-column:1;grid-row:2;background:none!important;display:flex;gap:8px;padding:0;min-height:0}
+.rio-app .module-control-panel .obs-wrap{grid-column:2;grid-row:1 / 3}
+.rio-app .module-control-panel .extras{grid-column:3;grid-row:1 / 3;gap:6px}
+.rio-app .module-control-panel #btnPDF{grid-column:4;grid-row:1 / 3;width:100%}
+.rio-app .module-control-panel #bolsasPicker.show{grid-column:2 / -1;flex-wrap:wrap}
+.rio-app #obsInput{height:42px;min-height:42px}.rio-app .obs-hint{font-size:11px;margin-top:4px}
+.rio-app .two-cols{grid-template-columns:minmax(0,1fr) 340px;gap:20px}
+.rio-app .col-left{gap:12px}
+.rio-app .order-search{position:sticky;top:var(--order-top);z-index:40;background:#faf9f7!important;padding:12px 14px!important;border-radius:0 0 10px 10px;box-shadow:none;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:end}
+.rio-app .order-search h2{display:none}.rio-app .order-search label{font-size:12px;margin:0}.rio-app .order-search input{margin-top:5px;width:100%}
+.order-search-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.order-search-actions>span{flex-basis:100%;font-size:11px;color:#615b55}
+.rio-app #promosGrid{padding:0!important;border:0;background:transparent!important;box-shadow:none}
+.rio-app .promos-grid .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start}
+.rio-app .promo-card{min-width:0;padding:14px;box-shadow:none;scroll-margin-top:calc(var(--order-top) + 130px)}
+.rio-app .promo-card[hidden]{display:none!important}.rio-app .promo-card:hover{transform:none;box-shadow:none}
+.rio-app .promo-head{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.rio-app .promo-actions{margin:0;justify-content:flex-end}.rio-app .promo-title{font-size:14px;overflow-wrap:anywhere}.rio-app .promo-sub{font-size:11px}.rio-app .price-row{gap:5px}.rio-app .price-chip{padding:4px 7px;font-size:11px}
+.rio-app .promo-card.expanded .promo-expand>.row.gap:first-child{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,.65fr);gap:12px}
+.rio-app .promo-card.expanded .promo-expand>.row.gap:first-child>.card.inner{min-width:0!important;width:100%;padding:12px!important;box-sizing:border-box;box-shadow:none}
+.rio-app .artList .item{white-space:normal;overflow-wrap:anywhere;min-width:0}.rio-app .artList{max-height:280px}.rio-app .promo-expand .inner h3{font-size:14px}
+.rio-app #pedidoPanel.sticky{top:calc(var(--order-top) + 12px);padding:14px!important}.rio-app #pedidoPanel .row{gap:6px}.rio-app #pedidoPanel .btn{padding:0 10px!important}.rio-app #pedidoPanel h2{font-size:18px}
+@media(max-width:1150px){.rio-app .module-control-panel .meta{grid-template-columns:150px minmax(0,1fr)}.rio-app .module-control-panel .meta>*{grid-column:auto!important;grid-row:auto!important}.rio-app .module-control-panel .obs-wrap{grid-row:1 / 3!important;grid-column:2!important}.rio-app .module-control-panel .extras{grid-column:1 / -1!important}.rio-app .two-cols{grid-template-columns:minmax(0,1fr) 290px}}
+@media(max-width:850px){.rio-app .two-cols{grid-template-columns:minmax(0,1fr)}.rio-app .promo-card.expanded .promo-expand>.row.gap:first-child{grid-template-columns:minmax(0,1fr)}.rio-app .order-search{grid-template-columns:minmax(0,1fr)}.order-search-actions>span{flex:1}.rio-app #pedidoPanel .btn{width:auto}.rio-app .module-control-panel{width:calc(100% - 36px)}}
+@media(max-width:600px){.rio-app[data-rio-app="pedido-semanal"]{--order-top:112px}.rio-app .module-control-panel .meta{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}.rio-app .module-control-panel .obs-wrap{grid-column:1 / -1!important;grid-row:auto!important}.rio-app .order-search{padding:10px!important}.rio-app .order-search input{font-size:16px}}
+@media print{.rio-app .order-search{display:none}}
+
+.rio-app .col-right{align-self:stretch}.rio-app .promo-card.expanded{box-shadow:none!important}
+.rio-app .promo-card{box-shadow:none!important}
+.rio-app .order-search-shortcut{position:fixed;right:20px;bottom:20px;z-index:56;display:grid;place-items:center;width:48px;height:48px;padding:12px!important;border-radius:50%;background:#ff5f5c!important;color:#3d1d1b!important;border:1px solid #b64240!important;box-shadow:0 6px 18px #40282026}
+.order-search-shortcut svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+@media print{.order-search-shortcut{display:none!important}}
+/* Selected state must remain visible over the shared form styles. */
+.rio-app[data-rio-app="pedido-semanal"] .artList .item{position:relative;padding-left:42px!important;cursor:pointer}
+.rio-app[data-rio-app="pedido-semanal"] .artList .item::before{content:"";position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:1px solid #bbaaa1;border-radius:4px;background:#fff;box-sizing:border-box}
+.rio-app[data-rio-app="pedido-semanal"] .artList .item.selected{background:#ffe2dc!important;border:2px solid #912b29!important;color:#65221f!important;box-shadow:none!important;font-weight:600}
+.rio-app[data-rio-app="pedido-semanal"] .artList .item.selected::before{background:#912b29;border-color:#912b29}
+.rio-app[data-rio-app="pedido-semanal"] .artList .item.selected::after{content:"";position:absolute;left:19px;top:50%;width:4px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-65%) rotate(45deg)}
+.rio-app[data-rio-app="pedido-semanal"] .chk{padding:7px 9px;border:1px solid transparent;border-radius:7px;cursor:pointer}
+.rio-app[data-rio-app="pedido-semanal"] .chk:has(input:checked){background:#ffe2dc!important;border-color:#912b29;color:#65221f!important}
+.rio-app[data-rio-app="pedido-semanal"] .chk input[type="checkbox"]{appearance:none!important;position:relative;flex-shrink:0;width:20px;height:20px;min-height:20px;border:1px solid #bbaaa1!important;border-radius:4px;background:#fff!important;box-shadow:none!important}
+.rio-app[data-rio-app="pedido-semanal"] .chk input[type="checkbox"]:checked{background:#912b29!important;border-color:#912b29!important}
+.rio-app[data-rio-app="pedido-semanal"] .chk input[type="checkbox"]:checked::after{content:"";position:absolute;left:6px;top:3px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);box-sizing:border-box}
+.rio-app[data-rio-app="pedido-semanal"] .chk input:focus-visible{outline:3px solid #43428e!important;outline-offset:3px}
+/* Keep order totals legible and reserve space for all four columns. */
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table{table-layout:fixed;width:100%;min-width:0!important}
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table th,
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table td{color:#332d29!important;padding:10px 6px;word-break:normal;white-space:nowrap;text-align:center;font-variant-numeric:tabular-nums}
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table th{background:#f2e9e3!important;font-size:11px}
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table td{font-size:13px;font-weight:500}
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table th:nth-child(1),
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table td:nth-child(1){width:36%;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table th:nth-child(2),
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table td:nth-child(2){width:21%}
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table th:nth-child(3),
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table td:nth-child(3){width:25%}
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table th:nth-child(4),
+.rio-app[data-rio-app="pedido-semanal"] #pedidoPanel .table td:nth-child(4){width:18%;min-width:0}

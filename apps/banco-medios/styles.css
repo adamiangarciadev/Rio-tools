@@ -87,7 +87,7 @@ body{
   width:100%;
   aspect-ratio:9 / 16;
   max-height:360px;
-  background:#05070a;
+  background:#f3f5f9;
   border-bottom:1px solid var(--border);
 }
 
@@ -245,7 +245,7 @@ body{
 .modal-frame{
   width:100%;
   height:70vh;
-  background:#000;
+  background:#f6f6f6;
 }
 
 .modal-frame iframe{
@@ -321,7 +321,10 @@ body.modal-open{
 footer {
       text-align: center;
       padding: 18px 24px;
-      color: var(--muted);
+      color:var(--muted);
       font-size: 12px;
       border-top: 1px solid var(--border);
 }
+
+/* Workspace redesign: banco-medios */
+.rio-app .filters{padding:20px;background:#fff;border:1px solid var(--rio-border);border-radius:12px;gap:16px;margin-bottom:26px}.rio-app .grid{gap:24px;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))}.rio-app .video-card{overflow:hidden}.rio-app video{max-width:100%;background:#18131f}.rio-app .card-body{padding:18px}

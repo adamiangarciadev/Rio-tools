@@ -14,10 +14,15 @@
     gtag("config", "G-CDPZFHV1BV");
   </script>
 
-  <link rel="stylesheet" href="../../assets/rio-theme.css" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
+  <link rel="stylesheet" href="styles.css?v=8827668b62" />
+<link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0">
+<link rel="stylesheet" href="../../assets/rio-identity.css?v=c9458779b8">
+<link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
+<script src="../../assets/rio-access.js?v=935accae1e"></script>
+<script src="../../assets/rio-context.js?v=8b59f5d8a2"></script>
 </head>
-<body>
+<body class="rio-app" data-rio-app="pedidos-dashboard">
   <section id="accessGate" class="access-gate" aria-labelledby="accessTitle">
     <form id="accessForm" class="access-card">
       <div class="access-lock" aria-hidden="true">🔒</div>
@@ -102,7 +107,7 @@
         <div class="panel-head">
           <div>
             <h2>Tiempo en armado</h2>
-            <p id="cycleHint">Desde el primer ingreso hasta el primer estado pickeado/armado</p>
+            <p id="cycleHint">Desde PARA ARMAR o ARMANDO PEDIDO hasta el primer ARMADO o PICKEADO</p>
           </div>
         </div>
         <div id="cycleChart" class="cycle-grid"></div>
@@ -120,7 +125,7 @@
 
       <article class="panel">
         <div class="panel-head">
-          <h2>Estados actuales</h2>
+          <div><h2>Estados actuales</h2><p>Último estado registrado por pedido y canal al cierre del período, según el historial disponible. Los filtros se aplican a ese último movimiento.</p></div>
         </div>
         <div id="stateChart" class="stack-list"></div>
       </article>
@@ -170,9 +175,9 @@
                 <th>ID</th>
                 <th>Sucursal</th>
                 <th>Ingreso</th>
-                <th>Pickeado/Armado</th>
+                <th>Fin de armado</th>
                 <th>Tiempo</th>
-                <th>Estado pickeado</th>
+                <th>Estado de finalización</th>
               </tr>
             </thead>
             <tbody id="cycleTable"></tbody>
@@ -252,8 +257,10 @@
       });
     })();
   </script>
-  <script src="api-config.js"></script>
-  <script src="app.js"></script>
-  <script src="../../assets/rio-report-problem.js"></script>
+  <script src="api-config.js?v=8d2a483d66"></script>
+  <script src="app.js?v=c7ed14447e"></script>
+  <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>
+<script src="../../assets/app-catalog.js?v=fd52fc724b"></script>
+<script src="../../assets/app-shell.js?v=420f7666a0"></script>
 </body>
 </html>

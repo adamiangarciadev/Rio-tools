@@ -15,11 +15,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- CSS PRINCIPAL DE LA SUITE -->
-  <link rel="stylesheet" href="./styles.css" />
-<link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="./styles.css?v=e9d01a7474" />
+  <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
+  <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
+  <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../assets/rio-identity.css?v=c9458779b8" />
+<script src="../../assets/rio-access.js?v=935accae1e"></script>
+<script src="../../assets/rio-context.js?v=8b59f5d8a2"></script>
+<link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
+  <link rel="stylesheet" href="../../assets/rio-bank-accounts.css?v=1">
+  <script defer src="../../assets/rio-bank-accounts.js?v=1"></script>
 </head>
 
-<body>
+<body class="rio-app" data-rio-app="archivos-administrativos">
 
   <!-- HEADER / TOPBAR (igual al resto de la suite) -->
   <header class="topbar">
@@ -41,6 +49,13 @@
          ADMINISTRACION / ARCHIVOS
          ========================= -->
     <section class="adm-wrap">
+      <article class="adm-panel" id="panel-tarjetas" hidden>
+        <header class="adm-head"><h2 class="adm-title">Tarjetas de tu local</h2><p class="adm-sub" id="tarjetasLocal"></p></header>
+        <div class="adm-body"><p class="adm-hint">Una hoja A4 con 10 tarjetas iguales: logo RÍO, dirección, teléfono y QR directo a WhatsApp. Recortá por las líneas punteadas.</p>
+          <a id="tarjetasDescargar" class="adm-btn adm-btn-primary" download>Descargar PDF A4</a>
+          <p class="adm-hint">Imprimí al 100% o tamaño real, sin ajustar a página.</p>
+        </div>
+      </article>
 
       <!-- 1) PLANILLAS DIARIAS -->
       <article class="adm-panel" id="panel-planillas">
@@ -73,27 +88,10 @@
       <!-- 2) CUENTAS PARA DEPÓSITO -->
       <article class="adm-panel" id="panel-cuentas">
         <header class="adm-head">
-          <h2 class="adm-title">Cuentas para Depósito (PROXIMAMENTE)</h2>
-          <p class="adm-sub">
-            Accesos rápidos a archivos internos del depósito.
-          </p>
+          <h2 class="adm-title">Cuentas para Depósito</h2>
+          <p class="adm-sub">Consultá y descargá los datos bancarios de cada cuenta.</p>
         </header>
-
-        <div class="adm-body">
-          <div class="adm-links">
-            <!-- Ejemplos
-            <a class="adm-link" href="LINK" target="_blank" rel="noopener">
-              Cuenta MPQR Depósito
-            </a>
-            <a class="adm-link" href="LINK" target="_blank" rel="noopener">
-              CBU Proveedor
-            </a>
-            -->
-            <div class="adm-empty">
-              Pegame los links y lo dejo armado.
-            </div>
-          </div>
-        </div>
+        <div class="adm-body" data-rio-bank-accounts></div>
       </article>
 
       <!-- 3) MANUALES DRAGONFISH -->
@@ -116,7 +114,7 @@
             </a>
             -->
             <div class="adm-empty">
-              Pegame la carpeta o los PDFs y lo ordeno.
+              Los manuales se publicarán en esta sección cuando estén disponibles.
             </div>
           </div>
         </div>
@@ -126,8 +124,10 @@
   </main>
 
   <!-- JS ÚNICO DE LA SUITE -->
-  <script src="./app.js"></script>
+  <script src="./app.js?v=b0b7c92085"></script>
 
-  <script src="../../assets/rio-report-problem.js"></script>
+  <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>
+  <script src="../../assets/app-catalog.js?v=fd52fc724b"></script>
+  <script src="../../assets/app-shell.js?v=420f7666a0"></script>
 </body>
 </html>

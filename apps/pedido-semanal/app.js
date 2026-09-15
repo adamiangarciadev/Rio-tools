@@ -30,9 +30,9 @@
     "NAZCA","AVELLANEDA 2","LAMARCA","SARMIENTO","CORRIENTES","CORRIENTES2","CASTELLI","QUILMES","PUEYRREDON"
   ];
 
-  const LS_KEY_PEDIDO = "pedido_v1";
-  const LS_KEY_OBS    = "pedido_obs_v1";
-  const LS_KEY_EXTRAS = "pedido_extras_v1";
+  const LS_KEY_PEDIDO = window.RioContext.storageKey("pedido_v1");
+  const LS_KEY_OBS    = window.RioContext.storageKey("pedido_obs_v1");
+  const LS_KEY_EXTRAS = window.RioContext.storageKey("pedido_extras_v1");
 
   // =========================
   // State
@@ -357,8 +357,27 @@
     const input=$("#promoSearch");
     if(!input) return;
 
-    input.addEventListener("change", ()=> seleccionarPorTexto(input.value));
-    input.addEventListener("input", ()=> seleccionarPorTexto(input.value,{onlyExact:true}));
+    const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    function filter() {
+      const query = normalize(input.value);
+      let count = 0;
+      for (const promo of PROMOS) {
+        const card = document.querySelector(`.promo-card[data-pid="${CSS.escape(promo.id)}"]`);
+        if (!card) continue;
+        const content = normalize(`${promo.id} ${promo.marca} ${promo.nombre} ${(promo.items || []).map(it => `${it.codigo} ${it.desc}`).join(' ')}`);
+        const visible = !query || normalize(`${promo.id} - ${promo.marca} - ${promo.nombre}`) === query || content.includes(query) || query.split(/\s+/).every(word => content.includes(word));
+        card.hidden = !visible;
+        if (visible) count++;
+      }
+      $("#promoSearchStatus").textContent = !PROMOS.length ? 'Cargando promociones…' : count ? `${count} ${count === 1 ? "promoción" : "promociones"}` : 'No hay coincidencias. Probá otro código o nombre.';
+    }
+    const search = () => { filter(); seleccionarPorTexto(input.value); };
+    input.addEventListener("input", filter);
+    input.addEventListener("keydown", event => { if(event.key === 'Enter'){event.preventDefault();search();} });
+    $("#findPromo").addEventListener('click', search);
+    $("#orderSearchShortcut").addEventListener('click', () => {input.scrollIntoView({block:'center',behavior:'instant'});input.focus({preventScroll:true});input.select();});
+    $("#clearPromoSearch").addEventListener('click', () => {input.value='';filter();input.focus();});
+    filter();
   }
 
   function seleccionarPorTexto(txt,{onlyExact=false}={}){
@@ -377,7 +396,7 @@
       ));
       if(matchByArt){
         p = matchByArt;
-        expandirPromoCard(p.id);
+        expandirPromoCard(p.id, true);
         try{
           const card = document.querySelector(`.promo-card[data-pid="${CSS.escape(p.id)}"]`);
           const cont = card?.querySelector(".artList");
@@ -398,7 +417,11 @@
       }
     }
 
-    if(p) expandirPromoCard(p.id);
+    if(!p && !onlyExact) p = PROMOS.find(p => {
+      const card = document.querySelector(`.promo-card[data-pid="${CSS.escape(p.id)}"]`);
+      return card && !card.hidden;
+    });
+    if(p) expandirPromoCard(p.id, true);
   }
 
   // =========================
@@ -533,9 +556,10 @@
 
     host.innerHTML="";
     host.appendChild(grid);
+    $("#promoSearch")?.dispatchEvent(new Event('input', {bubbles:true}));
   }
 
-  function expandirPromoCard(id){
+  function expandirPromoCard(id, forceOpen=false){
     const card = document.querySelector(`.promo-card[data-pid="${CSS.escape(id)}"]`);
     if(!card) return;
 
@@ -544,7 +568,7 @@
       prev?.classList.remove("expanded");
     }
 
-    const isOpen = card.classList.toggle("expanded");
+    const isOpen = forceOpen ? (card.classList.add("expanded"), true) : card.classList.toggle("expanded");
     promoActual = isOpen ? id : null;
 
     if(isOpen){

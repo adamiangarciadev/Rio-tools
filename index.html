@@ -14,449 +14,80 @@
     gtag("config", "G-CDPZFHV1BV");
   </script>
 
-  <link rel="stylesheet" href="./assets/rio-theme.css" />
-  <style>
-    body {
-      min-width: 320px;
-      background:
-        linear-gradient(180deg, rgba(34, 199, 184, .035), transparent 260px),
-        var(--rio-bg);
-    }
-
-    .suite-shell {
-      width: min(1480px, calc(100% - 48px));
-      margin: 0 auto;
-      padding: 36px 0 40px;
-    }
-
-    .suite-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      padding: 0;
-      margin-bottom: 34px;
-      background: transparent !important;
-      border: 0 !important;
-      box-shadow: none !important;
-    }
-
-    .brand-lockup {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .logo-mark {
-      width: 38px;
-      height: 38px;
-      display: grid;
-      place-items: center;
-      flex: 0 0 auto;
-      border-radius: 9px;
-      background: var(--rio-primary);
-      color: #061017;
-      font-weight: 800;
-      letter-spacing: 0;
-    }
-
-    .brand-copy h1 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 750;
-    }
-
-    .brand-copy p {
-      margin: 3px 0 0;
-      font-size: 13px;
-      color: var(--rio-muted) !important;
-    }
-
-    .suite-hero {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      align-items: stretch;
-      margin-bottom: 16px;
-    }
-
-    .hero-copy {
-      padding: 24px;
-      border: 1px solid var(--rio-border);
-      border-radius: var(--rio-radius);
-      background: rgba(17, 24, 33, .76);
-      box-shadow: none;
-    }
-
-    .eyebrow {
-      margin: 0 0 12px;
-      color: var(--rio-primary) !important;
-      font-size: 11px;
-      font-weight: 750;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
-
-    .hero-copy h2 {
-      max-width: 760px;
-      margin: 0;
-      font-size: clamp(1.85rem, 3vw, 2.75rem);
-      line-height: 1.08;
-      font-weight: 680;
-      letter-spacing: 0 !important;
-    }
-
-    .hero-copy .lead {
-      max-width: 760px;
-      margin: 14px 0 0;
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .board {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 12px;
-      align-items: start;
-    }
-
-    body.supervision-unlocked .board {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-
-    .col {
-      --sector-color: #2dd4bf;
-      --sector-rgb: 45, 212, 191;
-      min-height: 100%;
-      border-top: 3px solid var(--sector-color);
-      background: rgba(17, 24, 33, .72) !important;
-    }
-
-    .suite-header-actions {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .monthly-goal-button {
-      white-space: nowrap;
-    }
-
-    .col:nth-child(1) {
-      --sector-color: #f59e0b;
-      --sector-rgb: 245, 158, 11;
-    }
-
-    .col:nth-child(2) {
-      --sector-color: #a78bfa;
-      --sector-rgb: 167, 139, 250;
-    }
-
-    .col:nth-child(3) {
-      --sector-color: #38bdf8;
-      --sector-rgb: 56, 189, 248;
-    }
-
-    .col:nth-child(4) {
-      --sector-color: #fb7185;
-      --sector-rgb: 251, 113, 133;
-    }
-
-    .col:nth-child(5) {
-      --sector-color: #2dd4bf;
-      --sector-rgb: 45, 212, 191;
-    }
-
-    .col:nth-child(6) {
-      --sector-color: #818cf8;
-      --sector-rgb: 129, 140, 248;
-    }
-
-    .col-head {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--rio-border);
-      background: rgba(var(--sector-rgb), .07);
-    }
-
-    .col-head h2 {
-      margin: 0;
-      color: var(--sector-color);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em !important;
-      font-weight: 760;
-    }
-
-    .col-head p {
-      margin: 4px 0 0;
-      font-size: 12px;
-    }
-
-    .links {
-      display: grid;
-    }
-
-    .item {
-      display: grid;
-      gap: 6px;
-      padding: 15px 16px 14px;
-      border-bottom: 1px solid var(--rio-border);
-      text-decoration: none;
-      transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
-    }
-
-    .item:last-child {
-      border-bottom: 0;
-    }
-
-    .col .item:hover {
-      background: rgba(var(--sector-rgb), .08);
-      box-shadow: inset 3px 0 0 var(--sector-color);
-    }
-
-    .supervision-access {
-      display: grid;
-      gap: 10px;
-      padding: 15px 16px;
-      border-bottom: 1px solid var(--rio-border);
-      background: rgba(34, 199, 184, .045);
-    }
-
-    .header-supervision {
-      width: auto;
-      flex: 0 0 auto;
-      padding: 0;
-      border: 0;
-      background: transparent;
-    }
-
-    .header-supervision.is-open {
-      width: min(330px, 100%);
-      padding: 12px 14px;
-      border: 1px solid var(--rio-border);
-      border-radius: var(--rio-radius);
-      background: rgba(17, 24, 33, .76);
-    }
-
-    .header-supervision .supervision-access__message:empty {
-      display: none;
-    }
-
-    .supervision-access__title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--rio-text);
-      font-size: 14px;
-      font-weight: 760;
-    }
-
-    .supervision-access__form {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 8px;
-    }
-
-    .supervision-access__form input {
-      min-width: 0;
-      height: 40px;
-    }
-
-    .supervision-access__message {
-      min-height: 18px;
-      color: var(--rio-muted);
-      font-size: 12px;
-    }
-
-    body:not(.supervision-unlocked) [data-supervision-access] {
-      display: none;
-    }
-
-    body.supervision-unlocked .supervision-access__form {
-      display: none;
-    }
-
-    .header-supervision:not(.is-open) .supervision-access__form,
-    .header-supervision:not(.is-open) .supervision-access__message {
-      display: none;
-    }
-
-    body.supervision-unlocked #supervisionOpenButton {
-      display: none;
-    }
-
-    body:not(.supervision-unlocked) #supervisionLockButton {
-      display: none;
-    }
-
-    .item-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: 720;
-    }
-
-    .item-desc {
-      margin: 0;
-      font-size: 12.5px;
-      line-height: 1.45;
-    }
-
-    .item-meta {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 3px;
-    }
-
-    .state {
-      width: fit-content;
-      padding: 2px 7px;
-      border-radius: 999px;
-      border: 1px solid var(--rio-border);
-      color: var(--rio-muted);
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .state.ready {
-      color: var(--rio-ok);
-      border-color: rgba(52, 211, 153, .28);
-      background: rgba(52, 211, 153, .06);
-    }
-
-    .state.beta {
-      color: var(--rio-warn);
-      border-color: rgba(245, 158, 11, .36);
-      background: rgba(245, 158, 11, .08);
-    }
-
-    footer {
-      margin-top: 18px;
-      padding: 18px;
-      color: var(--rio-muted);
-      font-size: 12px;
-      text-align: center;
-    }
-
-    @media (max-width: 1180px) {
-      .board {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      body.supervision-unlocked .board {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .suite-hero {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 720px) {
-      .suite-shell {
-        width: min(100% - 24px, 1480px);
-        padding-top: 12px;
-      }
-      .suite-header {
-        position: static;
-        align-items: flex-start;
-        flex-direction: column;
-      }
-      .suite-header-actions {
-        width: 100%;
-        align-items: stretch;
-        flex-direction: column;
-      }
-      .monthly-goal-button {
-        width: 100%;
-      }
-      .header-supervision {
-        width: 100%;
-      }
-      .board {
-        grid-template-columns: 1fr;
-      }
-      body.supervision-unlocked .board {
-        grid-template-columns: 1fr;
-      }
-      .supervision-access__form {
-        grid-template-columns: 1fr;
-      }
-      .hero-copy {
-        padding: 18px;
-      }
-    }
-  </style>
+  <meta name="theme-color" content="#FF5F5C" />
+  <link rel="icon" href="./assets/rio-mark.svg" type="image/svg+xml" />
+  <link rel="preload" href="./assets/identity/gotham-book.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="./assets/workspace.css?v=4a1897fc7e" />
+  <script defer src="./assets/workspace.js?v=ff4dea110a"></script>
+  <link rel="stylesheet" href="assets/rio-identity.css?v=c9458779b8" />
+<script src="assets/rio-access.js?v=935accae1e"></script>
+<script src="assets/rio-context.js?v=8b59f5d8a2"></script>
+<link rel="stylesheet" href="assets/rio-context.css?v=952f92312d">
 </head>
-
 <body>
-  <div class="suite-shell">
-    <header class="suite-header">
-      <div class="brand-lockup">
-        <div class="logo-mark">RIO</div>
-        <div class="brand-copy">
-          <h1>RIO Tools Suite</h1>
-          <p>Operacion, deposito, ecommerce y administracion en una sola plataforma.</p>
-        </div>
-      </div>
-      <div class="suite-header-actions">
-        <a class="btn monthly-goal-button" href="./apps/objetivos-ventas/">Mi objetivo mensual</a>
-        <div class="supervision-access header-supervision" id="supervisionAccess">
-          <button class="btn" id="supervisionOpenButton" type="button">Supervision</button>
-          <form class="supervision-access__form" id="supervisionAccessForm">
-            <input id="supervisionAccessPass" type="password" autocomplete="current-password" placeholder="Clave de acceso" aria-label="Clave de acceso de supervisión" />
-            <button class="btn" type="submit">Ingresar</button>
-          </form>
-          <button class="btn" id="supervisionLockButton" type="button">Cerrar supervision</button>
-          <div class="supervision-access__message" id="supervisionAccessMessage"></div>
-        </div>
-      </div>
+  <a class="skip" href="#tools">Ir a las herramientas</a>
+  <aside class="sidebar" aria-label="Navegación principal">
+    <a class="brand" href="./" aria-label="RIO Tools, inicio"><img class="rio-brand-logo" src="./assets/identity/rio-logo-coral.svg" alt="RÍO Lencería" width="99" height="68" /><span class="rio-brand-descriptor"><strong>TOOLS</strong><small>Espacio de<br>trabajo</small></span></a>
+    <p class="side-label">Tu espacio</p>
+    <nav class="navigation" aria-label="Mi espacio">
+      <button class="nav-button active" data-mode="all" aria-pressed="true"><svg data-icon="grid"></svg>Inicio</button>
+      <button class="nav-button" data-mode="favorites" aria-pressed="false"><svg data-icon="star"></svg>Favoritos <span class="nav-count" id="favoriteCount">0</span></button>
+      <button class="nav-button" data-mode="recent" aria-pressed="false"><svg data-icon="clock"></svg>Recientes</button>
+    </nav>
+    <div class="area-navigation"><p class="side-label">Áreas de trabajo</p><nav class="navigation" id="areaNav" aria-label="Áreas de trabajo"></nav></div>
+    <div class="side-bottom"><a class="help-link" href="./apps/incidentes/"><svg data-icon="help"></svg>Mesa de ayuda<svg data-icon="arrow"></svg></a><div class="workspace-note"><strong>Un equipo. Un mismo lugar.</strong>Herramientas para hacer más simple cada día.</div></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><div class="breadcrumb">Workspace <span>/</span><strong id="breadcrumb">Vista general</strong></div><div class="top-actions"><time class="date" id="today"></time>
+      <a class="btn access-button" href="./index.html?branch=change&amp;profile=ADMINISTRACION" id="administrationOpenButton"><svg data-icon="lock"></svg>Administración</a>
+      <div class="supervision-access" id="supervisionAccess">
+        <button class="btn access-button" id="supervisionOpenButton" type="button" aria-expanded="false" aria-controls="supervisionAccessForm"><svg data-icon="lock"></svg>Supervisores</button>
+        <form class="supervision-access__form" id="supervisionAccessForm" hidden>
+          <label for="supervisionAccessPass">Acceso de Supervisores</label><input id="supervisionAccessPass" type="password" autocomplete="current-password" placeholder="Ingresá tu clave" required />
+          <button class="btn" type="submit">Ingresar</button><button class="btn" id="accessCancel" type="button">Cancelar</button><div class="supervision-access__message" id="supervisionAccessMessage" role="status"></div>
+        </form>
+        <button class="btn" id="supervisionLockButton" type="button">Cerrar Supervisores</button>
+      </div></div>
     </header>
-
-    <section class="suite-hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Suite operativa para retail</p>
-        <h2>Gestion operativa centralizada.</h2>
-        <p class="lead">RIO Tools ordena procesos diarios de deposito, locales, ecommerce y administracion en una plataforma web modular, simple de operar y preparada para evolucionar a mobile.</p>
-      </div>
-    </section>
-
+    <div class="offline" id="offline" role="status" hidden>Estás sin conexión. Podés explorar el panel; las herramientas conectadas necesitan internet.</div>
     <main>
-      <section class="board" aria-label="Herramientas disponibles">
+      <section class="intro"><div><h1>Todo listo para empezar.</h1><p>Tus herramientas, tu equipo y el próximo paso. En un solo lugar.</p></div><span class="local-time"><i></i>Tu espacio de trabajo diario</span></section>
+      <section class="feature" aria-label="Accesos principales">
+        <div class="hero"><h2>Un mismo equipo.<br>Todo en RÍO.</h2><p>Las herramientas que conectan nuestros locales, depósito y equipo. Cada día, más cerca.</p><a class="hero-link" href="#tools">Explorar herramientas<svg data-icon="arrow"></svg></a><div class="hero-art" aria-hidden="true"><img src="./assets/identity/rio-symbol-white.svg" alt="" width="144" height="153" /></div></div>
+        <div class="quick-panel"><div class="quick-heading"><h2>Directo a la tarea</h2><span>Accesos rápidos</span></div>
+          <a class="quick-link" href="./apps/entrada-mercaderia/"><span class="quick-icon"><svg data-icon="box"></svg></span><span><strong>Ingresar mercadería</strong><small>Recepción y control de productos</small></span><svg data-icon="arrow"></svg></a>
+          <a class="quick-link" href="./apps/pedidos-web/"><span class="quick-icon"><svg data-icon="bag"></svg></span><span><strong>Gestionar pedidos web</strong><small>Del pedido a la entrega</small></span><svg data-icon="arrow"></svg></a>
+          <a class="quick-link" href="./apps/asistencia/"><span class="quick-icon"><svg data-icon="people"></svg></span><span><strong>Registrar asistencia</strong><small>El día a día de tu equipo</small></span><svg data-icon="arrow"></svg></a>
+        </div>
+      </section>
+      <section id="tools" aria-labelledby="toolsTitle">
+        <div class="tools-heading"><h2 id="toolsTitle"><span id="viewTitle">Todas las herramientas</span><span class="count" id="toolCount"></span></h2><label class="search"><svg data-icon="search"></svg><input id="toolSearch" type="search" placeholder="Buscar una herramienta…" aria-label="Buscar herramientas" /><kbd>Ctrl K</kbd></label></div>
+        <div class="filter-bar"><div class="filters" id="filters" aria-label="Filtrar por área"></div><div class="view-controls" aria-label="Presentación"><button class="icon-button" data-view="grid" aria-label="Vista por áreas" aria-pressed="true"><svg data-icon="grid"></svg></button><button class="icon-button" data-view="list" aria-label="Vista de lista" aria-pressed="false"><svg data-icon="list"></svg></button></div></div>
+<section class="board" aria-label="Herramientas disponibles">
         <div class="col">
           <div class="col-head">
             <h2>Operaciones</h2>
-            <p>Flujo diario de locales y deposito.</p>
+            <p>Flujo diario de locales y depósito.</p>
           </div>
-          <div class="links">
+          <div class="links"><a class="item" href="./apps/objetivos-ventas/"><div class="item-title">Objetivos mensuales</div><p class="item-desc">Meta del mes, ventas acumuladas y cumplimiento diario de tu local.</p></a>
             <a class="item" href="./apps/entrada-mercaderia/">
-              <div class="item-title">Entrada de Mercaderia</div>
+              <div class="item-title">Entrada de Mercadería</div>
               <p class="item-desc">Ingreso por escaneo, equivalencias y control contra CSV.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
-              <a class="item" href="./apps/mercaderia-transito/">
-                <div class="item-title">Mercaderia en Transito</div>
-                <p class="item-desc">Seguimiento de remitos, archivos asociados y picking de transito.</p>
-                <div class="item-meta"><span class="state ready">Activo</span></div>
-              </a>
-              <a class="item" href="./apps/mercaderia-transito-v2/">
-                <div class="item-title">Mercaderia en Transito NUEVO!!</div>
-                <p class="item-desc">Seguimiento de remitos, archivos asociados y picking de transito. Nueva versión con mejor performance.</p>
-                <div class="item-meta"><span class="state ready">Prueba</span></div>
-              </a>
+            <a class="item" href="./apps/mercaderia-transito/">
+              <div class="item-title">Mercadería en Tránsito</div>
+              <p class="item-desc">Seguimiento de remitos, archivos asociados y picking de transito.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
+            </a>
             <a class="item" href="./apps/control-remitos-clientes/">
               <div class="item-title">Control de Remitos</div>
-              <p class="item-desc">Control y confirmacion de remitos emitidos a clientes.</p>
+              <p class="item-desc">Control y confirmación de remitos emitidos a clientes.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/envios/">
-              <div class="item-title">Envios shipnow y transporte</div>
-              <p class="item-desc">Rotulos, seguimiento interno y control operativo de envios.</p>
+              <div class="item-title">Envíos y transporte</div>
+              <p class="item-desc">Rótulos, seguimiento interno y control operativo de envíos.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
           </div>
@@ -470,24 +101,20 @@
           <div class="links">
             <a class="item" href="./apps/categorizador/">
               <div class="item-title">Categorizador</div>
-              <p class="item-desc">Normalizacion y categorizacion de productos para publicacion.</p>
+              <p class="item-desc">Normalización y categorización de productos para publicación.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/pedidos-web/">
               <div class="item-title">Pedidos Web</div>
-              <p class="item-desc">Gestion y armado de pedidos desde el canal online.</p>
+              <p class="item-desc">Gestión y armado de pedidos desde el canal online.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/pedidos-dashboard/">
-              <div class="item-title">🔒 Dashboard Pedidos</div>
-              <p class="item-desc">Analisis interactivo del log de estados, sucursales y envios.</p>
-              <div class="item-meta"><span class="state beta">Acceso protegido</span></div>
+              <div class="item-title">Dashboard Pedidos</div>
+              <p class="item-desc">Analisis interactivo del log de estados, sucursales y envíos.</p>
+              <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
-            <a class="item" href="./apps/clientes-contactar/">
-              <div class="item-title">🔒 Clientes a contactar</div>
-              <p class="item-desc">Alertas y seguimiento de clientes WEB sin compra reciente.</p>
-              <div class="item-meta"><span class="state beta">Acceso protegido</span></div>
-            </a>
+            <a class="item" href="./apps/clientes-contactar/"><div class="item-title">Clientes a contactar</div><p class="item-desc">Seguimiento comercial de clientes WEB pendientes de contacto.</p></a>
             <a class="item" href="./apps/pedidos-web-locales/">
               <div class="item-title">Pedidos Web Locales</div>
               <p class="item-desc">Entrada, retiro y seguimiento de pedidos web en sucursales.</p>
@@ -503,23 +130,23 @@
 
         <div class="col">
           <div class="col-head">
-            <h2>Deposito</h2>
-            <p>Preparacion, planificacion y control.</p>
+            <h2>Depósito</h2>
+            <p>Preparación, planificación y control.</p>
           </div>
           <div class="links">
             <a class="item" href="./apps/picking-salida/">
               <div class="item-title">Picking Salida</div>
-              <p class="item-desc">Preparacion por codigo de barras, validacion y guardado de salida.</p>
+              <p class="item-desc">Preparación por código de barras, validación y guardado de salida.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/pedido-semanal/">
               <div class="item-title">Pedido Semanal</div>
-              <p class="item-desc">Armado de pedidos por curva, historicos, talles y promociones.</p>
+              <p class="item-desc">Armado de pedidos por curva, históricos, talles y promociones.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/etiquetas/">
               <div class="item-title">Generador de Etiquetas</div>
-              <p class="item-desc">Generacion de archivos para altas, bajas y etiquetas por producto.</p>
+              <p class="item-desc">Generación de archivos para altas, bajas y etiquetas por producto.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
           </div>
@@ -527,8 +154,8 @@
 
         <div class="col">
           <div class="col-head">
-            <h2>Administracion</h2>
-            <p>Soporte, supervision y backoffice.</p>
+            <h2>Gestión del local</h2>
+            <p>Soporte, supervisión y backoffice.</p>
           </div>
           <div class="links">
             <a class="item" href="./apps/asistencia/">
@@ -537,8 +164,8 @@
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/confirmacion-depositos/">
-              <div class="item-title">Depositos a Confirmar</div>
-              <p class="item-desc">Carga y consulta de depositos o transferencias bancarias.</p>
+              <div class="item-title">Depósitos a Confirmar</div>
+              <p class="item-desc">Carga y consulta de depósitos o transferencias bancarias.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/archivos-administrativos/">
@@ -547,14 +174,9 @@
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
             <a class="item" href="./apps/pedido-carteleria/">
-              <div class="item-title">Pedido de Carteleria</div>
-              <p class="item-desc">Solicitud y seguimiento de carteleria para locales y campanas.</p>
+              <div class="item-title">Pedido de Cartelería</div>
+              <p class="item-desc">Solicitud y seguimiento de cartelería para locales y campañas.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
-            </a>
-            <a class="item" href="./apps/check-depositos/" data-supervision-access>
-              <div class="item-title">Check Depositos</div>
-              <p class="item-desc">Panel para revisar, corregir y confirmar depositos.</p>
-              <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
           </div>
         </div>
@@ -570,21 +192,6 @@
               <p class="item-desc">Solicitudes, problemas técnicos y seguimiento de soporte interno.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
-            <a class="item" href="./apps/stock-ventas/" data-supervision-access>
-              <div class="item-title">Stock &amp; Ventas</div>
-              <p class="item-desc">Consulta diaria de stock y ventas por producto, proveedor y sucursal.</p>
-              <div class="item-meta"><span class="state beta">Nuevo</span></div>
-            </a>
-            <a class="item" href="./apps/revision-stock/" data-supervision-access>
-              <div class="item-title">Equiparacion de Stock</div>
-              <p class="item-desc">Movimientos sugeridos para equilibrar mercaderia entre sucursales.</p>
-              <div class="item-meta"><span class="state beta">Nuevo</span></div>
-            </a>
-            <a class="item" href="./apps/sistemas/" data-supervision-access>
-              <div class="item-title">Gestión de Incidentes</div>
-              <p class="item-desc">Recepción, asignación y seguimiento de incidentes reportados por los locales.</p>
-              <div class="item-meta"><span class="state ready">Activo</span></div>
-            </a>
           </div>
         </div>
 
@@ -596,11 +203,11 @@
           <div class="links">
             <a class="item" href="./apps/supervisores/">
               <div class="item-title">Control de Asistencia</div>
-              <p class="item-desc">Vista diaria de asistencia para control de supervision.</p>
+              <p class="item-desc">Vista diaria de asistencia para control de supervisión.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
-            <a class="item" href="./apps/margenes/">
-              <div class="item-title">Margenes</div>
+            <a class="item" href="./apps/objetivos-ventas-sistemas/"><div class="item-title">Administrar objetivos</div><p class="item-desc">Editar objetivos mensuales de los locales desde Sistemas.</p></a><a class="item" href="./apps/margenes/">
+              <div class="item-title">Márgenes</div>
               <p class="item-desc">Dashboard interactivo de ventas, costos, ganancias, sucursales y proveedores.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
@@ -609,9 +216,9 @@
               <p class="item-desc">Control mensual de faltas, llegadas tarde y asistencia por local.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
-            <a class="item" href="./apps/sistemas-transito-v2/">
-              <div class="item-title">Seguimiento de Remitos</div>
-              <p class="item-desc">Auditoria de estados y movimientos de Mercaderia en Transito V.2.</p>
+            <a class="item" href="./apps/check-depositos/">
+              <div class="item-title">Check Depósitos</div>
+              <p class="item-desc">Panel seguro para revisar, corregir y confirmar depósitos.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
             <a class="item" href="./apps/ventas-clientes/">
@@ -619,73 +226,30 @@
               <p class="item-desc">Ranking, seguimiento y comportamiento de compra por cliente.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
-            <a class="item" href="./apps/remitos-deposito/">
-              <div class="item-title">Remitos Deposito</div>
-              <p class="item-desc">Carga manual, numeracion por cliente e historial de remitos.</p>
-              <div class="item-meta"><span class="state beta">Nuevo</span></div>
+            <a class="item" href="./apps/sistemas/">
+              <div class="item-title">Gestión de Incidentes</div>
+              <p class="item-desc">Recepción, asignación y seguimiento de incidentes reportados por los locales.</p>
+              <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
-            <a class="item" href="./apps/objetivos-ventas-sistemas/">
-              <div class="item-title">Objetivos de Venta</div>
-              <p class="item-desc">Edición mensual de objetivos comerciales por local.</p>
+            <a class="item" href="./apps/remitos-deposito/">
+              <div class="item-title">Remitos Depósito</div>
+              <p class="item-desc">Carga manual, numeración por cliente e historial de remitos.</p>
               <div class="item-meta"><span class="state beta">Nuevo</span></div>
             </a>
             <a class="item" href="./apps/apercibimientos/">
               <div class="item-title">Apercibimientos</div>
-              <p class="item-desc">Gestion disciplinaria, consulta de remitos y generacion de PDF.</p>
+              <p class="item-desc">Gestión disciplinaria, consulta de remitos y generación de PDF.</p>
               <div class="item-meta"><span class="state ready">Activo</span></div>
             </a>
           </div>
         </div>
       </section>
+        <div class="empty" id="empty" hidden><h3 id="emptyTitle"></h3><p id="emptyText"></p><button class="btn" id="resetFilters">Ver todas las herramientas</button></div>
+        <p id="resultsStatus" class="sr-only" role="status"></p>
+      </section>
     </main>
-
-    <footer>
-      RIO Tools Suite | Plataforma modular para operaciones internas | Presentacion comercial
-    </footer>
+    <footer class="footer"><span class="footer-brand"><img src="./assets/identity/rio-symbol-coral.svg" alt="RÍO" width="23" height="27" />Herramientas que conectan tu operación.</span><span>Hecho para tu equipo · RIO Tools</span></footer>
   </div>
-  <script src="./assets/rio-access.js"></script>
-  <script>
-    (() => {
-      const form = document.getElementById("supervisionAccessForm");
-      const input = document.getElementById("supervisionAccessPass");
-      const message = document.getElementById("supervisionAccessMessage");
-      const access = document.getElementById("supervisionAccess");
-      const openButton = document.getElementById("supervisionOpenButton");
-      const lockButton = document.getElementById("supervisionLockButton");
-
-      function renderAccessState() {
-        const unlocked = window.RioAccess?.isUnlocked();
-        document.body.classList.toggle("supervision-unlocked", !!unlocked);
-        if(message) {
-          message.textContent = "";
-        }
-      }
-
-      openButton?.addEventListener("click", () => {
-        access?.classList.add("is-open");
-        input?.focus();
-      });
-
-      form?.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const ok = window.RioAccess?.unlock(input?.value || "");
-        if(input) input.value = "";
-        renderAccessState();
-        if(ok) {
-          access?.classList.remove("is-open");
-        } else if(message) {
-          message.textContent = "Clave incorrecta.";
-        }
-      });
-
-      lockButton?.addEventListener("click", () => {
-        window.RioAccess?.lock();
-        access?.classList.remove("is-open");
-        renderAccessState();
-      });
-
-      renderAccessState();
-    })();
-  </script>
+  <div class="toast" id="toast" role="status" hidden></div>
 </body>
 </html>

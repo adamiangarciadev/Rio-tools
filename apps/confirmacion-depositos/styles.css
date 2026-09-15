@@ -60,7 +60,7 @@ label{
 
 .input{
   width:100%;
-  background:#0f1216;
+  background:#f4f6f8;
   color:var(--fg);
   border:1px solid var(--border);
   border-radius:10px;
@@ -81,7 +81,7 @@ label{
   border:1px dashed var(--border);
   border-radius:12px;
   cursor:pointer;
-  background:#0f1216;
+  background:#f4f6f8;
 }
 
 .filebox input{display:none}
@@ -110,7 +110,7 @@ label{
 }
 
 .btn.secondary{
-  background:#1a2029;
+  background:#f4f6f8;
   color:var(--fg);
   border:1px solid var(--border);
 }
@@ -132,7 +132,7 @@ label{
   border:1px solid var(--border);
   border-radius:12px;
   padding:12px;
-  background:#0f1216;
+  background:#f4f6f8;
 }
 
 .dep-top{
@@ -224,3 +224,5 @@ label{
   display:inline-flex;
   align-items:center;
 }
+/* Workspace redesign: confirmacion-depositos */
+.rio-app .page-grid{gap:26px;align-items:start}.rio-app .card{padding:24px}.rio-app .grid{gap:18px}.rio-app label{display:grid;gap:8px}.rio-app .filebox{background:#f6f1fd;border:1px dashed #bca8dc;padding:22px;border-radius:10px}.rio-app .list{display:grid;gap:12px}

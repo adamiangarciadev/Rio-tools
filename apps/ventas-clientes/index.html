@@ -14,10 +14,17 @@
     gtag("config", "G-CDPZFHV1BV");
   </script>
 
-  <link rel="stylesheet" href="../../assets/rio-theme.css" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=098da151a0" />
+  <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
+  <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
+  <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../assets/rio-identity.css?v=c9458779b8" />
+<script src="../../assets/rio-access.js?v=935accae1e" data-require-supervision="true"></script>
+<script src="../../assets/rio-context.js?v=8b59f5d8a2"></script>
+<link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
+<link rel="stylesheet" href="workspace.css?v=b451f24189">
 </head>
-<body>
+<body class="rio-app" data-rio-app="ventas-clientes">
   <header class="container module-topbar">
     <a href="../../index.html" class="btn back-btn">Volver</a>
     <div class="module-topbar__title">
@@ -38,7 +45,7 @@
         <label>
           Periodo
           <select id="periodFilter">
-            <option value="month">Mes en curso</option>
+            <option value="month">Último mes informado</option>
             <option value="last3">Ultimos 3 meses</option>
             <option value="year">Año base</option>
             <option value="all">Historico</option>
@@ -128,8 +135,7 @@
                   </label>
                 </th>
                 <th>Cliente</th>
-                <th>Telefono</th>
-                <th>Telefono movil</th>
+                <th>Contacto</th>
                 <th>Sucursal</th>
                 <th>Segmento</th>
                 <th>Total periodo</th>
@@ -137,13 +143,14 @@
               </tr>
             </thead>
             <tbody id="clientRows">
-              <tr><td colspan="8" class="empty-cell">Cargando clientes...</td></tr>
+              <tr><td colspan="7" class="empty-cell">Cargando clientes...</td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <aside class="panel detail-panel">
+      <aside class="panel detail-panel" hidden>
+        <button type="button" id="backToClients" class="btn">Volver al listado</button>
         <div class="panel-head">
           <div>
             <h2>Seguimiento</h2>
@@ -218,19 +225,19 @@
           <span data-field="code"></span>
         </button>
       </td>
-      <td data-field="phone"></td>
-      <td data-field="mobile"></td>
+      <td class="contact-cell"><span data-field="mobile"></span><small data-field="phone"></small></td>
       <td data-field="branch"></td>
       <td><span class="segment-pill" data-field="segment"></span></td>
       <td data-field="periodTotal"></td>
       <td data-field="lastPurchase"></td>
     </tr>
   </template>
-
-  <script src="../../assets/rio-access.js" data-require-supervision="true"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="api-config.js"></script>
-  <script src="app.js"></script>
-  <script src="../../assets/rio-report-problem.js"></script>
+  <script src="api-config.js?v=ff715bf1c8"></script>
+  <script src="app.js?v=ae8407f9d1"></script>
+  <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>
+  <script src="../../assets/app-catalog.js?v=fd52fc724b"></script>
+  <script src="../../assets/app-shell.js?v=420f7666a0"></script>
+  <script src="workspace.js?v=2cc7462e9e"></script>
 </body>
 </html>

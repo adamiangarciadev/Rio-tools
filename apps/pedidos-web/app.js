@@ -103,12 +103,7 @@
   let guardandoWhatsapp = false;
   let PADRON_USUARIOS = new Map();
 
-  // =========================
-  // ESTADOS DISPONIBLES
-  // =========================
-  // IMPORTANTE:
-  // No hay progresividad: mientras el pedido no esté ARMADO se ofrecen todos
-  // los estados operativos. Al cerrarlo como ARMADO se eliminan los anteriores.
+  // Estados y opciones sincronizados con Rio-tools (web original).
   const ESTADOS_DISPONIBLES = [
     'PARA ARMAR',
     'ARMANDO PEDIDO',

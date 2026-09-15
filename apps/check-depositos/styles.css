@@ -12,8 +12,7 @@
 }
 
 body {
-  background:
-    linear-gradient(180deg, rgba(34, 199, 184, .04), transparent 280px),
+  background:linear-gradient(180deg, rgba(34, 199, 184, .04), transparent 280px),
     var(--check-bg);
 }
 
@@ -31,7 +30,7 @@ body {
 .panel,
 .summary-card,
 .deposit-card {
-  background: var(--check-panel) !important;
+  background:var(--check-panel) !important;
   border: 1px solid var(--check-line) !important;
   border-radius: 8px !important;
 }
@@ -51,7 +50,7 @@ body {
   padding: 4px;
   border: 1px solid var(--check-line);
   border-radius: 8px;
-  background: rgba(8, 13, 20, .72);
+  background:rgba(8, 13, 20, .72);
 }
 
 .tab {
@@ -60,7 +59,7 @@ body {
 }
 
 .tab.active {
-  background: rgba(34, 199, 184, .22) !important;
+  background:rgba(34, 199, 184, .22) !important;
   border-color: rgba(34, 199, 184, .5) !important;
 }
 
@@ -96,13 +95,13 @@ input {
 }
 
 .summary-card span {
-  color: var(--check-muted);
+  color:var(--check-muted);
   font-size: 12px;
   font-weight: 700;
 }
 
 .summary-card strong {
-  color: var(--check-text);
+  color:var(--check-text);
   font-size: 28px;
   line-height: 1;
 }
@@ -130,7 +129,7 @@ input {
   height: min(72vh, 780px);
   border: 1px solid var(--check-line);
   border-radius: 8px;
-  background: rgba(8, 13, 20, .58);
+  background:rgba(8, 13, 20, .58);
 }
 
 .panel-head {
@@ -157,7 +156,7 @@ input {
   padding: 4px 9px;
   border: 1px solid var(--check-line);
   border-radius: 999px;
-  color: var(--check-muted);
+  color:var(--check-muted);
   font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
@@ -176,7 +175,7 @@ input {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   text-align: left;
-  background: var(--check-panel-2) !important;
+  background:var(--check-panel-2) !important;
 }
 
 .account-row strong,
@@ -192,7 +191,7 @@ input {
 }
 
 .account-row span {
-  color: var(--check-muted);
+  color:var(--check-muted);
   font-size: 12px;
 }
 
@@ -205,7 +204,7 @@ input {
   padding: 14px;
   display: grid;
   gap: 12px;
-  background: var(--check-panel-2) !important;
+  background:var(--check-panel-2) !important;
 }
 
 .deposit-card__top {
@@ -225,7 +224,7 @@ input {
 }
 
 .deposit-card__amount {
-  color: var(--check-text);
+  color:var(--check-text);
   font-size: 24px;
   font-weight: 850;
 }
@@ -242,7 +241,7 @@ input {
 }
 
 dt {
-  color: var(--check-muted);
+  color:var(--check-muted);
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -250,7 +249,7 @@ dt {
 
 dd {
   margin: 4px 0 0;
-  color: var(--check-text);
+  color:var(--check-text);
   font-size: 13px;
   overflow-wrap: anywhere;
 }
@@ -274,23 +273,23 @@ dd {
 }
 
 .badge.pending {
-  color: var(--check-warn) !important;
+  color:var(--check-warn) !important;
   border-color: rgba(245, 158, 11, .34) !important;
-  background: rgba(245, 158, 11, .1) !important;
+  background:rgba(245, 158, 11, .1) !important;
 }
 
 .badge.confirmed {
-  color: var(--check-ok) !important;
+  color:var(--check-ok) !important;
   border-color: rgba(52, 211, 153, .34) !important;
-  background: rgba(52, 211, 153, .1) !important;
+  background:rgba(52, 211, 153, .1) !important;
 }
 
 .empty-state {
   padding: 16px;
-  color: var(--check-muted);
+  color:var(--check-muted);
   border: 1px dashed var(--check-line);
   border-radius: 8px;
-  background: rgba(8, 13, 20, .38);
+  background:rgba(8, 13, 20, .38);
 }
 
 .confirm-btn[hidden],
@@ -314,7 +313,7 @@ dd {
 .modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, .62);
+  background:rgba(0, 0, 0, .62);
 }
 
 .modal__panel {
@@ -325,7 +324,7 @@ dd {
   gap: 13px;
   border: 1px solid var(--check-line);
   border-radius: 8px;
-  background: var(--check-panel);
+  background:var(--check-panel);
 }
 
 .modal__head,
@@ -349,7 +348,7 @@ dd {
   min-height: 40px;
   display: inline-flex;
   align-items: center;
-  color: var(--check-muted);
+  color:var(--check-muted);
   font-size: 13px;
 }
 
@@ -392,3 +391,6 @@ dd {
     position: static;
   }
 }
+
+/* Workspace redesign: check-depositos */
+.rio-app .toolbar{gap:20px;padding:20px}.rio-app .content-grid{gap:24px;grid-template-columns:minmax(210px,.7fr) minmax(0,1.5fr)}.rio-app .content-grid>*{min-width:0}.rio-app .content-grid> :last-child{grid-column:1/-1}.rio-app .tabs{background:#eee7f8}.rio-app .deposit-card{padding:20px}.rio-app .account-row{padding:14px}@media(max-width:850px){.rio-app .content-grid{grid-template-columns:minmax(0,1fr)}}

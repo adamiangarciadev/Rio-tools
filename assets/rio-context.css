@@ -1,0 +1,11 @@
+.rio-context-button{font:inherit;font-size:12px;font-weight:600;color:#912b29;background:#ffe4df;border:1px solid #edc8c1;border-radius:8px;min-height:40px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.rio-context-dialog{box-sizing:border-box;width:min(480px,calc(100% - 32px));max-height:calc(100dvh - 40px);padding:32px;border:0;border-radius:16px;background:#faf9f7;color:#292725;font-family:'Gotham RIO',system-ui,sans-serif;box-shadow:0 24px 80px #241a1933}
+.rio-context-dialog::backdrop{background:#28232099}.rio-context-dialog h2{font-size:25px;line-height:1.2;margin:24px 0 12px}.rio-context-dialog p{font-size:14px;line-height:1.65;color:#615b55}.rio-context-dialog label{display:block;margin:22px 0 9px;font-size:13px;font-weight:600}.rio-context-dialog select,.rio-context-dialog input{box-sizing:border-box;width:100%;min-height:46px;background:white;color:#292725;border:1px solid #c5bab2;border-radius:8px;padding:10px;font:inherit}.rio-context-dialog button{min-height:46px;margin-top:16px;width:100%;border:0;border-radius:8px;background:#ff5f5c;color:#3d1d1b;font:inherit;font-weight:600;cursor:pointer}.rio-context-dialog .rio-context-message{color:#912b29}.rio-context-dialog [hidden]{display:none!important}.rio-context-dialog :focus-visible{outline:3px solid #43428e;outline-offset:3px}
+@media(max-width:600px){.rio-context-dialog{padding:24px}.rio-context-button{max-width:125px;overflow:hidden;text-overflow:ellipsis}.rio-shell-actions{gap:6px}.rio-app .rio-app-search{max-width:none;flex-basis:100%}}
+
+/* Operating branch is shown once in the shared app header. */
+.rio-app .rio-context-inherited{display:none!important}
+.rio-app .module-control-panel .meta.rio-context-compact-meta{grid-template-columns:90px minmax(200px,1fr) minmax(200px,1fr) 150px}
+.rio-app .module-control-panel .rio-context-compact-meta .kpi{grid-row:1 / 3}
+@media(max-width:1150px){.rio-app .module-control-panel .meta.rio-context-compact-meta{grid-template-columns:90px minmax(0,1fr)}}
+

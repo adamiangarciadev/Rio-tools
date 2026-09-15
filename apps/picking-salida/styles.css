@@ -7,7 +7,7 @@
 html,body{height:100%}
 body{
   margin:0; font-family: ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-  background:#0b0c0e; color:var(--fg);
+  background:#f5f6f7; color:var(--fg);
 }
 .container{max-width:1100px; margin:0 auto; padding:16px}
 .header-row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:24px}
@@ -23,19 +23,19 @@ p{margin:0 0 12px 0}
 .row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
 .spacer{flex:1}
 .btn{
-  border:1px solid var(--border); background:#171a1f; color:var(--fg); padding:10px 14px; border-radius:10px;
+  border:1px solid var(--border); background:#f5f6f7; color:var(--fg); padding:10px 14px; border-radius:10px;
   cursor:pointer; transition:.15s transform;
 }
 .btn:hover{transform:translateY(-1px)}
 .btn.primary{background:var(--accent); color:#0b0c0e; border-color:#3b82f6}
 .btn.ghost{background:transparent}
 .input, select{
-  background:#0f1216; color:var(--fg); border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+  background:#f4f6f8; color:var(--fg); border:1px solid var(--border); border-radius:8px; padding:8px 10px;
 }
 /* Scan input */
 .scan-wrap{display:flex; flex-direction:column; gap:10px}
 .scan-input{
-  width:100%; background:#0f1216; color:#e5e7eb; border:2px solid var(--border); border-radius:12px;
+  width:100%; background:#f4f6f8; color:#5c5269; border:2px solid var(--border); border-radius:12px;
   padding:16px 14px; font-size:20px; letter-spacing:0.5px;
 }
 .scan-input.ok{border-color: var(--ok); box-shadow: 0 0 0 3px rgba(34,197,94,0.2);}
@@ -43,22 +43,22 @@ p{margin:0 0 12px 0}
 .scan-meta{display:flex; align-items:center; gap:10px; justify-content:space-between}
 .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:99px; font-size:12px; border:1px solid var(--border); color:var(--muted)}
 .last-scans{margin-top:10px; font-size:13px; color:var(--muted)}
-.last-scans .ok{color:#86efac}
-.last-scans .err{color:#fca5a5}
+.last-scans .ok{color:#228145}
+.last-scans .err{color:#812222}
 .foot{opacity:.7; text-align:center; padding-bottom:24px}
 
 /* Pill de estado */
 .pill{
   display:inline-flex; align-items:center; gap:8px; padding:8px 12px;
-  border:1px solid var(--border); border-radius:999px; background:#101318; color:var(--fg);
+  border:1px solid var(--border); border-radius:999px; background:#f4f6f8; color:var(--fg);
 }
 .pill .dot{
-  width:10px; height:10px; border-radius:50%; background: var(--muted);
+  width:10px; height:10px; border-radius:50%; background:var(--muted);
   box-shadow: 0 0 0 3px rgba(255,255,255,0.04) inset;
 }
-.pill.ok .dot{ background: var(--ok); }
-.pill.warn .dot{ background: var(--warn); }
-.pill.danger .dot{ background: var(--danger); }
+.pill.ok .dot{ background:var(--ok); }
+.pill.warn .dot{ background:var(--warn); }
+.pill.danger .dot{ background:var(--danger); }
 .hidden{display:none}
 /* ===== Lista completa de pickeo ===== */
 .pick-list-head{
@@ -72,7 +72,7 @@ p{margin:0 0 12px 0}
 .pick-list{
   border:1px solid var(--border);
   border-radius:12px;
-  background:#0f1216;
+  background:#f4f6f8;
   max-height: 420px;           /* scroll */
   overflow:auto;
 }
@@ -100,12 +100,12 @@ p{margin:0 0 12px 0}
   font-weight:700;
 }
 
-.pick-badge.ok{ color:#86efac; }
-.pick-badge.err{ color:#fca5a5; }
+.pick-badge.ok{ color:#228145; }
+.pick-badge.err{ color:#812222; }
 
 .pick-code{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  color: var(--fg);
+  color:var(--fg);
   word-break: break-word;
 }
 
@@ -114,8 +114,8 @@ p{margin:0 0 12px 0}
   padding:8px 10px;
   border-radius:10px;
   border:1px solid var(--border);
-  background: transparent;
-  color: var(--fg);
+  background:transparent;
+  color:var(--fg);
   cursor:pointer;
 }
 .pick-del:hover{ filter: brightness(1.1); }
@@ -149,8 +149,8 @@ p{margin:0 0 12px 0}
   appearance:none;
   -webkit-appearance:none;
 
-  background: var(--card);
-  color: var(--fg);
+  background:var(--card);
+  color:var(--fg);
   border: 1px solid var(--border);
   border-radius: 12px;
   height: 40px;
@@ -158,7 +158,7 @@ p{margin:0 0 12px 0}
   outline: none;
 }
 
-.field-inline input::placeholder{ color: var(--muted); }
+.field-inline input::placeholder{ color:var(--muted); }
 
 /* Botón guardar igual a tus botones */
 .btn-guardar-inline{
@@ -169,8 +169,8 @@ p{margin:0 0 12px 0}
   padding: 0 16px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: var(--accent);
-  color: #fff;
+  background:var(--accent);
+  color:#5c5269;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -189,7 +189,7 @@ p{margin:0 0 12px 0}
 .art-counter{
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--card);
+  background:var(--card);
   padding: 10px;
 }
 
@@ -217,7 +217,7 @@ p{margin:0 0 12px 0}
 }
 .art-code{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  color: var(--fg);
+  color:var(--fg);
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
@@ -228,8 +228,8 @@ p{margin:0 0 12px 0}
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 2px 10px;
-  color: var(--fg);
-  background: rgba(255,255,255,.03);
+  color:var(--fg);
+  background:rgba(255,255,255,.03);
   white-space: nowrap;
   font-size: 12px;
 }
@@ -242,7 +242,7 @@ p{margin:0 0 12px 0}
   justify-content:center;
   border:1px solid var(--border);
   border-radius: 999px;
-  color: var(--muted);
+  color:var(--muted);
   flex: 0 0 auto;
 }
 .art-item[open] .art-arrow{ transform: rotate(90deg); }
@@ -260,12 +260,12 @@ p{margin:0 0 12px 0}
   padding: 6px 8px;
   border:1px solid var(--border);
   border-radius: 10px;
-  background: rgba(255,255,255,.02);
-  color: var(--fg);
+  background:rgba(255,255,255,.02);
+  color:var(--fg);
   font-size: 13px;
 }
 
-.art-variant small{ color: var(--muted); }
+.art-variant small{ color:var(--muted); }
 
 /* ===== Uso principal en lector Android: mobile first operativo ===== */
 @media (max-width: 760px) {
@@ -369,3 +369,6 @@ p{margin:0 0 12px 0}
     margin-left: 0;
   }
 }
+
+/* Workspace redesign: picking-salida */
+.rio-app main.container{display:grid;gap:20px}.rio-app main.container>.card{margin:0;padding:24px}.rio-app .field-inline{display:grid;gap:7px;min-width:0}.rio-app .pick-list{background:#f6f2fb;border-color:var(--rio-border)}.rio-app .pick-row{padding:14px}.rio-app .scan-meta{flex-wrap:wrap;gap:12px}

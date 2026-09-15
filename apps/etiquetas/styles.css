@@ -1,0 +1,3 @@
+
+/* Workspace redesign: etiquetas */
+.rio-app .wrap>.grid{gap:24px}.rio-app .card{padding:26px}.rio-app .card label{margin:18px 0 7px}.rio-app #agregar,.rio-app #descargar,.rio-app #descargarBajas{margin-top:14px;background:var(--rio-primary)!important;color:#fff!important}.rio-app #bajasInput{min-height:210px}.rio-app #lista{max-height:320px;overflow:auto}.rio-app .wrap>.muted{margin-bottom:18px}

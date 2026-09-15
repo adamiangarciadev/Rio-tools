@@ -1,7 +1,6 @@
 ;(() => {
   "use strict";
-  const API_LECTURA_URL = "https://script.google.com/macros/s/AKfycbyHeHtA935aruQE6YsBM0lTp51_TWdNqMkz1CEfQ9Cem_uKKse9xOeRdezzD65riCaq/exec";
-  const API_ESCRITURA_URL = "https://script.google.com/macros/s/AKfycbyjV61vxornSXgFNt10L-IohoU2Bp002flTPV7LMjCr-PFGA98rFx_sgBQbB72zfEvR/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbyjV61vxornSXgFNt10L-IohoU2Bp002flTPV7LMjCr-PFGA98rFx_sgBQbB72zfEvR/exec";
   const LS_SUCURSAL = "mercaderia_transito_sucursal";
   const CSV_FILES = ["../../data/equivalencia.csv", "../../data/equivalencia2.csv"];
   const BACKUP_ROOT_FOLDER_ID = "1HoQBiMRvflZuyLtCaJyRBWio1C5i6ofH";
@@ -155,30 +154,10 @@
       });
     }
   }
-  async function leerRespuestaJson(res, mensajeError) {
-    const texto = await res.text();
-    let data;
-    try {
-      data = texto ? JSON.parse(texto) : null;
-    } catch (_) {
-      const esHtml = /^\s*</.test(texto) || /text\/html/i.test(res.headers.get("content-type") || "");
-      throw new Error(esHtml
-        ? `${mensajeError}. El servidor devolvió una página de error; intentá nuevamente en unos segundos.`
-        : `${mensajeError}. La respuesta del servidor no es válida.`
-      );
-    }
-    if (!res.ok) {
-      throw new Error(data?.error || `${mensajeError} (HTTP ${res.status})`);
-    }
-    if (!data || typeof data !== "object") {
-      throw new Error(`${mensajeError}. El servidor devolvió una respuesta vacía.`);
-    }
-    return data;
-  }
   async function cargarSucursales() {
     try {
-      const res = await fetch(`${API_LECTURA_URL}?accion=sucursales`);
-      const data = await leerRespuestaJson(res, "No se pudieron cargar las sucursales");
+      const res = await fetch(`${API_URL}?accion=sucursales`);
+      const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Error al cargar sucursales");
       const sucursalesRaw = Array.isArray(data.sucursales) ? data.sucursales : [];
       const sucursales = [...new Set(sucursalesRaw.map(canonSucursal).filter(Boolean))].sort((a, b) =>
@@ -240,8 +219,8 @@
       el.estadoCarga.textContent = `Cargando remitos de ${state.sucursal}...`;
     }
     try {
-      const res = await fetch(`${API_LECTURA_URL}?accion=listar&sucursal=${encodeURIComponent(state.sucursal)}`);
-      const data = await leerRespuestaJson(res, "No se pudieron cargar los remitos");
+      const res = await fetch(`${API_URL}?accion=listar&sucursal=${encodeURIComponent(state.sucursal)}`);
+      const data = await res.json();
       if (!data.ok) throw new Error(data.error || "No se pudieron cargar los remitos");
       state.remitos = (data.remitos || []).map(normalizarRemito);
       renderRemitos();
@@ -611,7 +590,7 @@
       if (el.estadoCarga) {
         el.estadoCarga.textContent = `Actualizando remito ${remito}...`;
       }
-      const res = await fetch(API_ESCRITURA_URL, {
+      const res = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({
           accion: "actualizarEstado",
@@ -621,12 +600,11 @@
           codigoPersonal
         })
       });
-      const data = await leerRespuestaJson(res, "No se pudo actualizar el estado");
+      const data = await res.json();
       if (!data.ok) throw new Error(data.error || "No se pudo actualizar el estado");
       await cargarRemitos();
     } catch (err) {
       alert(err.message);
-      await cargarRemitos();
     }
   }
   async function confirmarOk(remito) {
@@ -639,7 +617,7 @@
       if (el.estadoCarga) {
         el.estadoCarga.textContent = `Confirmando remito ${remito}...`;
       }
-      const res = await fetch(API_ESCRITURA_URL, {
+      const res = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({
           accion: "confirmarOk",
@@ -648,12 +626,11 @@
           codigoPersonal
         })
       });
-      const data = await leerRespuestaJson(res, "No se pudo confirmar el remito");
+      const data = await res.json();
       if (!data.ok) throw new Error(data.error || "No se pudo confirmar");
       await cargarRemitos();
     } catch (err) {
       alert(err.message);
-      await cargarRemitos();
     }
   }
   function abrirModal(remito) {
@@ -756,7 +733,7 @@
       const archivos = await Promise.all(
         Array.from((el.difFiles && el.difFiles.files) || []).map(fileToBase64Object)
       );
-      const res = await fetch(API_ESCRITURA_URL, {
+      const res = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({
           accion: "guardarDiferencias",
@@ -767,7 +744,7 @@
           codigoPersonal
         })
       });
-      const data = await leerRespuestaJson(res, "No se pudieron guardar las diferencias");
+      const data = await res.json();
       if (!data.ok) throw new Error(data.error || "No se pudieron guardar las diferencias");
       cerrarModal();
       await cargarRemitos();

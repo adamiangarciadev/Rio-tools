@@ -78,6 +78,7 @@
   document.addEventListener("DOMContentLoaded", init);
 
   function init() {
+    document.getElementById('btnRefreshReport').addEventListener('click', loadDailyReport);
     els.btnPick.addEventListener("click", () => els.fileInput.click());
     els.fileInput.addEventListener("change", () => handleFiles([...els.fileInput.files]));
     els.btnExportAll.addEventListener("click", exportAllReports);
@@ -123,12 +124,16 @@
       return;
     }
 
-    setStatus("Cargando el reporte diario desde el correo...");
+    const refresh = document.getElementById('btnRefreshReport');
+    refresh.disabled = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    setStatus("Cargando el último reporte procesado desde el correo...");
     try {
       const url = new URL(API_URL);
       url.searchParams.set("accion", "reporte");
       url.searchParams.set("_", Date.now());
-      const response = await fetch(url.toString(), { cache: "no-store" });
+      const response = await fetch(url.toString(), { cache: "no-store", signal: controller.signal });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
       if (!payload.ok) throw new Error(payload.error || "La API no devolvio un reporte valido.");
@@ -147,7 +152,10 @@
       );
       render();
     } catch (error) {
-      setStatus(`No pude cargar el reporte automatico: ${error.message}. Podes usar la carga manual.`);
+      setStatus(`No pude cargar el reporte automático: ${error.name === 'AbortError' ? 'la conexión tardó demasiado' : error.message}. Podés reintentar o usar la carga manual.`);
+    } finally {
+      clearTimeout(timeout);
+      refresh.disabled = false;
     }
   }
 

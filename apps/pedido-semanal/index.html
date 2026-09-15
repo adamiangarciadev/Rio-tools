@@ -15,7 +15,7 @@
   <title>Pedido Semanal · RIO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=e2a5d8bba1" />
 
   <!-- Libs -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -51,7 +51,6 @@
     }
     .obs-hint{ font-size:.85rem; margin-top:4px; color: var(--muted); }
   </style>
-<link rel="stylesheet" href="../../assets/rio-theme.css" />
 <style>
   :root {
     --bg: #0b0f14;
@@ -94,9 +93,17 @@
     font-weight: 800;
   }
 </style>
+  <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
+  <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
+  <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../assets/rio-identity.css?v=c9458779b8" />
+<script src="../../assets/rio-access.js?v=935accae1e"></script>
+<script src="../../assets/rio-context.js?v=8b59f5d8a2"></script>
+<link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
+<link rel="stylesheet" href="./workspace-order.css?v=30df603850">
 </head>
 
-<body>
+<body class="rio-app" data-rio-app="pedido-semanal">
 
   <header class="topbar module-topbar">
     <a href="../../index.html" class="btn ghost">← Volver</a>
@@ -156,13 +163,14 @@
       <div id="alerta" class="alert" style="display:none;"></div>
 
       <!-- Buscador -->
-      <section class="card">
-        <h2>1) Elegí una promoción</h2>
+      <section class="card order-search">
+        <h2>Promociones y artículos</h2>
         <label>
-          Buscar promo
-          <input id="promoSearch" list="promosList" type="text" placeholder="COLOCA CODIGO DEL ARTICULO…" />
+          Buscar por código, artículo o promoción
+          <input id="promoSearch" list="promosList" type="search" placeholder="Código, artículo o promoción…" autocomplete="off" />
           <datalist id="promosList"></datalist>
         </label>
+        <div class="order-search-actions"><button id="findPromo" type="button" class="btn">Buscar</button><button id="clearPromoSearch" type="button" class="btn ghost">Ver todas</button><span id="promoSearchStatus" role="status" aria-live="polite"></span></div>
       </section>
 
       <!-- Grid de tarjetas de promociones -->
@@ -202,11 +210,14 @@
     </div>
   </aside>
 
+  <button id="orderSearchShortcut" class="order-search-shortcut" type="button" aria-label="Buscar un artículo" title="Buscar un artículo"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 6 6"/></svg></button>
   <footer>
     RIO Tools Suite | Plataforma operativa interna 
   </footer>
 
-  <script defer src="app.js"></script>
-  <script src="../../assets/rio-report-problem.js"></script>
+  <script defer src="app.js?v=fd86777012"></script>
+  <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>
+  <script src="../../assets/app-catalog.js?v=fd52fc724b"></script>
+  <script src="../../assets/app-shell.js?v=420f7666a0"></script>
 </body>
 </html>

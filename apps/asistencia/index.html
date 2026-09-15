@@ -12,11 +12,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Asistencia Personal - RIO</title>
   <meta name="description" content="Carga de asistencia por sucursal con backend en Google Sheets." />
-  <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="./styles.css?v=b6f8441cc8" />
+    <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
+  <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
+  <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../assets/rio-identity.css?v=c9458779b8" />
+<script src="../../assets/rio-access.js?v=935accae1e"></script>
+<script src="../../assets/rio-context.js?v=8b59f5d8a2"></script>
+<link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
 </head>
 
-<body>
+<body class="rio-app" data-rio-app="asistencia">
   <header class="topbar module-topbar">
     <a class="btn-ghost" href="../../index.html">← Volver</a>
     <div class="topbar-left module-topbar__title">
@@ -31,7 +37,7 @@
   <main class="container asistencia-layout">
     <section class="card form-card">
       <div class="card-head">
-        <h1>Cargar asistencia</h1>
+        <h2>Cargar asistencia</h2>
         <div class="pill" id="statusPill" aria-live="polite">
           <span class="dot" id="pillDot"></span>
           <span id="pillText">Listo</span>
@@ -158,10 +164,12 @@
   </dialog>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="./app.js"></script>
+  <script src="./app.js?v=b0b78c96ac"></script>
   <footer>
     RIO Tools Suite | Plataforma operativa interna
   </footer>
-  <script src="../../assets/rio-report-problem.js"></script>
+  <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>
+  <script src="../../assets/app-catalog.js?v=fd52fc724b"></script>
+  <script src="../../assets/app-shell.js?v=420f7666a0"></script>
 </body>
 </html>

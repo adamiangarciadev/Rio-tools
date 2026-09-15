@@ -17,7 +17,7 @@
 body{
   margin:0;
   font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-  background:linear-gradient(180deg,#0e1117,#0b0d12);
+  background:linear-gradient(180deg,#f4f5f8,#f4f5f8);
   color:var(--text);
 }
 
@@ -86,7 +86,7 @@ body{
 /* INPUTS */
 
 select,input,textarea{
-  background:#0f141d;
+  background:#f3f5f9;
   color:var(--text);
   border:1px solid var(--border);
   border-radius:10px;
@@ -104,11 +104,11 @@ select,input,textarea{
   font-size:13px;
 }
 
-.btn.primary{ background:var(--primary); color:#fff; }
-.btn.secondary{ background:#2b3342; color:#fff; }
-.btn.ok{ background:var(--ok); color:#fff; }
-.btn.warn{ background:var(--warn); color:#fff; }
-.btn.ghost{ background:transparent; border:1px solid var(--border); color:#fff; }
+.btn.primary{ background:var(--primary); color:#5c5269; }
+.btn.secondary{ background:#f4f6f8; color:#5c5269; }
+.btn.ok{ background:var(--ok); color:#5c5269; }
+.btn.warn{ background:var(--warn); color:#5c5269; }
+.btn.ghost{ background:transparent; border:1px solid var(--border); color:#5c5269; }
 
 /* LISTA */
 
@@ -176,13 +176,13 @@ select,input,textarea{
   border-radius:999px;
   font-size:11px;
   font-weight:700;
-  background:#2b3342;
+  background:#f4f6f8;
   width:fit-content;
 }
 
-.badge.recibido{ background:#1e3a8a; }
-.badge.diferencias{ background:#7c2d12; }
-.badge.pendiente{ background:#374151; }
+.badge.recibido{ background:#f3f5f9; }
+.badge.diferencias{ background:#f9f5f3; }
+.badge.pendiente{ background:#f4f6f8; }
 
 /* DERECHA (ACCIONES) */
 
@@ -202,7 +202,7 @@ select,input,textarea{
 }
 
 .extra a{
-  color:#93c5fd;
+  color:#224f81;
   text-decoration:none;
 }
 
@@ -320,8 +320,8 @@ textarea{
 }
 
 .btn.view{
-  background:#2b3342;
-  color:#fff;
+  background:#f4f6f8;
+  color:#5c5269;
 }
 
 .btn-picking-trigger{
@@ -345,7 +345,7 @@ textarea{
   height:100%;
   min-height:70vh;
   border:none;
-  background:#111;
+  background:#f6f6f6;
 }
 
 .modal-picking-box{
@@ -375,8 +375,8 @@ textarea{
 
 .scan-input{
   width:100%;
-  background:#0f1216;
-  color:#e5e7eb;
+  background:#f4f6f8;
+  color:#5c5269;
   border:2px solid var(--border);
   border-radius:12px;
   padding:16px 14px;
@@ -416,8 +416,8 @@ textarea{
   color:var(--muted);
 }
 
-.last-scans .ok{ color:#86efac; }
-.last-scans .err{ color:#fca5a5; }
+.last-scans .ok{ color:#228145; }
+.last-scans .err{ color:#812222; }
 
 .pick-list-head{
   display:flex;
@@ -429,7 +429,7 @@ textarea{
 .pick-list{
   border:1px solid var(--border);
   border-radius:12px;
-  background:#0f1216;
+  background:#f4f6f8;
   max-height:540px;
   overflow:auto;
 }
@@ -459,8 +459,8 @@ textarea{
   font-weight:700;
 }
 
-.pick-badge.ok{ color:#86efac; }
-.pick-badge.err{ color:#fca5a5; }
+.pick-badge.ok{ color:#228145; }
+.pick-badge.err{ color:#812222; }
 
 .pick-code{
   font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
@@ -591,8 +591,8 @@ textarea{
   align-items:center;
   justify-content:center;
   text-decoration:none;
-  color:#fff;
-  background:linear-gradient(180deg,#1c2a3d,#15202f);
+  color:#5c5269;
+  background:linear-gradient(180deg,#f3f6f9,#f3f6f9);
   border:1px solid #2b425f;
   padding:10px 14px;
   border-radius:12px;
@@ -602,7 +602,10 @@ textarea{
 footer {
       text-align: center;
       padding: 18px 24px;
-      color: var(--muted);
+      color:var(--muted);
       font-size: 12px;
       border-top: 1px solid var(--border);
     }
+
+/* Workspace redesign: mercaderia-transito */
+.rio-app .toolbar{padding:18px;gap:12px;border-radius:12px}.rio-app .modal-picking-body{gap:24px}.rio-app .picking-grid label{display:grid;gap:7px}.rio-app .pick-row{padding:12px}.rio-app .pick-list{background:var(--rio-surface-2)}

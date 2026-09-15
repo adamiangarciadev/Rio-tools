@@ -45,11 +45,18 @@
     .status { display:inline-flex; padding:5px 9px; border-radius:999px; background:rgba(34,199,184,.1); color:var(--primary); font-size:.78rem; font-weight:750; }
     @media(max-width:760px){ .card,.card.wide { grid-column:1/-1; } .login-card{padding:24px;} header{align-items:flex-start;} table{font-size:.82rem;} th,td{padding:11px 5px;} }
   </style>
+<link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef">
+<link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0">
+<link rel="stylesheet" href="../../assets/rio-identity.css?v=c9458779b8">
+<link rel="stylesheet" href="../../assets/rio-objectives.css?v=c5f37bbb1f">
+<script src="../../assets/rio-access.js?v=935accae1e"></script>
+<script src="../../assets/rio-context.js?v=8b59f5d8a2"></script>
+<link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
 </head>
-<body>
+<body class="rio-app" data-rio-app="objetivos-ventas">
   <main id="loginView" class="login">
     <form id="loginForm" class="login-card">
-      <div class="brand"><div class="logo">RIO</div><div><h1>Objetivos de venta</h1><div class="muted">Ingresá con los datos de tu local</div></div></div>
+      <div class="brand"><img src="../../assets/identity/rio-logo-coral.svg" alt="RÍO Lencería" width="74" height="58"><div><h1>Objetivos de venta</h1><div class="muted">Ingresá con los datos de tu local</div></div></div>
       <label>Mail del local<input id="email" type="email" autocomplete="username" required></label>
       <label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label>
       <button id="loginButton" type="submit">Ingresar</button>
@@ -69,6 +76,8 @@
       <article class="card full"><div class="label">Rendimiento diario</div><div style="overflow:auto"><table><thead><tr><th>Fecha</th><th>Venta</th><th>Objetivo</th><th>Cumplimiento</th><th>Diferencia</th></tr></thead><tbody id="history"></tbody></table></div></article>
     </section>
   </main>
-  <script src="./app.js"></script>
+  <script src="./app.js?v=319950e735"></script>
+<script src="../../assets/app-catalog.js?v=fd52fc724b"></script>
+<script src="../../assets/app-shell.js?v=420f7666a0"></script>
 </body>
 </html>

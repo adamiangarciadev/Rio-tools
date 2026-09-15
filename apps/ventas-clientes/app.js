@@ -8,17 +8,6 @@
     year: "Anio base",
     all: "Historico"
   };
-  const BRANCH_GROUPS = {
-    WEB: "WEB", PRUWEB: "WEB",
-    AV1: "NAZCA", PRUAV1: "NAZCA", NAZCA: "NAZCA",
-    AV2: "AVELLANEDA", PRUAV2: "AVELLANEDA", AVELLANEDA: "AVELLANEDA",
-    ONCE: "SARMIENTO", PRUONCE: "SARMIENTO", SARMIENTO: "SARMIENTO",
-    CASTELLI: "CASTELLI", PRUCASTE: "CASTELLI",
-    LAMARCA: "LAMARCA", PRULAMAR: "LAMARCA",
-    PUEY: "PUEYRREDON", PRUPUEY: "PUEYRREDON", PUEYRREDON: "PUEYRREDON",
-    QUILMES: "QUILMES", PRUQUILM: "QUILMES",
-    CORRIENT: "CORRIENTES", CORRIENTES: "CORRIENTES", CORRISNETES: "CORRIENTES", PRUCORRI: "CORRIENTES"
-  };
 
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -174,7 +163,7 @@
       state.dashboard = {
         meta: data.meta || {},
         clientes: normalizeClients(data.clientes),
-        sucursales: aggregateBranches(data.sucursales),
+        sucursales: Array.isArray(data.sucursales) ? data.sucursales : [],
         meses: Array.isArray(data.meses) ? data.meses : []
       };
 
@@ -249,6 +238,8 @@
     if (!clientId) return;
     state.selectedClientId = clientId;
     renderClients();
+    el.clientDetail.innerHTML = '<div class="empty-state" role="status">Cargando la ficha y las compras del cliente…</div>';
+    window.RioSalesView?.open(clientId);
     await loadClientDetail(clientId);
   }
 
@@ -295,8 +286,9 @@
     try {
       el.detailHint.textContent = "Cargando historial...";
       const data = await apiGet("cliente", { cliente: clientId });
+      if (state.selectedClientId !== clientId) return;
       if (!data.ok) throw new Error(data.error || "No se pudo cargar el cliente.");
-      state.comprasCliente = normalizePurchases(data.compras);
+      state.comprasCliente = Array.isArray(data.compras) ? data.compras : [];
       renderDetail();
     } catch (error) {
       console.error(error);
@@ -394,7 +386,7 @@
     el.clientRows.innerHTML = "";
 
     if (!sorted.length) {
-      el.clientRows.innerHTML = `<tr><td colspan="8" class="empty-cell">No hay clientes para estos filtros.</td></tr>`;
+      el.clientRows.innerHTML = `<tr><td colspan="7" class="empty-cell">No hay clientes para estos filtros. Probá otro nombre o ajustá los filtros.</td></tr>`;
       updateSelectAllVisibleState([]);
       return;
     }
@@ -568,7 +560,7 @@
         desde,
         hasta,
         clientes: normalizeClients(data.clientes),
-        compras: normalizePurchases(data.compras),
+        compras: Array.isArray(data.compras) ? data.compras : [],
         meta: data.meta || {}
       };
       el.periodFilter.value = "all";
@@ -654,7 +646,7 @@
 
   function addRangeFields(client, purchases) {
     const dates = Array.from(new Set(purchases.map((purchase) => purchase.fecha).filter(Boolean))).sort();
-    const branches = Array.from(new Set(purchases.map((purchase) => normalizeBranch(purchase.sucursal)).filter(Boolean))).sort();
+    const branches = Array.from(new Set(purchases.map((purchase) => purchase.sucursal).filter(Boolean))).sort();
     const lists = Array.from(new Set(purchases.map((purchase) => purchase.listaPrecio).filter(Boolean))).sort();
     return {
       ...client,
@@ -683,43 +675,12 @@
   }
 
   function normalizeClients(clients) {
-    return (Array.isArray(clients) ? clients : []).map((client) => {
-      const branches = Array.from(new Set(
-        (Array.isArray(client.sucursales) ? client.sucursales : parseListText(client.sucursalesTexto))
-          .map(normalizeBranch).filter(Boolean)
-      )).sort();
-      const rangeBranches = Array.from(new Set(
-        (Array.isArray(client.sucursalesRango) ? client.sucursalesRango : [])
-          .map(normalizeBranch).filter(Boolean)
-      )).sort();
-      return {
-        ...client,
-        clienteId: String(client.clienteId || ""),
-        sucursales: branches,
-        sucursalesTexto: branches.join(", "),
-        sucursalPrincipal: normalizeBranch(client.sucursalPrincipal) || branches[0] || "",
-        sucursalesRango: rangeBranches,
-        listas: Array.isArray(client.listas) ? client.listas : parseListText(client.listasTexto),
-        lastPurchaseTs: Date.parse(client.ultimaCompra || "") || 0
-      };
-    });
-  }
-
-  function aggregateBranches(items) {
-    const totals = new Map();
-    (Array.isArray(items) ? items : []).forEach((item) => {
-      const branch = normalizeBranch(item && item.sucursal);
-      if (!branch) return;
-      totals.set(branch, (totals.get(branch) || 0) + Number(item.total || 0));
-    });
-    return Array.from(totals, ([sucursal, total]) => ({ sucursal, total }))
-      .sort((a, b) => b.total - a.total || a.sucursal.localeCompare(b.sucursal, "es"));
-  }
-
-  function normalizePurchases(purchases) {
-    return (Array.isArray(purchases) ? purchases : []).map((purchase) => ({
-      ...purchase,
-      sucursal: normalizeBranch(purchase.sucursal)
+    return (Array.isArray(clients) ? clients : []).map((client) => ({
+      ...client,
+      clienteId: String(client.clienteId || ""),
+      sucursales: Array.isArray(client.sucursales) ? client.sucursales : [],
+      listas: Array.isArray(client.listas) ? client.listas : parseListText(client.listasTexto),
+      lastPurchaseTs: Date.parse(client.ultimaCompra || "") || 0
     }));
   }
 
@@ -736,7 +697,7 @@
   }
 
   function renderEmpty(message) {
-    el.clientRows.innerHTML = `<tr><td colspan="8" class="empty-cell">${escapeHtml(message)}</td></tr>`;
+      el.clientRows.innerHTML = `<tr><td colspan="7" class="empty-cell">${escapeHtml(message)}</td></tr>`;
     el.clientDetail.innerHTML = `<div class="empty-state">Cuando haya datos, aca aparece el seguimiento del cliente.</div>`;
     el.totalClients.textContent = "0";
     el.newClients.textContent = "0";
@@ -872,7 +833,7 @@
           segmento: client.segmento || "",
           fecha: purchase.fecha || "",
           comprobante: purchase.comprobante || "",
-          sucursal: normalizeBranch(purchase.sucursal),
+          sucursal: purchase.sucursal || "",
           listaPrecio: purchase.listaPrecio || "",
           total
         });
@@ -1011,7 +972,7 @@
           segmento: client.segmento || "",
           fecha: purchase.fecha || "",
           comprobante: purchase.comprobante || "",
-          sucursal: normalizeBranch(purchase.sucursal),
+          sucursal: purchase.sucursal || "",
           listaPrecio: purchase.listaPrecio || "",
           total: Number(purchase.total || 0)
         });
@@ -1132,13 +1093,7 @@
   }
 
   function sameBranch(a, b) {
-    return normalizeBranch(a) === normalizeBranch(b);
-  }
-
-  function normalizeBranch(value) {
-    const raw = String(value || "").trim().toUpperCase();
-    const key = normalizeSearch(raw).replace(/[^a-z0-9]/g, "").toUpperCase();
-    return BRANCH_GROUPS[key] || raw;
+    return normalizeSearch(a) === normalizeSearch(b);
   }
 
   function samePriceList(a, b) {
@@ -1210,10 +1165,6 @@
 
   function formatDateShort(value) {
     if (!value) return "-";
-    const dateOnly = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (dateOnly) {
-      return `${dateOnly[3]}/${dateOnly[2]}/${dateOnly[1]}`;
-    }
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return String(value);
     return new Intl.DateTimeFormat("es-AR").format(date);

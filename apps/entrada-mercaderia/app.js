@@ -44,8 +44,8 @@
   // Carpeta raíz de backup en Drive
   const BACKUP_ROOT_FOLDER_ID = "1HoQBiMRvflZuyLtCaJyRBWio1C5i6ofH";
 
-  const LS_META = "entrada_mercaderia_meta_v4";
-  const LS_SCANS = "entrada_mercaderia_scans_v4";
+  const LS_META = window.RioContext.storageKey("entrada_mercaderia_meta_v4");
+  const LS_SCANS = window.RioContext.storageKey("entrada_mercaderia_scans_v4");
 
   const AUTOCOMMIT_IDLE_MS = 80;
   const MIN_LEN_FOR_COMMIT = 3;

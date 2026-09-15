@@ -2,11 +2,16 @@
   "use strict";
 
   const API_URL = "https://script.google.com/macros/s/AKfycbylSdpa7qTV9FMa7roN5U9iIPIT9IC7AMSmP0JJYDFFYihxuwld8xZ2JOyhz_3-yDF9/exec";
-  const SESSION_KEY = "rio_objetivos_ventas_token";
+  const SESSION_KEY = window.RioContext.storageKey("rio_objetivos_ventas_token");
   const $ = (id) => document.getElementById(id);
   const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
   const dateFormat = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
   let token = sessionStorage.getItem(SESSION_KEY) || "";
+  const emails = {AV2:'avellaneda3249@rio.com.ar',NAZCA:'avellaneda2900@rio.com.ar',CASTELLI:'castelli@rio.com.ar',CORRIENTES:'corrientes@rio.com.ar',LAMARCA:'lamarca@rio.com.ar',PUEYRREDON:'pueyrredon@rio.com.ar',QUILMES:'quilmes@rio.com.ar',SARMIENTO:'sarmiento@rio.com.ar',WEB:'web@rio.com.ar'};
+  if (window.RioContext.isLocal() && emails[window.RioContext.branch]) {
+    $("email").value = emails[window.RioContext.branch];
+    $("email").readOnly = true;
+  }
 
   $("loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -87,6 +92,9 @@
   }
 
   function render(data) {
+    if(window.RioContext.isLocal() && window.RioContext.canonical(data.store.name)!==window.RioContext.branch){
+      throw new Error("La cuenta no corresponde a la sucursal elegida en el inicio.");
+    }
     $("storeName").textContent = data.store.name;
     $("period").textContent = "Período " + data.month + (data.updatedAt ? " · actualizado " + new Date(data.updatedAt).toLocaleString("es-AR") : " · esperando la primera actualización");
     $("goal").textContent = money.format(data.goal);

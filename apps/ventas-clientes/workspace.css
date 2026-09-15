@@ -1,0 +1,72 @@
+.rio-app[data-rio-app="ventas-clientes"]{--sales-text:#332d29;--sales-muted:#655d56;--sales-line:#e4dbd5;--sales-panel:#fff;--sales-panel-2:#fff;--sales-primary:#912b29;--sales-ok:#176956;--sales-warn:#85540e;--sales-danger:#9b2929}
+.rio-app[data-rio-app="ventas-clientes"] .rio-section-nav{display:none}
+.rio-app[data-rio-app="ventas-clientes"] .rio-module-heading{padding-top:22px!important;padding-bottom:16px!important}
+.rio-app[data-rio-app="ventas-clientes"] .sales-shell{gap:16px;padding-top:0}
+.rio-app[data-rio-app="ventas-clientes"] .content-grid{grid-template-columns:minmax(0,1fr);scroll-margin-top:90px}
+.rio-app[data-rio-app="ventas-clientes"] [hidden]{display:none!important}
+.rio-app[data-rio-app="ventas-clientes"] .toolbar{padding:16px!important}
+.rio-app[data-rio-app="ventas-clientes"] .sales-shell .filters{grid-template-columns:minmax(240px,1fr) minmax(190px,260px);gap:12px 20px}
+.rio-app[data-rio-app="ventas-clientes"] .sales-search input{font-size:15px}
+.rio-app[data-rio-app="ventas-clientes"] .sales-advanced{grid-column:1/-1;border-top:1px solid var(--sales-line);padding-top:10px}
+.sales-advanced summary{cursor:pointer;color:#655d56;font-size:13px;font-weight:500;padding:5px 0;max-width:max-content}
+.sales-advanced[open] summary{color:#912b29;margin-bottom:12px}
+.sales-advanced-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:end}
+.rio-app[data-rio-app="ventas-clientes"] .range-actions{display:flex;gap:8px;grid-column:span 2}
+.rio-app[data-rio-app="ventas-clientes"] .toggle-filter{background:#faf7f4!important;color:#332d29!important}
+.rio-app[data-rio-app="ventas-clientes"] input[type="checkbox"]{appearance:auto!important;width:18px!important;height:18px!important;min-height:18px;padding:0!important;accent-color:#912b29;flex-shrink:0}
+.rio-app[data-rio-app="ventas-clientes"] .status-line{font-size:11px;gap:8px}
+.rio-app[data-rio-app="ventas-clientes"] .summary-grid{display:flex;gap:28px;padding:0 6px;flex-wrap:wrap}
+.rio-app[data-rio-app="ventas-clientes"] .summary-card{display:flex;align-items:baseline;gap:12px;padding:0!important;border:0!important;background:transparent!important}
+.rio-app[data-rio-app="ventas-clientes"] .summary-card strong{font-size:24px;color:#332d29!important}
+.rio-app[data-rio-app="ventas-clientes"] .ranking-panel{padding:20px!important}
+.rio-app[data-rio-app="ventas-clientes"] .panel-head{align-items:center;margin-bottom:14px}
+.rio-app[data-rio-app="ventas-clientes"] .panel-head h2{font-size:18px}
+.rio-app[data-rio-app="ventas-clientes"] .view-actions{display:flex;width:auto;background:#f6f1ed!important;border:0;padding:4px;gap:4px}
+.rio-app[data-rio-app="ventas-clientes"] .view-actions button{min-height:36px!important;border:0!important;background:transparent!important;color:#655d56!important}
+.rio-app[data-rio-app="ventas-clientes"] .view-actions .active{background:#ffe2dc!important;color:#792a25!important}
+.sales-selection-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.sales-selection-actions .selection-text{margin:0 auto 0 0!important}
+.rio-app[data-rio-app="ventas-clientes"] .sales-selection-actions button{min-height:34px;font-size:12px}
+.rio-app[data-rio-app="ventas-clientes"] .table-wrap{border:0;border-radius:0;max-height:65vh;overflow:auto;scrollbar-color:#c4afa5 #f7f2ee}
+.rio-app[data-rio-app="ventas-clientes"] table{table-layout:fixed;min-width:850px!important;width:100%}
+.rio-app[data-rio-app="ventas-clientes"] th,.rio-app[data-rio-app="ventas-clientes"] td{color:#332d29!important;padding:14px 12px!important;overflow-wrap:normal;word-break:normal}
+.rio-app[data-rio-app="ventas-clientes"] th{font-size:10px;background:#f2ece6!important;white-space:nowrap;letter-spacing:.02em}
+.rio-app[data-rio-app="ventas-clientes"] td{font-size:12px}
+.rio-app[data-rio-app="ventas-clientes"] th:nth-child(1){width:50px}
+.rio-app[data-rio-app="ventas-clientes"] th:nth-child(2){width:24%}
+.rio-app[data-rio-app="ventas-clientes"] th:nth-child(3){width:15%}
+.rio-app[data-rio-app="ventas-clientes"] th:nth-child(4){width:12%}
+.rio-app[data-rio-app="ventas-clientes"] th:nth-child(5){width:19%}
+.rio-app[data-rio-app="ventas-clientes"] th:nth-child(6){width:16%}
+.rio-app[data-rio-app="ventas-clientes"] th:nth-child(7){width:13%}
+.rio-app[data-rio-app="ventas-clientes"] td:nth-child(6),.rio-app[data-rio-app="ventas-clientes"] th:nth-child(6){text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rio-app[data-rio-app="ventas-clientes"] .select-all-label span{display:none}
+.rio-app[data-rio-app="ventas-clientes"] .client-button{display:grid!important;width:100%;border:0!important;box-shadow:none!important;background:transparent!important;padding:3px 0!important;min-height:0!important;gap:6px;text-align:left;border-radius:0!important;white-space:normal!important}
+.rio-app[data-rio-app="ventas-clientes"] .client-button strong{font-size:13px;color:#332d29!important;line-height:1.4}
+.rio-app[data-rio-app="ventas-clientes"] .client-button:hover strong{text-decoration:underline;text-underline-offset:3px}
+.rio-app[data-rio-app="ventas-clientes"] .client-button span{font-size:11px;color:#655d56!important}
+.rio-app[data-rio-app="ventas-clientes"] .contact-cell span,.rio-app[data-rio-app="ventas-clientes"] .contact-cell small{display:block;overflow-wrap:anywhere;line-height:1.7}
+.rio-app[data-rio-app="ventas-clientes"] .contact-cell small{color:#655d56}
+.rio-app[data-rio-app="ventas-clientes"] .segment-pill{white-space:normal;line-height:1.4;font-size:11px;padding:4px 8px}
+.rio-app[data-rio-app="ventas-clientes"] tbody tr:has(.client-check:checked) td{background:#ffe2dc!important}
+.rio-app[data-rio-app="ventas-clientes"] tbody tr:hover td{background:#fff3ee!important}
+.rio-app[data-rio-app="ventas-clientes"] .detail-panel{position:static;padding:24px!important}
+.rio-app[data-rio-app="ventas-clientes"] #backToClients{margin-bottom:20px}
+.rio-app[data-rio-app="ventas-clientes"] #detailHint{font-size:12px;color:#655d56}
+.rio-app[data-rio-app="ventas-clientes"] .client-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 32px}
+.rio-app[data-rio-app="ventas-clientes"] .client-card__title{grid-column:1/-1}
+.rio-app[data-rio-app="ventas-clientes"] .client-card__title h3{font-size:24px}
+.rio-app[data-rio-app="ventas-clientes"] .client-card__title p{line-height:1.8;overflow-wrap:anywhere}
+.rio-app[data-rio-app="ventas-clientes"] .client-card>.segment-pill{grid-column:1/-1}
+.rio-app[data-rio-app="ventas-clientes"] .metric-grid{grid-column:1;gap:0 20px}
+.rio-app[data-rio-app="ventas-clientes"] .metric{padding:14px 0!important;background:transparent!important;border:0!important;border-bottom:1px solid #e4dbd5!important;border-radius:0!important}
+.rio-app[data-rio-app="ventas-clientes"] .metric strong{font-size:15px;color:#332d29!important}
+.rio-app[data-rio-app="ventas-clientes"] .client-card>.metric{grid-column:1}
+.rio-app[data-rio-app="ventas-clientes"] .detail-list{grid-column:2;grid-row:3/5;max-height:560px}
+.rio-app[data-rio-app="ventas-clientes"] .purchase-row{background:#faf7f4!important;color:#332d29!important;padding:12px!important;grid-template-columns:90px minmax(0,1fr)}
+.rio-app[data-rio-app="ventas-clientes"] .purchase-row span{white-space:normal;color:#655d56!important}
+.rio-app[data-rio-app="ventas-clientes"] :focus-visible{outline:2px solid #43428e!important;outline-offset:3px}
+.rio-app[data-rio-app="ventas-clientes"] .export-modal{z-index:120;overflow:auto}
+.rio-app[data-rio-app="ventas-clientes"] .export-modal__card{max-height:90vh;overflow:auto}
+@media(max-width:1000px){.sales-advanced-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rio-app[data-rio-app="ventas-clientes"] .client-card{grid-template-columns:1fr}.rio-app[data-rio-app="ventas-clientes"] .detail-list{grid-column:1;grid-row:auto}}
+@media(max-width:600px){.rio-app[data-rio-app="ventas-clientes"] .sales-shell .filters{grid-template-columns:minmax(0,1fr)}.rio-app[data-rio-app="ventas-clientes"] .ranking-panel{padding:12px!important}.rio-app[data-rio-app="ventas-clientes"] .table-wrap{max-height:65vh}.rio-app[data-rio-app="ventas-clientes"] table{min-width:730px!important}.rio-app[data-rio-app="ventas-clientes"] th:nth-child(2),.rio-app[data-rio-app="ventas-clientes"] td:nth-child(2){position:sticky;left:0;background:#fff!important;z-index:1}.rio-app[data-rio-app="ventas-clientes"] th:nth-child(2){z-index:2;background:#f2ece6!important}.rio-app[data-rio-app="ventas-clientes"] .export-form{grid-template-columns:1fr}.rio-app[data-rio-app="ventas-clientes"] .content-grid{scroll-margin-top:125px}.rio-app[data-rio-app="ventas-clientes"] .detail-panel{padding:16px!important}}

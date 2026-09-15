@@ -2,13 +2,13 @@ body {
   font-family: system-ui, sans-serif;
   margin: 0;
   padding: 0;
-  background: var(--rio-bg, #0b0f14);
-  color: var(--rio-text, #eef4fb);
+  background:var(--rio-bg, #f3f6f9);
+  color:var(--rio-text, #224e81);
 }
 
 header {
-  background: #222;
-  color: #fff;
+  background:#f6f6f6;
+  color:#5c5269;
   padding: 10px 15px;
 }
 
@@ -42,7 +42,7 @@ main {
 table {
   width: 100%;
   border-collapse: collapse;
-  background: rgba(15, 23, 34, .96);
+  background:rgba(15, 23, 34, .96);
 }
 
 th, td {
@@ -52,7 +52,7 @@ th, td {
 }
 
 tr.alerta {
-  background-color: rgba(251, 113, 133, .18);
+  background-color:rgba(251, 113, 133, .18);
 }
 
 button {
@@ -63,18 +63,18 @@ button {
 }
 
 button.recibido {
-  background: #007bff;
-  color: #fff;
+  background:#007bff;
+  color:#5c5269;
 }
 
 button.retirado {
-  background: #28a745;
-  color: #fff;
+  background:#28a745;
+  color:#5c5269;
 }
 
 #estadoCarga {
   font-size: 13px;
-  color: var(--rio-muted, #9fb0c3);
+  color:var(--rio-muted, #5c5269);
 }
 
 @media (max-width: 760px) {
@@ -113,7 +113,10 @@ button.retirado {
 footer {
       text-align: center;
       padding: 18px 24px;
-      color: var(--muted);
+      color:var(--muted);
       font-size: 12px;
       border-top: 1px solid var(--border);
     }
+
+/* Workspace redesign: pedidos-web-locales */
+.rio-app .top-bar{padding:20px;background:#fff;border:1px solid var(--rio-border);border-radius:12px;margin-bottom:22px;gap:16px}.rio-app .top-bar label{display:grid;gap:7px}.rio-app .modal-content{border-radius:16px;padding:24px}.rio-app .table-container{border:1px solid var(--rio-border);border-radius:12px;overflow:auto}

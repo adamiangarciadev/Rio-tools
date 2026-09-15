@@ -1,0 +1,74 @@
+/* RÍO brand, from 01_Identidad. RGB values are from the supplied artwork. */
+@font-face{font-family:'Gotham RIO';src:url('./identity/gotham-book.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:'Gotham RIO';src:url('./identity/gotham-medium.woff2') format('woff2');font-style:normal;font-weight:500 600;font-display:swap}
+@font-face{font-family:'Gotham RIO';src:url('./identity/gotham-bold.woff2') format('woff2');font-style:normal;font-weight:650 900;font-display:swap}
+@font-face{font-family:'Gotham Rounded RIO';src:url('./identity/gotham-rounded-medium.woff2') format('woff2');font-style:normal;font-weight:400 800;font-display:swap}
+:root{
+ --rio-coral:#ff5f5c;--rio-violet:#7f7eff;--rio-mint:#4cccad;
+ --rio-coral-ink:#912b29;--rio-violet-ink:#43428e;--rio-mint-ink:#1b6452;
+ --rio-font:'Gotham RIO',system-ui,sans-serif;
+ --rio-bg:#faf9f7;--rio-bg-soft:#f6f1ed;--rio-surface:#fff;--rio-surface-2:#faf3f0;--rio-surface-3:#ffe6e2;
+ --rio-border:#e9e2de;--rio-border-strong:#cfc1ba;--rio-text:#302b2a;--rio-muted:#716762;--rio-muted-2:#786b66;
+ --rio-primary:var(--rio-coral-ink);--rio-primary-2:#75221f;--rio-ok:var(--rio-mint-ink);--rio-danger:#aa243b;--rio-warn:#895600;
+ --ink:var(--rio-text);--muted:var(--rio-muted);--purple:var(--rio-coral-ink);--line:var(--rio-border);--paper:var(--rio-bg);--rail:#f5f0ec;--soft:#ffebe7;
+ font-family:var(--rio-font);color:var(--rio-text);background:var(--rio-bg);
+}
+html,body,.rio-app{font-family:var(--rio-font)!important;background:var(--rio-bg)!important;color:var(--rio-text)}
+button,input,select,textarea{font-family:var(--rio-font)}
+::selection{background:#ffd1c9;color:#4a2521}:focus-visible{outline-color:var(--rio-coral-ink)!important}input,textarea{caret-color:var(--rio-coral-ink)}html{scrollbar-color:#cdbbb2 var(--rio-bg)}
+::-webkit-scrollbar-track{background:#f5f0ec}::-webkit-scrollbar-thumb{background:#cdbbb2}::-webkit-scrollbar-thumb:hover{background:#b4998d}
+.sidebar,.rio-app .rio-rail{background:#f5f0ec;border-color:var(--rio-border);overflow-y:auto}
+.brand,.rio-app .rio-shell-brand{display:flex;align-items:center;gap:14px;padding:0 9px 16px;min-height:84px;text-decoration:none}
+.rio-brand-logo{display:block;width:99px;height:68px;object-fit:contain;flex-shrink:0}
+.rio-brand-descriptor{display:flex;flex-direction:column;gap:4px;padding-left:13px;border-left:1px solid #d9cac3;font-family:'Gotham Rounded RIO',sans-serif;color:var(--rio-text)}
+.rio-brand-descriptor strong{font-size:13px!important;letter-spacing:.06em!important;font-weight:500!important}.rio-brand-descriptor small{font-size:10px!important;letter-spacing:0!important;line-height:1.5;color:var(--rio-muted);white-space:normal!important}
+.nav-button,.filter,.rio-app .rio-area-link,.rio-app .rio-tool-link,.rio-section-nav a{font-family:'Gotham Rounded RIO',var(--rio-font)}
+.nav-button.active,.rio-app .rio-tool-link.is-current{background:#ffded7;color:#702522}
+.nav-button:hover,.rio-app .rio-tool-link:hover,.rio-app .rio-area-link:hover,.rio-rail-home:hover,.rio-rail-help:hover{background:#f9e5de;color:#702522}
+.rio-app .rio-area-link.is-current{color:#912b29}.filter.active{background:var(--rio-coral);color:#3d1d1b}
+.topbar,.rio-app .rio-appbar,.focus-mode .topbar,.focus-mode .tools-heading{background:var(--rio-bg);border-color:var(--rio-border)}
+.hero{background:var(--rio-coral);color:#401f1d;padding:34px;min-height:265px}
+.hero h2{color:#401f1d;font-size:34px;font-weight:500;max-width:340px;line-height:1.22;letter-spacing:-.035em}
+.hero p{color:#512a26;max-width:300px;font-size:13px;line-height:1.8}
+.hero::after{display:none}.hero-link{background:#fff;color:#75221f;min-height:42px}.hero-link:hover{background:#fff3ef}
+.hero-art{transform:none;animation:none;right:25px;top:32px;bottom:auto;width:180px;height:195px;opacity:1;display:grid;place-items:center}
+.hero-art img{width:100%;height:100%;object-fit:contain}.hero-art span{display:none}
+.quick-icon{background:#ffe3db;color:#912b29}.quick-link:nth-child(3) .quick-icon{background:#e6e5ff;color:#43428e}.quick-link:nth-child(4) .quick-icon{background:#d9f4eb;color:#1b6452}.quick-link:hover strong{color:#912b29}
+.col:nth-child(3n+1){--category:#912b29;--category-bg:#ffe3db}.col:nth-child(3n+2){--category:#43428e;--category-bg:#e6e5ff}.col:nth-child(3n+3){--category:#1b6452;--category-bg:#d9f4eb}
+.tool-row:hover{background:#fff0e9}.count{background:#efe9e4;color:#6d5c54}.search{background:#fff}.search:focus-within{border-color:#912b29}.favorite-button:hover{background:#ffe3db;color:#912b29}.favorite-button[aria-pressed=true]{color:#912b29}.favorite-button[aria-pressed=true] svg{fill:#ffded7}.icon-button[aria-pressed=true]{background:#ffded7;color:#912b29}.filter:not(.active):hover{background:#ffeae4}
+.btn:hover,.empty,.rio-section-nav a{background:#fff0e9}.rio-section-nav a{color:#7a5145}.rio-section-nav a:hover{background:#ffded7;color:#702522}
+.rio-app .rio-app-search input{background:#fff!important}.rio-app .rio-search-result:hover,.rio-app .rio-search-result:focus{background:#fff0e9}.rio-app .rio-shell-button[aria-pressed=true]{background:#ffded7!important;color:#912b29!important}.rio-shell-button[aria-pressed=true] svg{fill:#ffc8bd}
+.rio-app :is(.btn.primary,.button.primary,.btn-primary,.adm-btn-primary,button[type=submit],.btn.accent,.segment.active,.tab.active,.tab-btn.is-active,.tab-btn.active,.event-option.is-selected,.btn.is-active){background:var(--rio-coral)!important;color:#3d1d1b!important;border-color:var(--rio-coral)!important}
+.rio-app :is(.btn.primary,.button.primary,.btn-primary,.adm-btn-primary,button[type=submit]):hover{background:#fa8179!important;color:#3d1d1b!important}
+.rio-app :is(.btn.secondary,.button.secondary,.btn-secondary,.btn.ghost){background:#fff!important;color:#65554d!important}
+.rio-app .card,.rio-app .panel{border-color:var(--rio-border)!important}.rio-app :is(.card-head,.adm-head){background:#faf3f0}
+.rio-app :is(.pill,.badge,.tag,.status,.connection-badge,.status-pill){background:#ffebe5;color:#8a4337;border-color:#efd0c6}
+.rio-app :is(.badge.ok,.pill.ok,.status-pill.ok,.badge.success,.connection-badge.online){background:#d9f4eb!important;color:#1b6452!important;border-color:#a9ddce!important}
+.rio-app :is(.badge.warn,.pill.warn,.badge.warning){background:#fff3da!important;color:#805007!important}
+.rio-app :is(.badge.danger,.badge.error,.status-pill.err,.pill.error){background:#ffe0dc!important;color:#942e2e!important}
+.rio-app :is(input,select,textarea):focus{outline-color:#d88676!important;border-color:#912b29!important}
+.rio-app :is(.scan-input,#scanInput){background:#fff6f0!important;border-color:#dba496!important}
+.rio-app :is(.scan-input.ok,#scanInput.ok){border-color:var(--rio-mint-ink)!important}.rio-app :is(.scan-input.err,#scanInput.err){border-color:#aa243b!important}
+.rio-app th{background:#f4eae4!important;color:#68554c!important}.rio-app tbody tr:nth-child(even){background:#fcf9f6}.rio-app tbody tr:hover{background:#fff0e9}
+.rio-app :is(.drop,.dropzone,.upload-zone,.drop-zone,.filebox){background:#fff7f1!important;border-color:#d5a092!important}.rio-app input[type=file]{background:#fff7f1!important}.rio-app input::file-selector-button{background:#ffded7;color:#702522}
+.rio-app :is(.empty,.empty-state,.adm-empty){background:#f7f1ec!important}.rio-app .rio-problem-button{color:#912b29!important;background:#fff!important;border-color:#dcbfb4!important}
+.rio-app .price-chip,.rio-app .tag,.rio-app .chip{background:#e4e4ff!important;color:#43428e!important}.rio-app .btn-add,.rio-app .btn-expand{color:#912b29!important}
+.rio-app .view-actions,.rio-app .segmented,.rio-app .tabs{background:#f4eae4!important}.rio-app .sheet-total{background:#d9f4eb;color:#1b6452}
+.rio-app #agregar,.rio-app #descargar,.rio-app #descargarBajas{background:var(--rio-coral)!important;color:#3d1d1b!important}
+.rio-app .quick-action.active{background:#e4e4ff!important;color:#43428e!important}.rio-app .quick-action>span{background:#e4e4ff;color:#43428e}
+.rio-app .stat-card--accent{border-color:#e9bcb3!important}.rio-app .stat-card--accent strong{color:#912b29}
+.footer{color:var(--rio-muted)}.footer-brand{display:inline-flex;align-items:center;gap:12px}.footer-brand img{width:23px;height:27px;object-fit:contain}
+@media(min-width:1600px){.hero-art{right:40px;width:225px;height:230px}.hero h2{font-size:40px}}
+@media(max-width:1250px){.hero-art{right:8px;width:125px;height:150px;top:55px}.hero h2{max-width:270px;font-size:30px}.hero p{max-width:240px}}
+@media(max-width:1000px) and (min-width:801px){.hero-art{display:none}.hero h2,.hero p{max-width:100%}}
+@media(max-width:800px){.brand{min-height:65px;padding:0;gap:12px}.rio-brand-logo{width:85px;height:58px}.sidebar{padding-top:14px}.rio-brand-descriptor strong{font-size:12px!important}.hero-art{display:none}}
+@media(max-width:560px){.hero{padding:25px;min-height:275px}.hero h2{font-size:29px;max-width:250px}.hero p{max-width:245px}.hero-art{display:none}.footer-brand{gap:8px}.footer{align-items:center}}
+@media print{html,body,.rio-app{background:#fff!important}}
+.rio-app[data-rio-app="clientes-contactar"]{--panel:#fff;--line:#dfd6ce;--ok:#1b6452;--warn:#855015;--danger:#912b29}
+.rio-app[data-rio-app="clientes-contactar"] .access-gate{min-height:calc(100dvh - 90px)}
+.rio-app[data-rio-app="clientes-contactar"] :is(.client-row,.detail-metrics div,.event-item){background:#fff!important;color:var(--rio-text)}
+.rio-app[data-rio-app="clientes-contactar"] .client-row.active{background:#ffe4df!important}
+.rio-app[data-rio-app="clientes-contactar"] :is(.list-panel,.detail-panel,.client-identity){min-width:0}
+.rio-app[data-rio-app="clientes-contactar"] .client-row{overflow-wrap:anywhere}
+.rio-app[data-rio-app="clientes-contactar"] .eyebrow{display:none}
+@media(min-width:721px){.rio-app[data-rio-app="clientes-contactar"] :is(.client-list-header,.client-row){grid-template-columns:minmax(140px,1.4fr) repeat(4,minmax(65px,1fr));gap:8px}}

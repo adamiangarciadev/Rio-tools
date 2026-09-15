@@ -28,18 +28,16 @@ jobs:
       - name: Prepare lightweight site artifact
         run: |
           mkdir -p .pages
-          rsync -a ./ .pages/ \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='.pages/' \
-            --exclude='tools/' \
-            --exclude='tmp/' \
-            --exclude='output/' \
-            --exclude='outputs/' \
-            --exclude='apps/ventas-clientes/ventas_csv/' \
-            --exclude='apps/pedido-carteleria/downloads/' \
-            --exclude='apps/pedido-carteleria/page-pdfs/' \
-            --exclude='apps/pedido-carteleria/previews/'
+          cp index.html .pages/
+          cp -R assets apps data .pages/
+          find .pages -type f \( -name '*.gs' -o -name '*.md' \) -delete
+          touch .pages/.nojekyll
+
+      - name: Verify shared CSV files in the published artifact
+        run: |
+          test -s .pages/data/equivalencia.csv
+          test -s .pages/data/equivalencia2.csv
+          test -s '.pages/data/ASISTENCIA_RIO - PADRON.csv'
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

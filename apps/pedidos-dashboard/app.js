@@ -1,8 +1,8 @@
 ;(() => {
   "use strict";
 
-  const API_URL = window.PEDIDOS_DASHBOARD_API_URL || "";
   const PADRON_URL = "../../data/ASISTENCIA_RIO%20-%20PADRON.csv";
+  const API_URL = window.PEDIDOS_DASHBOARD_API_URL || "";
   const USER_CANONICAL_LEGAJO = {
     FLORENCIA: "124"
   };
@@ -89,13 +89,16 @@
       VERONICA: ["VERONICA"]
     },
     estado: {
-      "ESPERANDO MERCADERIA": ["ESPERANDO MERCA", "ESPERANDO MERCADERIA", "ESPERANDO MERCADERÍA"],
+      "ESPERANDO MERCADERÍA": ["ESPERANDO MERCA", "ESPERANDO MERCADERIA", "ESPERANDO MERCADERÍA"],
       "ESPERANDO PAGO": ["ESPERANDO PAGO"],
       "PARA ARMAR": ["PARA ARMAR"],
       "ARMANDO PEDIDO": ["ARMANDO PEDIDO", "ARMADO PEDIDO"],
-      "PICKEADO/ARMADO": ["PICKEADO/ARMADO", "PICKEADO", "PICKED", "ARMADO", "ARMADO/PICKEADO"],
+      "ARMADO": ["ARMADO"],
+      "PICKEADO": ["PICKEADO", "PICKED"],
+      "ARMADO / PICKEADO (HISTÓRICO)": ["PICKEADO/ARMADO", "ARMADO/PICKEADO", "ARMADO / PICKEADO (HISTÓRICO)"],
       "LISTO PARA RETIRO": ["LISTO PARA RETIRO", "LISTO RETIRO"],
-      "ENVIADO": ["ENVIADO", "ENVIADO A SUCURSAL"],
+      "ENVIADO": ["ENVIADO"],
+      "ENVIADO A SUCURSAL": ["ENVIADO A SUCURSAL"],
       "RETIRADO": ["RETIRADO"],
       "EN SUCURSAL": ["EN SUCURSAL"]
     },
@@ -110,9 +113,8 @@
     }
   };
 
-  const DONE_STATE_PATTERNS = [
-    "PICKEADO"
-  ];
+  const DONE_STATES = new Set(["ARMADO", "PICKEADO", "ARMADO / PICKEADO (HISTÓRICO)"]);
+  const START_STATES = new Set(["PARA ARMAR", "ARMANDO PEDIDO"]);
 
   const DEMO_ROWS = [
     {
@@ -265,6 +267,8 @@
     if (state.loading) return;
 
     try {
+      setupDateDefaults();
+      setLoadNotice("");
       state.loading = true;
       el.refreshBtn.disabled = true;
       el.refreshBtn.textContent = "Actualizando...";
@@ -285,8 +289,8 @@
       render();
     } catch (error) {
       console.error(error);
-      state.rows = [];
-      renderEmpty(error.message || "No se pudo cargar Pedidos_LOG.");
+      setLoadNotice("No pudimos actualizar los pedidos desde Google. " + (state.rows.length ? "Seguís viendo la última carga de esta sesión. " : "") + "Probá nuevamente con Actualizar. Si persiste, revisá la disponibilidad del servicio de pedidos.");
+      if (!state.rows.length) renderEmpty("Datos no disponibles. Reintentá con Actualizar.");
     } finally {
       state.loading = false;
       el.refreshBtn.disabled = false;
@@ -297,24 +301,27 @@
   function render() {
     const rows = getFilteredRows();
     const sortedRows = [...rows].sort((a, b) => b.timestamp - a.timestamp);
-    const cycles = buildOrderCycles(rows);
-    const measuredDurations = cycles.map((cycle) => cycle.durationMs).filter((value) => value > 0);
+    const selectedKeys = new Set(rows.map(orderKey));
+    const cycles = buildOrderCycles(state.rows).filter(cycle => selectedKeys.has(orderKey(cycle.doneRow)) && rows.includes(cycle.doneRow));
+    const to = el.toDate.value ? new Date(`${el.toDate.value}T23:59:59.999`).getTime() : Infinity;
+    const currentRows = getFilteredRows(latestOrderRows(state.rows.filter(row => row.timestamp <= to)));
+    const measuredDurations = cycles.map((cycle) => cycle.durationMs).filter((value) => value >= 0);
 
     el.totalEvents.textContent = String(rows.length);
-    el.uniqueOrders.textContent = String(new Set(rows.map((row) => row.idPedido).filter(Boolean)).size);
+    el.uniqueOrders.textContent = String(new Set(rows.filter(row => row.idPedido).map(orderKey)).size);
     el.avgBuildTime.textContent = measuredDurations.length ? formatDuration(avg(measuredDurations)) : "-";
     el.measuredOrders.textContent = String(cycles.length);
 
     el.activityHint.textContent = state.demo
       ? "Vista demo hasta configurar la API"
       : `${rows.length} cambios filtrados`;
-    el.cycleHint.textContent = `${cycles.length} pedidos con ingreso y pickeado/armado detectados`;
+    el.cycleHint.textContent = `${cycles.length} pedidos con inicio registrado y primer ARMADO o PICKEADO. Incluye estados históricos.`;
     el.tableHint.textContent = `${sortedRows.length} movimientos visibles`;
     el.cycleTableHint.textContent = `${cycles.length} pedidos medidos`;
 
     renderCycleChart(cycles);
     renderDailyChart(rows);
-    renderStackList(el.stateChart, countBy(rows, "estadoActual"), "estado");
+    renderStackList(el.stateChart, countBy(currentRows, "estadoActual"), "estado");
     renderStackList(el.branchChart, countBy(rows, "sucursal"), "sucursal");
     renderStackList(el.shippingChart, countBy(rows, "tipoEnvio"), "envio");
     renderStackList(el.webChart, countBy(rows, "web"), "web");
@@ -362,12 +369,12 @@
     select.value = values.includes(current) ? current : "";
   }
 
-  function getFilteredRows() {
+  function getFilteredRows(source = state.rows) {
     const from = el.fromDate.value ? new Date(`${el.fromDate.value}T00:00:00`).getTime() : 0;
-    const to = el.toDate.value ? new Date(`${el.toDate.value}T23:59:59`).getTime() : Infinity;
+    const to = el.toDate.value ? new Date(`${el.toDate.value}T23:59:59.999`).getTime() : Infinity;
     const query = normalizeText(el.searchInput.value);
 
-    return getRowsUntilPicked(state.rows)
+    return source
       .filter((row) => row.timestamp >= from && row.timestamp <= to)
       .filter((row) => !el.branchFilter.value || row.sucursal === el.branchFilter.value)
       .filter((row) => !el.stateFilter.value || row.estadoActual === el.stateFilter.value)
@@ -390,20 +397,20 @@
       });
   }
 
-  function getRowsUntilPicked(rows) {
-    const firstPickedByOrder = new Map();
+  function orderKey(row) {
+    return JSON.stringify([row.web || "SIN CANAL", row.idPedido]);
+  }
 
-    rows.forEach((row) => {
-      if (!row.idPedido || !row.timestamp || !isBuildDoneRow(row)) return;
-      const current = firstPickedByOrder.get(row.idPedido);
-      if (!current || row.timestamp < current) firstPickedByOrder.set(row.idPedido, row.timestamp);
+  function latestOrderRows(rows) {
+    const latest = new Map();
+    rows.forEach(row => {
+      if (!row.idPedido || !row.timestamp) return;
+      const key = orderKey(row);
+      const previous = latest.get(key);
+      if (!previous || row.timestamp > previous.timestamp ||
+          (row.timestamp === previous.timestamp && row.rowNumber > previous.rowNumber)) latest.set(key, row);
     });
-
-    return rows.filter((row) => {
-      if (normalizeText(row.estadoActual) === normalizeText("RETIRADO")) return false;
-      const pickedAt = firstPickedByOrder.get(row.idPedido);
-      return !pickedAt || !row.timestamp || row.timestamp <= pickedAt;
-    });
+    return [...latest.values()];
   }
 
   function renderDailyChart(rows) {
@@ -431,7 +438,7 @@
 
   function renderCycleChart(cycles) {
     if (!cycles.length) {
-      el.cycleChart.innerHTML = `<div class="empty-state">Todavia no hay pedidos con ingreso y pickeado/armado detectados.</div>`;
+      el.cycleChart.innerHTML = `<div class="empty-state">No hay pedidos con inicio registrado y final de armado para estos filtros.</div>`;
       return;
     }
 
@@ -464,7 +471,7 @@
   }
 
   function renderStackList(container, map, emptyLabel) {
-    const entries = Array.from(map.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 9);
+    const entries = Array.from(map.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
     const max = Math.max(1, ...entries.map(([, value]) => value));
 
     if (!entries.length) {
@@ -528,17 +535,44 @@
     `).join("");
   }
 
-  async function fetchJson(url) {
-    const response = await fetch(url);
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      throw new Error(text || "La respuesta del servidor no es JSON valido.");
+  function setLoadNotice(message) {
+    let notice = document.getElementById("dashboardLoadNotice");
+    if (!notice) {
+      notice = document.createElement("p");
+      notice.id = "dashboardLoadNotice";
+      notice.setAttribute("role", "alert");
+      notice.className = "empty-state";
+      document.querySelector(".dashboard-shell").prepend(notice);
     }
-    if (!data.ok) throw new Error(data.error || "La API devolvio un error.");
-    return data;
+    notice.textContent = message;
+    notice.hidden = !message;
+  }
+
+  async function fetchJson(url) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 45000);
+      try {
+        const freshUrl = new URL(url);
+        freshUrl.searchParams.set("_rio", `${Date.now()}-${attempt}`);
+        const response = await fetch(freshUrl.href, {
+          cache: "no-store", credentials: "omit", signal: controller.signal
+        });
+        if (!response.ok) throw new Error("Servicio de pedidos no disponible.");
+        const text = await response.text();
+        let data;
+        try { data = JSON.parse(text); }
+        catch { throw new Error("Google no devolvió datos de pedidos."); }
+        if (!data || data.ok !== true || !Array.isArray(data.data)) {
+          throw new Error("La respuesta del servicio de pedidos no es válida.");
+        }
+        return data;
+      } catch (error) {
+        if (attempt === 1) throw new Error("No se pudo cargar el historial de pedidos. Reintentá con Actualizar.");
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
   }
 
   function normalizeRows(rows) {
@@ -549,6 +583,7 @@
         const estadoActual = normalizeValue(row.estadoActual, "estado");
         const normalizedRow = {
           fecha,
+          rowNumber: Number(row.rowNumber) || 0,
           timestamp: parseDate(fecha),
           origen: clean(row.origen || row.evento),
           idPedido: clean(row.idPedido || row.id),
@@ -572,21 +607,22 @@
     rows
       .filter((row) => row.idPedido && row.timestamp)
       .forEach((row) => {
-        if (!byOrder.has(row.idPedido)) byOrder.set(row.idPedido, []);
-        byOrder.get(row.idPedido).push(row);
+        const key = orderKey(row);
+        if (!byOrder.has(key)) byOrder.set(key, []);
+        byOrder.get(key).push(row);
       });
 
     const cycles = [];
 
-    byOrder.forEach((items, idPedido) => {
-      const ordered = [...items].sort((a, b) => a.timestamp - b.timestamp);
-      const startRow = ordered[0];
+    byOrder.forEach((items) => {
+      const ordered = [...items].sort((a, b) => a.timestamp - b.timestamp || a.rowNumber - b.rowNumber);
+      const startRow = ordered.find(row => START_STATES.has(row.estadoActual));
       const doneRow = ordered.find(isBuildDoneRow);
 
       if (!startRow || !doneRow || doneRow.timestamp < startRow.timestamp) return;
 
       cycles.push({
-        idPedido,
+        idPedido: doneRow.idPedido,
         sucursal: doneRow.sucursal || startRow.sucursal,
         startRow,
         doneRow,
@@ -598,8 +634,7 @@
   }
 
   function isBuildDoneRow(row) {
-    const stateText = normalizeText(row.estadoActual);
-    return DONE_STATE_PATTERNS.some((pattern) => stateText.includes(normalizeText(pattern)));
+    return DONE_STATES.has(row.estadoActual);
   }
 
   function countBy(rows, key) {
@@ -662,7 +697,7 @@
   }
 
   function formatDuration(ms) {
-    if (!ms || ms < 0) return "-";
+    if (!Number.isFinite(ms) || ms < 0) return "-";
     const totalMinutes = Math.round(ms / 60000);
     const days = Math.floor(totalMinutes / 1440);
     const hours = Math.floor((totalMinutes % 1440) / 60);
@@ -773,6 +808,8 @@
       return [];
     }
   }
+
+
 
   function parseCsv(text) {
     const lines = String(text || "").replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());

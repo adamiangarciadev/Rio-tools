@@ -20,7 +20,7 @@
 html,body{
   margin:0;
   padding:0;
-  background:linear-gradient(180deg,#0b0f14,#0d1219 50%,#0b0f14);
+  background:linear-gradient(180deg,#f3f6f9,#f3f6f9 50%,#f3f6f9);
   color:var(--text);
   font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
 }
@@ -35,8 +35,8 @@ body{
   left:16px;
   z-index:1000;
   text-decoration:none;
-  color:#fff;
-  background:linear-gradient(180deg,#1c2a3d,#15202f);
+  color:#5c5269;
+  background:linear-gradient(180deg,#f3f6f9,#f3f6f9);
   border:1px solid #2b425f;
   padding:10px 14px;
   border-radius:12px;
@@ -44,7 +44,7 @@ body{
 }
 
 .back-btn:hover{
-  background:linear-gradient(180deg,#24364d,#1a2839);
+  background:linear-gradient(180deg,#f3f6f9,#f3f6f9);
 }
 
 .hero{
@@ -134,7 +134,7 @@ select:focus,input:focus{
 }
 
 .btn.secondary{
-  background:#253244;
+  background:#f3f6f9;
   color:var(--text);
 }
 
@@ -203,8 +203,8 @@ th,td{
 }
 
 th{
-  color:#cdd8e6;
-  background:#101722;
+  color:#364e6d;
+  background:#f3f5f9;
   position:sticky;
   top:0;
 }
@@ -273,3 +273,5 @@ footer{
     padding-top:78px;
   }
 }
+/* Workspace redesign: control-remitos-clientes */
+.rio-app .filters{padding:20px;background:#fff;border:1px solid var(--rio-border);border-radius:12px;gap:16px}.rio-app .stats{gap:18px;margin:22px 0}.rio-app .stats>div{padding:20px;border-radius:12px;background:#fff}.rio-app .container label{display:grid;gap:7px}

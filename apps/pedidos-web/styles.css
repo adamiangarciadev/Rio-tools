@@ -2,12 +2,12 @@ body {
   font-family: system-ui, sans-serif;
   margin: 0;
   padding: 0;
-  background: #f5f5f5;
+  background:#f5f5f5;
 }
 
 header {
-  background: #222;
-  color: #fff;
+  background:#f6f6f6;
+  color:#5c5269;
   padding: 10px 15px;
 }
 
@@ -25,7 +25,7 @@ main {
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background:white;
 }
 
 th, td {
@@ -42,7 +42,7 @@ th, td {
 .cell-sub {
   display: block;
   margin-top: 3px;
-  color: var(--rio-muted);
+  color:var(--rio-muted);
   font-size: 12px;
   font-weight: 650;
   white-space: nowrap;
@@ -62,8 +62,8 @@ th, td {
   min-height: 30px !important;
   padding: 4px 8px !important;
   border-radius: 6px !important;
-  background: #12323d !important;
-  color: var(--rio-text) !important;
+  background:#f3f8f9 !important;
+  color:var(--rio-text) !important;
   border: 1px solid var(--rio-border-strong) !important;
   font-size: 12px !important;
   font-weight: 800 !important;
@@ -73,17 +73,17 @@ th, td {
 .edit-envio-btn:hover,
 .edit-envio-btn:focus-visible,
 .edit-envio-btn:active {
-  background: #174a58 !important;
+  background:#f3f8f9 !important;
   border-color: rgba(45, 212, 191, .62) !important;
 }
 
 tr.alerta {
-  background-color: #ffe0e0;
+  background-color:#ffe0e0;
 }
 
 .pedido-row {
   position: relative;
-  --estado-bg: rgba(17, 24, 33, .96);
+  --estado-bg: #f6f1ed;
   --estado-border: rgba(148, 163, 184, .24);
 }
 
@@ -92,7 +92,7 @@ tr.alerta {
 }
 
 .pedido-row > td {
-  background: var(--estado-bg);
+  background:var(--estado-bg);
 }
 
 .pedido-row:hover > td {
@@ -110,10 +110,20 @@ tr.alerta {
   --estado-border: #a78bfa;
 }
 
+.pedido-row.st-armado,
 .pedido-row.st-pickeado-armado,
 .pedido-row.st-pickeado {
-  --estado-bg: rgba(79, 70, 229, .18);
-  --estado-border: #818cf8;
+  --estado-bg: #d9f4e3;
+  --estado-border: #368452;
+}
+
+.pedido-row.st-pedido-con-faltantes {
+  --estado-bg: #ffe4c7;
+  --estado-border: #b96516;
+}
+
+.pedido-row:is(.st-armado, .st-pickeado-armado, .st-pickeado, .st-pedido-con-faltantes) > td {
+  color: #302b2a;
 }
 
 .pedido-row.st-esperando-pago {
@@ -164,7 +174,7 @@ tr.alerta {
 
 #estadoCarga {
   font-size: 13px;
-  color: #ccc;
+  color:#5c5269;
 }
 
 .top-bar {
@@ -176,7 +186,7 @@ tr.alerta {
 }
 
 .whatsapp-btn {
-  background: rgba(34, 197, 94, .14) !important;
+  background:rgba(34, 197, 94, .14) !important;
   border-color: rgba(34, 197, 94, .32) !important;
 }
 
@@ -202,8 +212,8 @@ button {
 
 /* Base */
 button.accion {
-  background: #e9e9e9;
-  color: #111;
+  background:#e9e9e9;
+  color:#111;
 }
 
 button.accion:hover {
@@ -212,8 +222,8 @@ button.accion:hover {
 
 /* Cancelado siempre rojo */
 button.cancelado {
-  background: #c62828;
-  color: #fff;
+  background:#c62828;
+  color:#5c5269;
 }
 button.cancelado:hover {
   filter: brightness(0.95);
@@ -224,30 +234,30 @@ button.cancelado:hover {
    Nota: estas clases las agrega el JS
    ========================= */
 
-button.st-armando-pedido { background: #1565c0; color: #fff; }              /* azul */
-button.st-armandose { background: #1565c0; color: #fff; }              /* azul */
-button.st-pickeado-armado { background: #6a1b9a; color: #fff; }        /* violeta */
-button.st-pickeado { background: #6a1b9a; color: #fff; }        /* violeta */
-button.st-esperando-mercaderia { background: #ef6c00; color: #fff; }   /* naranja */
-button.st-controlado { background: #2e7d32; color: #fff; }             /* verde */
-button.st-esperando-pago { background: #546e7a; color: #fff; }         /* gris azulado */
-button.st-pendiente-de-envio { background: #00838f; color: #fff; }     /* teal */
-button.st-listo-para-retiro { background: #1b5e20; color: #fff; }      /* verde oscuro */
-button.st-enviado-a-sucursal { background: #283593; color: #fff; }     /* índigo */
-button.st-en-sucursal { background: #00695c; color: #fff; }            /* verde agua */
-button.st-enviado { background: #455a64; color: #fff; }                /* gris */
-button.st-retirado { background: #2e7d32; color: #fff; }               /* verde */
+button.st-armando-pedido { background:#1565c0; color:#5c5269; }              /* azul */
+button.st-armandose { background:#1565c0; color:#5c5269; }              /* azul */
+button.st-pickeado-armado { background:#6a1b9a; color:#5c5269; }        /* violeta */
+button.st-pickeado { background:#6a1b9a; color:#5c5269; }        /* violeta */
+button.st-esperando-mercaderia { background:#ef6c00; color:#5c5269; }   /* naranja */
+button.st-controlado { background:#f3f9f3; color:#5c5269; }             /* verde */
+button.st-esperando-pago { background:#546e7a; color:#5c5269; }         /* gris azulado */
+button.st-pendiente-de-envio { background:#f3f9f9; color:#5c5269; }     /* teal */
+button.st-listo-para-retiro { background:#f3f9f3; color:#5c5269; }      /* verde oscuro */
+button.st-enviado-a-sucursal { background:#283593; color:#5c5269; }     /* índigo */
+button.st-en-sucursal { background:#f3f9f8; color:#5c5269; }            /* verde agua */
+button.st-enviado { background:#f4f7f8; color:#5c5269; }                /* gris */
+button.st-retirado { background:#f3f9f3; color:#5c5269; }               /* verde */
 
 td:first-child {
   font-weight: 600;
 }
 
 td:first-child:contains("MAYORISTA") {
-  color: #6a1b9a;
+  color:#6a1b9a;
 }
 
 td:first-child:contains("MINORISTA") {
-  color: #1565c0;
+  color:#1565c0;
 }
 .buscador-row{
   display:flex;
@@ -281,7 +291,7 @@ td:first-child:contains("MINORISTA") {
 }
 
 .dd-toggle {
-  background: #e9e9e9;
+  background:#e9e9e9;
   border-radius: 6px;
   padding: 6px 10px;
   font-size: 12px;
@@ -292,7 +302,7 @@ td:first-child:contains("MINORISTA") {
   top: 100%;
   left: 0;
   min-width: 210px;
-  background: #101821 !important;
+  background:#f3f6f9 !important;
   border: 1px solid var(--rio-border-strong);
   border-radius: 8px;
   padding: 6px;
@@ -311,8 +321,8 @@ td:first-child:contains("MINORISTA") {
   padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid rgba(148, 163, 184, .16) !important;
-  background: #111d29 !important;
-  color: var(--rio-text) !important;
+  background:#f3f6f9 !important;
+  color:var(--rio-text) !important;
   font-weight: 800;
   opacity: 1 !important;
 }
@@ -320,15 +330,15 @@ td:first-child:contains("MINORISTA") {
 .dd-item:hover,
 .dd-item:focus-visible,
 .dd-item:active {
-  background: #183444 !important;
+  background:#f3f7f9 !important;
   border-color: rgba(45, 212, 191, .48) !important;
   opacity: 1 !important;
 }
 
 /* Cancelado destacado */
 .dd-item.cancelado {
-  background: #c62828;
-  color: #fff;
+  background:#c62828;
+  color:#5c5269;
 }
 
 .dd-item.cancelado:hover {
@@ -355,8 +365,8 @@ td.acciones .dd {
   padding: 8px 10px;
   border-radius: 6px;
 
-  background: #12323d !important;
-  color: var(--rio-text) !important;
+  background:#f3f8f9 !important;
+  color:var(--rio-text) !important;
   border: 1px solid var(--rio-border-strong) !important;
   font-size: 13px;
   font-weight: 800;
@@ -371,14 +381,14 @@ td.acciones .dd {
 .dd-toggle:hover,
 .dd-toggle:focus-visible,
 .dd-toggle:active {
-  background: #174a58 !important;
+  background:#f3f8f9 !important;
   border-color: rgba(45, 212, 191, .62) !important;
   opacity: 1 !important;
 }
 footer {
       text-align: center;
       padding: 18px 24px;
-      color: var(--muted);
+      color:var(--muted);
       font-size: 12px;
       border-top: 1px solid var(--border);
     }
@@ -390,7 +400,7 @@ footer {
   display: grid;
   place-items: center;
   padding: 18px;
-  background: rgba(4, 8, 13, .72);
+  background:rgba(4, 8, 13, .72);
   backdrop-filter: blur(8px);
 }
 
@@ -409,8 +419,8 @@ footer {
   overflow: auto;
   border: 1px solid var(--rio-border);
   border-radius: 8px;
-  background: var(--rio-surface);
-  color: var(--rio-text);
+  background:var(--rio-surface);
+  color:var(--rio-text);
   box-shadow: 0 18px 54px rgba(0, 0, 0, .38);
 }
 
@@ -425,7 +435,7 @@ footer {
 
 .modal-kicker {
   margin: 0 0 4px;
-  color: var(--rio-primary) !important;
+  color:var(--rio-primary) !important;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: .08em;
@@ -464,7 +474,7 @@ footer {
 }
 
 .optional {
-  color: var(--rio-muted);
+  color:var(--rio-muted);
   font-size: 12px;
   font-weight: 600;
 }
@@ -474,8 +484,8 @@ footer {
   width: 100%;
   border: 1px solid var(--rio-border-strong);
   border-radius: 6px;
-  background: #0b1017;
-  color: var(--rio-text);
+  background:#f3f6f9;
+  color:var(--rio-text);
   padding: 10px 12px;
   outline: none;
 }
@@ -510,3 +520,6 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* Workspace redesign: pedidos-web */
+.rio-app .top-bar{padding:18px;background:#fff;border:1px solid var(--rio-border);border-radius:12px;margin-bottom:20px;gap:12px}.rio-app .top-bar label{display:flex;align-items:center;gap:8px}.rio-app .modal-content{border-radius:16px;padding:24px}.rio-app .whatsapp-form{gap:18px}.rio-app .edit-envio-btn{background:#eee7fa!important;color:#573597!important}

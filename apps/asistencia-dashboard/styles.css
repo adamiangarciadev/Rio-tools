@@ -12,8 +12,7 @@
 }
 
 body {
-  background:
-    linear-gradient(180deg, rgba(34, 199, 184, .04), transparent 300px),
+  background:linear-gradient(180deg, rgba(34, 199, 184, .04), transparent 300px),
     var(--as-bg);
 }
 
@@ -31,7 +30,7 @@ body {
 .filters-panel,
 .kpi-card,
 .panel {
-  background: var(--as-panel) !important;
+  background:var(--as-panel) !important;
   border: 1px solid var(--as-line) !important;
   border-radius: 8px !important;
 }
@@ -47,7 +46,7 @@ body {
 label {
   display: grid;
   gap: 6px;
-  color: var(--as-muted) !important;
+  color:var(--as-muted) !important;
   font-size: 12px;
   font-weight: 750;
 }
@@ -92,12 +91,12 @@ select {
 
 .kpi-card span,
 .panel-head p {
-  color: var(--as-muted);
+  color:var(--as-muted);
   font-size: 12px;
 }
 
 .kpi-card strong {
-  color: var(--as-text);
+  color:var(--as-text);
   font-size: 28px;
   line-height: 1;
 }
@@ -133,11 +132,11 @@ select {
   padding: 11px;
   border: 1px solid var(--as-line);
   border-radius: 8px;
-  background: var(--as-panel-2);
+  background:var(--as-panel-2);
 }
 
 .branch-score strong {
-  color: var(--as-text);
+  color:var(--as-text);
 }
 
 .metric {
@@ -147,21 +146,21 @@ select {
 }
 
 .metric span {
-  color: var(--as-muted);
+  color:var(--as-muted);
   font-size: 11px;
   font-weight: 750;
 }
 
 .metric b {
-  color: var(--as-text);
+  color:var(--as-text);
 }
 
 .metric.danger b {
-  color: var(--as-danger);
+  color:var(--as-danger);
 }
 
 .metric.warn b {
-  color: var(--as-warn);
+  color:var(--as-warn);
 }
 
 .rank-row {
@@ -171,7 +170,7 @@ select {
   padding: 10px;
   border: 1px solid var(--as-line);
   border-radius: 8px;
-  background: var(--as-panel-2);
+  background:var(--as-panel-2);
 }
 
 .rank-row strong {
@@ -182,7 +181,7 @@ select {
 }
 
 .rank-row span {
-  color: var(--as-muted);
+  color:var(--as-muted);
   font-size: 12px;
 }
 
@@ -190,7 +189,7 @@ select {
   padding: 12px;
   border: 1px solid var(--as-line);
   border-radius: 8px;
-  background: var(--as-panel-2);
+  background:var(--as-panel-2);
 }
 
 .history-card__top {
@@ -207,7 +206,7 @@ select {
 
 .history-card p {
   margin: 3px 0 0;
-  color: var(--as-muted);
+  color:var(--as-muted);
   font-size: 12px;
 }
 
@@ -221,28 +220,28 @@ select {
   height: 18px;
   border-radius: 4px;
   border: 1px solid rgba(148, 163, 184, .12);
-  background: rgba(148, 163, 184, .13);
+  background:rgba(148, 163, 184, .13);
 }
 
 .day-dot.ok {
-  background: rgba(52, 211, 153, .72);
+  background:rgba(52, 211, 153, .72);
 }
 
 .day-dot.late {
-  background: rgba(245, 158, 11, .82);
+  background:rgba(245, 158, 11, .82);
 }
 
 .day-dot.absent {
-  background: rgba(251, 113, 133, .82);
+  background:rgba(251, 113, 133, .82);
 }
 
 .day-dot.missing {
-  background: rgba(251, 113, 133, .22);
+  background:rgba(251, 113, 133, .22);
   border-color: rgba(251, 113, 133, .72);
 }
 
 .day-dot.other {
-  background: rgba(90, 167, 255, .62);
+  background:rgba(90, 167, 255, .62);
 }
 
 .table-wrap {
@@ -255,7 +254,7 @@ select {
 table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--as-panel-2) !important;
+  background:var(--as-panel-2) !important;
 }
 
 th,
@@ -271,7 +270,7 @@ th {
   position: sticky;
   top: 0;
   z-index: 1;
-  color: var(--as-muted) !important;
+  color:var(--as-muted) !important;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .04em !important;
@@ -279,10 +278,10 @@ th {
 
 .empty-state {
   padding: 16px;
-  color: var(--as-muted);
+  color:var(--as-muted);
   border: 1px dashed var(--as-line);
   border-radius: 8px;
-  background: rgba(8, 13, 20, .38);
+  background:rgba(8, 13, 20, .38);
 }
 
 .seller-dialog {
@@ -290,13 +289,13 @@ th {
   padding: 0;
   border: 1px solid rgba(148, 163, 184, .24);
   border-radius: 12px;
-  color: var(--as-text);
-  background: #111821;
+  color:var(--as-text);
+  background:#f3f6f9;
   box-shadow: 0 24px 80px rgba(0, 0, 0, .58);
 }
 
 .seller-dialog::backdrop {
-  background: rgba(3, 7, 12, .78);
+  background:rgba(3, 7, 12, .78);
   backdrop-filter: blur(4px);
 }
 
@@ -324,7 +323,7 @@ th {
 
 .seller-dialog__head p {
   margin-top: 5px;
-  color: var(--as-muted);
+  color:var(--as-muted);
   font-size: 13px;
 }
 
@@ -334,8 +333,8 @@ th {
   padding: 0;
   border: 1px solid var(--as-line);
   border-radius: 8px;
-  color: var(--as-muted);
-  background: rgba(148, 163, 184, .08);
+  color:var(--as-muted);
+  background:rgba(148, 163, 184, .08);
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
@@ -346,21 +345,21 @@ th {
   padding: 11px 12px;
   border: 1px solid var(--as-line);
   border-radius: 8px;
-  color: var(--as-muted);
-  background: var(--as-panel-2);
+  color:var(--as-muted);
+  background:var(--as-panel-2);
   font-size: 13px;
 }
 
 .seller-dialog__result.is-found {
   border-color: rgba(52, 211, 153, .38);
-  color: var(--as-ok);
-  background: rgba(52, 211, 153, .08);
+  color:var(--as-ok);
+  background:rgba(52, 211, 153, .08);
 }
 
 .seller-dialog__result.is-error {
   border-color: rgba(251, 113, 133, .42);
-  color: var(--as-danger);
-  background: rgba(251, 113, 133, .08);
+  color:var(--as-danger);
+  background:rgba(251, 113, 133, .08);
 }
 
 .seller-dialog__actions {
@@ -371,8 +370,8 @@ th {
 
 .btn-primary {
   border-color: rgba(34, 199, 184, .55) !important;
-  color: #031615 !important;
-  background: var(--as-primary) !important;
+  color:#031615 !important;
+  background:var(--as-primary) !important;
 }
 
 @media (max-width: 1040px) {
@@ -412,12 +411,6 @@ th {
     grid-template-columns: 1fr 1fr;
   }
 }
-.export-date-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
 
-@media (max-width: 560px) {
-  .export-date-grid { grid-template-columns: 1fr; }
-}
+/* Workspace redesign: asistencia-dashboard */
+.rio-app .filters-panel{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:22px}.rio-app .dash-grid{gap:24px;grid-template-columns:repeat(2,minmax(0,1fr))}.rio-app .dash-grid>*{min-width:0}.rio-app .panel-head{padding:10px 0;background:transparent}.rio-app .branch-score{gap:12px}@media(max-width:850px){.rio-app .dash-grid{grid-template-columns:minmax(0,1fr)}.rio-app .dash-grid>.span-2{grid-column:auto!important}}

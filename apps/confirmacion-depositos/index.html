@@ -13,10 +13,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Confirmación de Depósitos - RIO</title>
-  <link rel="stylesheet" href="styles.css" />
-<link rel="stylesheet" href="../../assets/rio-theme.css" />
+  <link rel="stylesheet" href="styles.css?v=820e44a775" />
+  <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
+  <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
+  <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../assets/rio-identity.css?v=c9458779b8" />
+<script src="../../assets/rio-access.js?v=935accae1e"></script>
+<script src="../../assets/rio-context.js?v=8b59f5d8a2"></script>
+<link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
+  <link rel="stylesheet" href="../../assets/rio-bank-accounts.css?v=1">
+  <script defer src="../../assets/rio-bank-accounts.js?v=1"></script>
 </head>
-<body>
+<body class="rio-app" data-rio-app="confirmacion-depositos">
     <header class="container header-row header-bar module-topbar">
         <a href="../../index.html" class="btn secondary back-btn">← Volver</a>
 
@@ -29,7 +37,10 @@
 
   <main class="container page-grid">
     <section class="card">
-      <h2>Datos del depósito</h2>
+      <div class="rio-bank-toolbar">
+        <h2>Datos del depósito</h2>
+        <button class="btn secondary" type="button" data-rio-bank-open>Ver cuentas para depósito</button>
+      </div>
 
       <div class="grid">
         <label>
@@ -111,7 +122,9 @@
     </aside>
   </main>
 
-  <script src="app.js"></script>
-  <script src="../../assets/rio-report-problem.js"></script>
+  <script src="app.js?v=785abe8eac"></script>
+  <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>
+  <script src="../../assets/app-catalog.js?v=fd52fc724b"></script>
+  <script src="../../assets/app-shell.js?v=420f7666a0"></script>
 </body>
 </html>

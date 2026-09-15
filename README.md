@@ -1,4 +1,26 @@
+# RÍO Tools Suite — entorno de pruebas
+
+Sitio: https://adamiangarciadev.github.io/Rio-tools/
+
+Repositorio independiente de Rio-tools. Despliegue automático con GitHub Actions al actualizar main. Las APIs de Google Apps Script siguen siendo las del sistema actual; las operaciones escriben en esos sistemas. La sincronización Canva queda manual y requiere configurar credenciales y CANVA_SYNC_ENABLED=true; el catálogo incluido se publica completo.
+
 # RIO Tools Suite
+
+## Renovación de toda la suite (vista previa local)
+
+La apariencia usa la identidad original de `01_Identidad`: logotipo y símbolo RÍO en SVG, Gotham/Gotham Rounded en WOFF2, coral `#FF5F5C`, violeta `#7F7EFF` y verde `#4CCCAD`. `assets/rio-identity.css` centraliza la marca. Los originales permanecen intactos. `python tools/build-rio-identity.py` regenera los recursos desde la raíz (requiere PyMuPDF, fontTools y Brotli).
+
+La portada se renovó con navegación por área, búsqueda que ignora tildes, favoritos persistentes, herramientas recientes y vistas por áreas o lista. Al seleccionar un área, Favoritos o Recientes, la presentación grande se oculta y aparece una cabecera compacta sticky con las herramientas de esa vista. La selección de área se conserva en la URL.
+
+La renovación ahora abarca las **25 aplicaciones**, incluido el Dashboard de Pedidos que no aparece en la portada, y las dos páginas de respaldo de Pedido Semanal. Todas incorporan navegación lateral, búsqueda entre aplicaciones, favoritos, identidad visual clara, formularios y tablas renovados. Los diseños se adaptaron por módulo; se conservaron los controles, IDs y scripts de los procesos existentes. Las integraciones operativas siguen siendo las mismas.
+
+`assets/app-catalog.js` contiene las rutas y áreas; `assets/app-shell.js` incorpora navegación y accesos a secciones; `assets/rio-theme.css` define los componentes compartidos; `assets/app-shell.css` define la estructura adaptable. Cada `apps/*/styles.css` incluye sus ajustes de diseño específicos. Las URLs de CSS y scripts de interfaz incluyen una versión de contenido para evitar reutilizar estilos viejos.
+
+El panel usa HTML, CSS y JavaScript estáticos, iconos y logotipos SVG, y las fuentes de RÍO alojadas localmente. No requiere npm, compilación ni un servidor de aplicaciones. Sus rutas relativas permiten publicarlo bajo `/Rio-tools/` en GitHub Pages. Los servicios de las aplicaciones internas siguen necesitando sus integraciones y conexión a internet.
+
+Para la vista previa: ejecutar `python -m http.server 4173 --bind 127.0.0.1` en la raíz y abrir `http://127.0.0.1:4173/`. Los cambios están pendientes de revisión antes de publicarse.
+
+Favoritos, recientes y preferencia de vista se guardan únicamente en este navegador. `Ctrl/Cmd + K` enfoca el buscador; `Escape` cierra el menú móvil o la búsqueda de herramientas. La supervisión conserva el mecanismo de sesión previo: es un control de interfaz, no una nueva autenticación de servidor. La verificación de esta renovación se documenta en `docs/rediseno-verificacion.md`.
 
 RIO Tools Suite es una plataforma web interna que centraliza procesos de locales, depósito, ecommerce, administración y soporte. Está compuesta por aplicaciones independientes en HTML, CSS y JavaScript vanilla, agrupadas detrás de un panel principal y preparadas para ejecutarse localmente o publicarse como sitio estático.
 
@@ -20,13 +42,12 @@ La suite prioriza despliegues simples, módulos aislados y automatizaciones punt
 | Operaciones | Entrada de Mercadería, Mercadería en Tránsito, Control de Remitos de Clientes, Envíos y Flete |
 | Ecommerce | Categorizador, Pedidos Web, Pedidos Web Locales, Pedidos Dashboard y Banco de Medios |
 | Depósito | Picking Salida, Pedido Semanal, Etiquetas y Remitos Depósito |
-| Administración | Asistencia, Confirmación de Depósitos, Check Depósitos, Archivos Administrativos y otras herramientas de control |
+| Administración | Asistencia, Confirmación de Depósitos, Archivos Administrativos y otras herramientas de control |
 | Comunicación visual | Pedido de Cartelería y catálogo sincronizado desde Canva |
 | Sistemas | Mesa de Ayuda para locales y Gestión de Incidentes para seguimiento interno |
-| Supervisores | Control de Asistencia, Márgenes, Dashboard de Asistencia, Seguimiento de Remitos, Ventas por Cliente, Remitos Depósito y Apercibimientos |
+| Supervisores | Control de Asistencia, Márgenes, Dashboard de Asistencia, Check Depósitos, Ventas por Cliente, Remitos Depósito y Apercibimientos |
 
 Las herramientas de la columna **Supervisores** solo se muestran después de habilitar el acceso correspondiente desde el panel principal.
-Gestión de Incidentes y Check Depósitos conservan sus áreas de Sistemas y Administración, respectivamente, pero también requieren el acceso de Supervisión.
 
 ## Cambios funcionales recientes
 
