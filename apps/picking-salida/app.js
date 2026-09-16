@@ -15,6 +15,7 @@
 
   const LS_META  = "pickeo_meta_v1";
   const LS_SCANS = "pickeo_scans_v1";
+  const LS_PENDING_TXT = "pickeo_pending_txt_v1";
 
   const AUTOCOMMIT_IDLE_MS = 450;
   const MIN_LEN_FOR_COMMIT = 3;
@@ -36,6 +37,7 @@
   let audioCtx = null;
   let scanTimer = null;
   let currentRemito = "";
+  let pendingTxt = null;
   let isSaving = false;
   let maxKnownCodeLength = 20;
 
@@ -67,13 +69,14 @@
     setupSelectors();
     bindUI();
     loadScans();
+    restorePendingTxt();
     loadAllCSVs(CSV_FILES);
     keepFocus();
 
     renderLast();
     renderPickList();
     renderArticleCounter();
-    updateRemitoUI("");
+    if (!currentRemito) updateRemitoUI("");
   });
 
   function bindUI() {
@@ -170,6 +173,40 @@
     } catch {
       return null;
     }
+  }
+
+  function removeLocal(k) {
+    try {
+      localStorage.removeItem(k);
+    } catch {}
+  }
+
+  function getPendingTxt() {
+    const pending = pendingTxt || readLocal(LS_PENDING_TXT);
+    if (!pending || !pending.remito || !pending.content || !pending.fileName || !pending.origen) {
+      return null;
+    }
+    pendingTxt = pending;
+    return pending;
+  }
+
+  function savePendingTxt(pending) {
+    pendingTxt = pending;
+    writeLocal(LS_PENDING_TXT, pending);
+  }
+
+  function clearPendingTxt() {
+    pendingTxt = null;
+    removeLocal(LS_PENDING_TXT);
+  }
+
+  function restorePendingTxt() {
+    const pending = getPendingTxt();
+    if (!pending) return;
+
+    updateRemitoUI(pending.remito);
+    note(`REM${pending.remito} pendiente: falta guardar el TXT. Presioná GUARDAR para reintentar.`);
+    showPill("warn", `REM${pending.remito}: TXT pendiente`);
   }
 
   function saveScans() {
@@ -682,6 +719,7 @@
     scans = [];
     scanSeq = 0;
     currentRemito = "";
+    clearPendingTxt();
     saveScans();
 
     if (el.scanCount) el.scanCount.textContent = "0 escaneados";
@@ -716,21 +754,23 @@
   async function downloadTxt() {
     ensureAudio();
 
+    const pending = getPendingTxt();
+
     if (isSaving) {
       note("El TXT ya se esta guardando. Espera un momento.");
       showPill("warn", "Guardando...");
       return;
     }
 
-    if (!scans.length) {
+    if (!scans.length && !pending) {
       showPill("warn", "No hay escaneos");
       note("No hay escaneos para guardar.");
       flash("err");
       return;
     }
 
-    const origen = (el.origenSelect?.value || "").toUpperCase().trim();
-    const destino = (el.destinoSelect?.value || "").toUpperCase().trim();
+    const origen = pending?.origen || (el.origenSelect?.value || "").toUpperCase().trim();
+    const destino = pending?.folderName || (el.destinoSelect?.value || "").toUpperCase().trim();
 
     if (!origen) {
       signalError("Seleccionï¿½ un ORIGEN.");
@@ -751,37 +791,58 @@
 
     setDownloadState(true);
     showPill("warn", "Guardando...");
-    note("Generando remito y guardando TXT...");
+    note(pending
+      ? `Reintentando el TXT del REM${pending.remito} sin generar otro remito...`
+      : "Generando remito y guardando TXT...");
 
     const ordered = scans.slice().reverse();
     const lines = ordered.map(s => String(s.code));
     const content = lines.join("\n");
 
     try {
-      const remitoData = await crearRemitoEnCuadernillo();
-      const remito = remitoData?.remito;
+      let txtJob = pending;
 
-      if (!remito) {
-        throw new Error("El cuadernillo no devolviï¿½ nï¿½mero de remito.");
+      if (!txtJob) {
+        const remitoData = await crearRemitoEnCuadernillo();
+        const remito = remitoData?.remito;
+
+        if (!remito) {
+          throw new Error("El cuadernillo no devolviï¿½ nï¿½mero de remito.");
+        }
+
+        updateRemitoUI(remito);
+        txtJob = {
+          remito: String(remito),
+          content,
+          fileName: resolveFilename(remito),
+          folderName: destino || "INVENTARIO",
+          origen,
+          createdAt: new Date().toISOString()
+        };
+
+        // Desde este punto el remito ya existe. Se conserva el trabajo antes de
+        // intentar Drive para que un error de red/HTTP no genere otro número.
+        savePendingTxt(txtJob);
+      } else {
+        updateRemitoUI(txtJob.remito);
       }
 
-      updateRemitoUI(remito);
-
-      const fileName = resolveFilename(remito);
-      const folderName = destino || "INVENTARIO";
-
       await guardarTxtEnOrigen({
-        content,
-        fileName,
-        folderName,
-        origen
+        content: txtJob.content,
+        fileName: txtJob.fileName,
+        folderName: txtJob.folderName,
+        origen: txtJob.origen
       });
 
-      signalSaved(remito, fileName);
+      clearPendingTxt();
+      signalSaved(txtJob.remito, txtJob.fileName);
 
     } catch (err) {
       console.error(err);
-      signalError(err?.message || "Error al guardar.");
+      const retry = getPendingTxt();
+      signalError(retry
+        ? `${err?.message || "Error al guardar TXT."} REM${retry.remito} quedó pendiente; GUARDAR reintentará ese mismo número.`
+        : (err?.message || "Error al guardar."));
     } finally {
       setDownloadState(false);
     }
