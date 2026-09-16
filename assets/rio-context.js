@@ -36,6 +36,11 @@
   const canUse = item => inProfile(item.slug)&&(item.slug!=='picking-salida'||branch==='DEPOSITO')&&(!item.restricted||!!window.RioAccess?.isUnlocked());
   window.RioContext={branch,branches,label,canonical,isLocal,canUse,change:home,storageKey:key=>key+':'+(branch||'unassigned')};
   if(branch) {try{seed(branch);}catch{}}
+  if(!currentSlug && branch && localProfiles.has(branch)) {
+    const transitBranch=branch==='AV2'?'AVELLANEDA':branch;
+    // Warm the selected branch while the user is still on the workspace page.
+    window.RioTransitCache?.refresh(transitBranch).catch(()=>{});
+  }
   if(currentSlug&&(!branch || !inProfile(currentSlug) || (branch==='ADMINISTRACION'&&!window.RioAccess?.isUnlocked()) || (currentSlug==='picking-salida'&&branch!=='DEPOSITO'))) {
     location.replace(new URL('index.html'+(currentSlug==='picking-salida'?'?notice=deposito':''),root));
     return;

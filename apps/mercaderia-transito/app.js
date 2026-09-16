@@ -48,6 +48,7 @@
   const state = {
     sucursal: localStorage.getItem(LS_SUCURSAL) || "",
     remitos: [],
+    loadSequence: 0,
     remitoActivo: null,
     search: "",
     picking: {
@@ -209,29 +210,51 @@
     state.picking.csvError = firstError?.reason?.message || "No se pudieron cargar equivalencias";
   }
   async function cargarRemitos() {
-    if (!state.sucursal) {
+    const sucursal = state.sucursal;
+    const sequence = ++state.loadSequence;
+    if (!sucursal) {
       if (el.cardsWrap) {
         el.cardsWrap.innerHTML = `<div class="empty">Seleccioná una sucursal.</div>`;
       }
       return;
     }
-    if (el.estadoCarga) {
-      el.estadoCarga.textContent = `Cargando remitos de ${state.sucursal}...`;
+    const cache = await window.RioTransitCache?.read(sucursal);
+    if (sequence !== state.loadSequence || sucursal !== state.sucursal) return;
+    if (cache?.remitos) {
+      state.remitos = cache.remitos.map(normalizarRemito);
+      renderRemitos();
+      if (el.estadoCarga) {
+        const hora = new Date(cache.updatedAt).toLocaleTimeString("es-AR");
+        el.estadoCarga.textContent = `Mostrando datos guardados de ${hora}. Actualizando...`;
+      }
+    } else {
+      state.remitos = [];
+      renderRemitos();
+      if (el.estadoCarga) el.estadoCarga.textContent = `Cargando remitos de ${sucursal}...`;
     }
     try {
-      const res = await fetch(`${API_URL}?accion=listar&sucursal=${encodeURIComponent(state.sucursal)}`);
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "No se pudieron cargar los remitos");
-      state.remitos = (data.remitos || []).map(normalizarRemito);
+      const snapshot = window.RioTransitCache
+        ? await window.RioTransitCache.refresh(sucursal)
+        : await fetch(`${API_URL}?accion=listar&sucursal=${encodeURIComponent(sucursal)}`)
+            .then(res => res.json())
+            .then(data => {
+              if (!data.ok) throw new Error(data.error || "No se pudieron cargar los remitos");
+              return { remitos: data.remitos || [], updatedAt: Date.now() };
+            });
+      if (sequence !== state.loadSequence || sucursal !== state.sucursal) return;
+      state.remitos = snapshot.remitos.map(normalizarRemito);
       renderRemitos();
       if (el.estadoCarga) {
         el.estadoCarga.textContent = `Actualizado: ${new Date().toLocaleTimeString("es-AR")}`;
       }
     } catch (err) {
+      if (sequence !== state.loadSequence || sucursal !== state.sucursal) return;
       if (el.estadoCarga) {
-        el.estadoCarga.textContent = `Error: ${err.message}`;
+        el.estadoCarga.textContent = state.remitos.length
+          ? `No se pudo actualizar. Se mantienen los últimos datos disponibles.`
+          : `Error: ${err.message}`;
       }
-      if (el.cardsWrap) {
+      if (el.cardsWrap && !state.remitos.length) {
         el.cardsWrap.innerHTML = `<div class="empty">No se pudo cargar la información.</div>`;
       }
     }
