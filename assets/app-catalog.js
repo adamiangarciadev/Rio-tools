@@ -1,4 +1,5 @@
 window.RioCatalog = [
+  {"slug":"mercaderia-transito-v2","name":"Mercadería en Tránsito v.2","description":"Nueva versión: lectura automática de PDF y seguimiento por sucursal.","area":"Operaciones","areaId":"0","restricted":false},
   {
     "slug": "entrada-mercaderia",
     "name": "Entrada de Mercadería",
