@@ -1,307 +1,62 @@
 ;(() => {
-  "use strict";
-
-  const API_URL = "https://script.google.com/macros/s/AKfycbxdlxNJmR3vF1YyuyDyRB1xU6effURNcPHu40jJzft6N-HCAGN1WrLEsFZnZoLmGPiU/exec";
-
-  const LS_SUCURSAL = "rio_remitos_sucursal";
-  const EXCLUDED_CLIENTS = new Set([
-    "DEPOSITO",
-    "AV2",
-    "AV1",
-    "QUILMES",
-    "CASTELLI",
-    "CORRIENTES",
-    "LAMARCA",
-    "PUEY",
-    "SARMIENTO",
-    "MORENO",
-    "GERENCIA",
-    "37278236",
-    "JOHA"
-
-  ]);
-
-  const el = {
-    sucursalSelect: document.getElementById("sucursalSelect"),
-    searchInput: document.getElementById("searchInput"),
-    btnReload: document.getElementById("btnReload"),
-    btnClearSucursal: document.getElementById("btnClearSucursal"),
-    tableBody: document.getElementById("tableBody"),
-    statusMsg: document.getElementById("statusMsg"),
-    totalVisible: document.getElementById("totalVisible"),
-    currentSucursal: document.getElementById("currentSucursal"),
-    lastUpdate: document.getElementById("lastUpdate")
+ 'use strict';
+ const API='https://hczekjyagyoxdqkzdimd.supabase.co/functions/v1/mt2-web-api';
+ const $=id=>document.getElementById(id);
+ const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const state={branch:'',items:[],offset:0,sequence:0,busy:false,loading:false};
+ async function api(op,data={}){
+  const response=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,op}),signal:AbortSignal.timeout(30000)});
+  const result=await response.json();if(!response.ok||!result.ok)throw Error(result.error||'No se pudo completar la operación');return result;
+ }
+ const status=text=>{$('statusMsg').textContent=text;};
+ function empty(text){$('tableBody').innerHTML='<tr><td colspan="8">'+escape(text)+'</td></tr>';}
+ function render(){
+  if(!state.items.length){empty('No hay remitos pendientes de clientes para estos filtros.');return;}
+  $('tableBody').innerHTML=state.items.map((r,i)=>'<tr>'+
+   ['fecha','remito','desde','cliente','vendedor','total_prendas'].map(k=>'<td>'+escape(r[k])+'</td>').join('')+
+   '<td><span class="badge pending">PENDIENTE</span></td><td class="actions-cell"><div class="row-actions">'+
+   ['FACTURA','CANCELADO'].map(s=>'<button class="btn small '+(s==='FACTURA'?'warn':'danger')+'" data-index="'+i+'" data-state="'+s+'">Afectar a '+s+'</button>').join('')+'</div></td></tr>').join('');
+ }
+ async function load(){
+  if(!state.branch||state.busy)return;
+  const seq=++state.sequence,branch=state.branch;state.loading=true;$('btnReload').disabled=true;
+  status('Consultando remitos de '+branch+'…');
+  try{
+   const data=await api('client_list',{sucursal:branch,offset:state.offset,search:$('searchInput').value.trim()});
+   if(seq!==state.sequence)return;
+   if(state.offset>=data.total&&state.offset>0){state.offset=Math.max(0,Math.floor((data.total-1)/50)*50);return await load();}
+   state.items=data.items;render();$('totalVisible').textContent=String(data.total);
+   $('crcPage').textContent='Página '+(state.offset/50+1)+' · '+data.total+' pendientes';
+   $('crcPrev').disabled=!state.offset;$('crcNext').disabled=!data.has_more;
+   $('lastUpdate').textContent=new Date().toLocaleTimeString('es-AR');status('Remitos desde el 22/09/2026 · Sin límite de antigüedad · '+branch);
+  }catch(e){if(seq===state.sequence)status('No se pudo actualizar. '+e.message);}
+  finally{if(seq===state.sequence){state.loading=false;$('btnReload').disabled=false;}}
+ }
+ async function init(){
+  $('btnClearSucursal').hidden=true;$('btnReload').onclick=load;
+  let timer;$('searchInput').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{state.offset=0;load();},300);};
+  $('crcPrev').onclick=()=>{state.offset=Math.max(0,state.offset-50);load();};
+  $('crcNext').onclick=()=>{state.offset+=50;load();};
+  $('tableBody').onclick=async e=>{
+   const button=e.target.closest('button[data-index]');if(!button||state.busy||state.loading)return;
+   const r=state.items[Number(button.dataset.index)],target=button.dataset.state;
+   if(!r||!confirm('¿Querés marcar el remito '+r.remito+' como '+target+'?'))return;
+   state.busy=true;++state.sequence;$('tableBody').querySelectorAll('button').forEach(b=>b.disabled=true);
+   try{await api('client_action',{sucursal:r.desde,remito:r.remito,version:r.version,estado:target});}
+   catch(e){alert(e.message);}
+   finally{state.busy=false;await load();$('tableBody').querySelectorAll('button').forEach(b=>b.disabled=false);}
   };
-
-  const state = {
-    allItems: [],
-    filteredItems: [],
-    sucursal: "",
-    query: ""
-  };
-
-  document.addEventListener("DOMContentLoaded", init);
-
-  async function init() {
-    bindEvents();
-    await loadSucursales();
-
-    const savedSucursal = localStorage.getItem(LS_SUCURSAL) || "";
-    if (savedSucursal) {
-      el.sucursalSelect.value = savedSucursal;
-      state.sucursal = savedSucursal;
-      updateSucursalInfo();
-      await loadRemitos();
-    } else {
-      renderEmpty("Seleccioná una sucursal para ver los remitos.");
-    }
-  }
-
-  function bindEvents() {
-    el.sucursalSelect.addEventListener("change", async () => {
-      state.sucursal = (el.sucursalSelect.value || "").trim().toUpperCase();
-      if (!state.sucursal) {
-        localStorage.removeItem(LS_SUCURSAL);
-        state.allItems = [];
-        state.filteredItems = [];
-        updateSucursalInfo();
-        renderEmpty("Seleccioná una sucursal para ver los remitos.");
-        return;
-      }
-
-      localStorage.setItem(LS_SUCURSAL, state.sucursal);
-      updateSucursalInfo();
-      await loadRemitos();
-    });
-
-    el.searchInput.addEventListener("input", () => {
-      state.query = (el.searchInput.value || "").trim().toLowerCase();
-      applyFilters();
-    });
-
-    el.btnReload.addEventListener("click", async () => {
-      if (!state.sucursal) return;
-      await loadRemitos();
-    });
-
-    el.btnClearSucursal.addEventListener("click", () => {
-      localStorage.removeItem(LS_SUCURSAL);
-      el.sucursalSelect.value = "";
-      state.sucursal = "";
-      state.allItems = [];
-      state.filteredItems = [];
-      updateSucursalInfo();
-      renderEmpty("Sucursal borrada. Elegí una nueva sucursal.");
-    });
-  }
-
-  async function loadSucursales() {
-    try {
-      setStatus("Cargando sucursales...");
-      const res = await fetch(`${API_URL}?accion=sucursales`);
-      const data = await res.json();
-
-      if (!data.ok) {
-        setStatus("Error al cargar sucursales.");
-        return;
-      }
-
-      const sucursales = data.sucursales || [];
-      el.sucursalSelect.innerHTML = `<option value="">Seleccionar sucursal</option>` +
-        sucursales.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
-
-      setStatus("Sucursales cargadas.");
-    } catch (err) {
-      console.error(err);
-      setStatus("No se pudieron cargar las sucursales.");
-    }
-  }
-
-  async function loadRemitos() {
-    if (!state.sucursal) return;
-
-    try {
-      setStatus(`Cargando remitos de ${state.sucursal}...`);
-      renderEmpty("Cargando...");
-
-      const url = `${API_URL}?accion=listar&sucursal=${encodeURIComponent(state.sucursal)}`;
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (!data.ok) {
-        setStatus(data.error || "Error al cargar remitos.");
-        renderEmpty("No se pudieron cargar los remitos.");
-        return;
-      }
-
-      state.allItems = Array.isArray(data.items) ? data.items : [];
-      applyFilters();
-      setStatus(`Remitos cargados para ${state.sucursal}.`);
-      el.lastUpdate.textContent = new Date().toLocaleTimeString("es-AR");
-    } catch (err) {
-      console.error(err);
-      setStatus("Error de red al cargar remitos.");
-      renderEmpty("Error de red.");
-    }
-  }
-
-  function applyFilters() {
-    const q = state.query;
-
-    state.filteredItems = state.allItems.filter(item => {
-      const cliente = normalize(item.cliente);
-      const estado = normalize(item.estado_web);
-
-      if (EXCLUDED_CLIENTS.has(cliente)) return false;
-      if (estado === "FACTURA" || estado === "CANCELADO") return false;
-
-      if (!q) return true;
-
-      const bucket = [
-        item.fecha,
-        item.remito,
-        item.desde,
-        item.cliente,
-        item.vendedor,
-        item.total_prendas
-      ].join(" ").toLowerCase();
-
-      return bucket.includes(q);
-    });
-
-    renderTable();
-    el.totalVisible.textContent = String(state.filteredItems.length);
-  }
-
-  function renderTable() {
-    if (!state.filteredItems.length) {
-      renderEmpty("No hay remitos visibles para esta sucursal.");
-      return;
-    }
-
-    el.tableBody.innerHTML = state.filteredItems.map(item => {
-      const estado = normalize(item.estado_web);
-      const badge = getBadge(estado);
-
-      return `
-        <tr>
-          <td>${escapeHtml(item.fecha || "")}</td>
-          <td>${escapeHtml(item.remito || "")}</td>
-          <td>${escapeHtml(item.desde || "")}</td>
-          <td>${escapeHtml(item.cliente || "")}</td>
-          <td>${escapeHtml(item.vendedor || "")}</td>
-          <td>${escapeHtml(item.total_prendas || "")}</td>
-          <td>${badge}</td>
-          <td class="actions-cell">
-            <div class="row-actions">
-              <button class="btn small warn" data-remito="${escapeAttr(item.remito)}" data-estado="FACTURA">Afectar a FACTURA</button>
-              <button class="btn small danger" data-remito="${escapeAttr(item.remito)}" data-estado="CANCELADO">Afectar a CANCELADO</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-    bindRowActions();
-  }
-
-  function bindRowActions() {
-    el.tableBody.querySelectorAll("button[data-remito]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const remito = btn.getAttribute("data-remito");
-        const estado = btn.getAttribute("data-estado");
-
-        const ok = confirm(`¿Querés marcar el remito ${remito} como ${estado}?`);
-        if (!ok) return;
-
-        await afectarRemito(remito, estado);
-      });
-    });
-  }
-
-  async function afectarRemito(remito, estado) {
-    try {
-      setStatus(`Actualizando remito ${remito}...`);
-
-      const res = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          accion: "afectar_remito",
-          remito: remito,
-          sucursal: state.sucursal,
-          estado: estado
-        })
-      });
-
-      const data = await res.json();
-
-      if (!data.ok) {
-        alert(data.error || "No se pudo actualizar el remito.");
-        setStatus("Error al actualizar el remito.");
-        return;
-      }
-
-      state.allItems = state.allItems.map(item => {
-        if (String(item.remito) === String(remito) && normalize(item.desde) === normalize(state.sucursal)) {
-          return { ...item, estado_web: estado };
-        }
-        return item;
-      });
-
-      applyFilters();
-      setStatus(`Remito ${remito} afectado como ${estado}.`);
-    } catch (err) {
-      console.error(err);
-      alert("Error de red al actualizar.");
-      setStatus("Error de red al actualizar.");
-    }
-  }
-
-  function renderEmpty(message) {
-    el.tableBody.innerHTML = `
-      <tr>
-        <td colspan="8">${escapeHtml(message)}</td>
-      </tr>
-    `;
-    el.totalVisible.textContent = "0";
-  }
-
-  function updateSucursalInfo() {
-    el.currentSucursal.textContent = state.sucursal || "-";
-  }
-
-  function setStatus(text) {
-    el.statusMsg.textContent = text;
-  }
-
-  function getBadge(estado) {
-    if (estado === "FACTURA") {
-      return `<span class="badge factura">FACTURA</span>`;
-    }
-    if (estado === "CANCELADO") {
-      return `<span class="badge cancelado">CANCELADO</span>`;
-    }
-    return `<span class="badge pending">PENDIENTE</span>`;
-  }
-
-  function normalize(v) {
-    return String(v || "")
-      .trim()
-      .toUpperCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  }
-
-  function escapeHtml(v) {
-    return String(v ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-  }
-
-  function escapeAttr(v) {
-    return escapeHtml(v);
-  }
+  try{
+   const data=await api('client_branches');
+   const select=$('sucursalSelect');select.innerHTML='<option value="">Seleccionar sucursal</option>';
+   data.sucursales.forEach(b=>select.add(new Option(b,b)));
+   const context=window.RioContext?.branch,wanted=context==='AV2'?'AVELLANEDA 2':context;
+   state.branch=data.sucursales.includes(wanted)?wanted:'';
+   select.value=state.branch;select.disabled=true;select.closest('.field').hidden=true;
+   $('currentSucursal').textContent=state.branch||'Sin seleccionar';
+   if(!state.branch){empty('Elegí la sucursal desde el inicio.');status('No hay sucursal seleccionada.');return;}
+   await load();setInterval(()=>{if(!document.hidden&&!state.busy&&!state.loading)load();},30000);
+  }catch(e){empty('No se pudo conectar.');status(e.message);}
+ }
+ document.addEventListener('DOMContentLoaded',init);
 })();
