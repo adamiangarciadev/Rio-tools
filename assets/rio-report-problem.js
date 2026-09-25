@@ -4,7 +4,7 @@
   if (window.RioProblemReporterLoaded) return;
   window.RioProblemReporterLoaded = true;
 
-  const API_URL = "https://script.google.com/macros/s/AKfycbxx3xJHX7dknxN87Sz8ABwZKVUD4UeC64RwXNV7K1sfCnwtNPf4P_bu4W44oAnU5UcVUg/exec";
+  const API_URL = "https://hczekjyagyoxdqkzdimd.supabase.co/functions/v1/incidentes-api";
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const BRANCH_KEYS = [
     "rio_sucursal",

@@ -8,11 +8,13 @@
   const BRANCHES = ["AV2", "NAZCA", "LAMARCA", "CORRIENTES", "CASTELLI", "QUILMES", "SARMIENTO", "DEPÓSITO", "PUEYRREDÓN", "WEB", "ADMINISTRACIÓN"];
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const MAX_FILES = 6;
+  const EMPLOYEE_URLS = ["../../data/legajos-empleados.csv", "../../data/ASISTENCIA_RIO%20-%20PADRON.csv"];
   let tickets = [];
   let selectedFiles = [];
   let mode = "general";
   let equivalences = [];
   let labelItems = [];
+  let employees = new Map();
   let toastTimer;
 
   const $ = (selector) => document.querySelector(selector);
@@ -31,6 +33,7 @@
     bindEvents();
     updateCounters();
     setMode("general");
+    await loadEmployees();
     loadEquivalences();
     await loadTickets();
   }
@@ -60,6 +63,7 @@
     [els.search, els.status, els.areaFilter].forEach(node => node.addEventListener("input", renderTickets));
     els.title.addEventListener("input", updateCounters);
     els.description.addEventListener("input", updateCounters);
+    els.reporter.addEventListener("input", matchReporter);
     els.files.addEventListener("change", event => addFiles(event.target.files));
     ["dragenter", "dragover"].forEach(name => els.dropZone.addEventListener(name, event => { event.preventDefault(); els.dropZone.classList.add("dragging"); }));
     ["dragleave", "drop"].forEach(name => els.dropZone.addEventListener(name, event => { event.preventDefault(); els.dropZone.classList.remove("dragging"); }));
@@ -74,6 +78,66 @@
       $(`#${prefix}Size`).addEventListener("change", () => { if (prefix === "negative") updateNegativeMatch(); });
     });
     $("#addLabelItem").addEventListener("click", addLabelItem);
+  }
+
+  async function loadEmployees() {
+    const combined = new Map();
+    for (const url of EMPLOYEE_URLS) {
+      try {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) continue;
+        parseEmployeeCsv(await response.text()).forEach(employee => {
+          if (!combined.has(employee.code)) combined.set(employee.code, employee);
+        });
+      } catch (error) {
+        console.warn("No se pudo cargar el padrón", url, error);
+      }
+    }
+    employees = combined;
+    const list = $("#employeeCodes");
+    list.innerHTML = [...employees.values()]
+      .sort((a, b) => naturalSort(a.code, b.code))
+      .map(employee => `<option value="${escapeHtml(employee.code)}">${escapeHtml(employee.name)}</option>`)
+      .join("");
+    matchReporter();
+  }
+
+  function parseEmployeeCsv(text) {
+    const lines = String(text || "").replace(/^\uFEFF/, "").split(/\r?\n/).filter(line => line.trim());
+    if (!lines.length) return [];
+    const headers = splitCsvLine(lines.shift()).map(value => normalizeText(value).replaceAll(" ", "_"));
+    return lines.map(line => {
+      const values = splitCsvLine(line);
+      const row = headers.reduce((result, header, index) => ({ ...result, [header]: values[index] || "" }), {});
+      const code = String(row.codigo || row.vendedor_id || row.id || "").trim();
+      const name = [row.apellido_nombre || row.nombre || row.vendedor_nombre || "", row.apellido || ""]
+        .map(value => String(value).trim()).filter(Boolean).join(" ");
+      return { code, name };
+    }).filter(employee => employee.code && employee.name);
+  }
+
+  function splitCsvLine(line) {
+    const values = [];
+    let current = "", quoted = false;
+    for (let index = 0; index < line.length; index += 1) {
+      const char = line[index], next = line[index + 1];
+      if (char === '"' && quoted && next === '"') { current += '"'; index += 1; }
+      else if (char === '"') quoted = !quoted;
+      else if (char === "," && !quoted) { values.push(current); current = ""; }
+      else current += char;
+    }
+    values.push(current);
+    return values;
+  }
+
+  function matchReporter() {
+    const code = els.reporter.value.replace(/\D/g, "").slice(0, 20);
+    if (els.reporter.value !== code) els.reporter.value = code;
+    const hint = $("#reporterMatch");
+    const employee = employees.get(code);
+    hint.className = employee ? "match-ok" : code && employees.size ? "match-error" : "";
+    hint.textContent = employee ? employee.name : code && employees.size ? "Legajo no encontrado en el padrón." : employees.size ? `${employees.size} legajos disponibles.` : "No se pudo cargar el padrón; se aceptará el código ingresado.";
+    return employee;
   }
 
   function setMode(nextMode) {
@@ -219,12 +283,14 @@
     event.preventDefault();
     clearMessage();
     if (!els.branch.value || !els.reporter.value.trim()) return setMessage("Completá la sucursal y el código de colaborador.", "error");
+    const reporter = matchReporter();
+    if (employees.size && !reporter) return setMessage("Ingresá un legajo que figure en el padrón.", "error");
     if (mode === "general" && !els.form.reportValidity()) return setMessage("Completá todos los campos obligatorios.", "error");
     saveBranch();
     els.submit.disabled = true; els.submit.textContent = "Creando…";
     try {
       const attachments = await Promise.all(selectedFiles.map(fileToPayload));
-      const common = { action: "crear", branch: normalizeBranch(els.branch.value), reporterCode: els.reporter.value.trim(), attachments };
+      const common = { action: "crear", branch: normalizeBranch(els.branch.value), reporterCode: els.reporter.value.trim(), reporterName: reporter?.name || "", attachments };
       let created = [];
       if (mode === "labels") created = await createLabelTickets(common);
       else if (mode === "negative") created = [await persistTicket(createNegativePayload(common))];
@@ -299,21 +365,23 @@
   function renderTickets() {
     const query = normalizeText(els.search.value);
     const filtered = tickets.filter(ticket => {
-      const haystack = normalizeText([ticket.id, ticket.title, ticket.description, ticket.reporterCode, ticket.branch, ticket.area].join(" "));
+      const haystack = normalizeText([ticket.id, ticket.title, ticket.description, ticket.reporterCode, ticket.reporterName, ticket.branch, ticket.area].join(" "));
       return (!query || haystack.includes(query)) && (!els.status.value || ticket.status === els.status.value) && (!els.areaFilter.value || ticket.area === els.areaFilter.value);
     });
     els.list.innerHTML = "";
     els.empty.hidden = filtered.length > 0;
     filtered.forEach(ticket => {
       const card = document.createElement("article"); card.className = "ticket-card"; card.dataset.priority = ticket.priority;
-      card.innerHTML = `<span class="priority-line"></span><div class="ticket-main"><div class="ticket-top"><span class="ticket-id">${escapeHtml(ticket.id)}</span><span class="tag">${escapeHtml(ticket.area)}</span></div><h3 class="ticket-title">${escapeHtml(ticket.title)}</h3><div class="ticket-meta"><span>${escapeHtml(ticket.branch)}</span><span>·</span><span>Cód. ${escapeHtml(ticket.reporterCode)}</span><span>·</span><span>${formatDate(ticket.createdAt)}</span>${ticket.attachments?.length ? `<span>· 📎 ${ticket.attachments.length}</span>` : ""}</div></div><span class="status-pill" data-status="${escapeHtml(ticket.status)}">${escapeHtml(ticket.status)}</span>`;
+      const reporterLabel = ticket.reporterName ? `${ticket.reporterName} (#${ticket.reporterCode})` : `Cód. ${ticket.reporterCode}`;
+      card.innerHTML = `<span class="priority-line"></span><div class="ticket-main"><div class="ticket-top"><span class="ticket-id">${escapeHtml(ticket.id)}</span><span class="tag">${escapeHtml(ticket.area)}</span></div><h3 class="ticket-title">${escapeHtml(ticket.title)}</h3><div class="ticket-meta"><span>${escapeHtml(ticket.branch)}</span><span>·</span><span>${escapeHtml(reporterLabel)}</span><span>·</span><span>${formatDate(ticket.createdAt)}</span>${ticket.attachments?.length ? `<span>· 📎 ${ticket.attachments.length}</span>` : ""}</div></div><span class="status-pill" data-status="${escapeHtml(ticket.status)}">${escapeHtml(ticket.status)}</span>`;
       card.addEventListener("click", () => openDetail(ticket)); els.list.appendChild(card);
     });
   }
 
   function openDetail(ticket) {
     const files = (ticket.attachments || []).map(item => `<a href="${escapeHtml(item.url || item.dataUrl || "#")}" target="_blank" rel="noopener">${fileIcon(item)} ${escapeHtml(item.name)}</a>`).join("");
-    els.detail.innerHTML = `<div class="detail-title"><p class="eyebrow">${escapeHtml(ticket.id)}</p><h2>${escapeHtml(ticket.title)}</h2><span class="status-pill" data-status="${escapeHtml(ticket.status)}">${escapeHtml(ticket.status)}</span></div><div class="detail-description">${escapeHtml(ticket.description)}</div><div class="detail-grid"><div class="detail-field"><span>Sucursal</span><strong>${escapeHtml(ticket.branch)}</strong></div><div class="detail-field"><span>Área</span><strong>${escapeHtml(ticket.area)}</strong></div><div class="detail-field"><span>Prioridad</span><strong>${escapeHtml(ticket.priority)}</strong></div><div class="detail-field"><span>Reportó</span><strong>Cód. ${escapeHtml(ticket.reporterCode)}</strong></div><div class="detail-field"><span>Creado</span><strong>${formatDate(ticket.createdAt)}</strong></div><div class="detail-field"><span>Última actualización</span><strong>${formatDate(ticket.updatedAt)}</strong></div></div>${files ? `<h3>Adjuntos</h3><div class="detail-attachments">${files}</div>` : ""}`;
+    const reporterLabel = ticket.reporterName ? `${ticket.reporterName} (#${ticket.reporterCode})` : `Cód. ${ticket.reporterCode}`;
+    els.detail.innerHTML = `<div class="detail-title"><p class="eyebrow">${escapeHtml(ticket.id)}</p><h2>${escapeHtml(ticket.title)}</h2><span class="status-pill" data-status="${escapeHtml(ticket.status)}">${escapeHtml(ticket.status)}</span></div><div class="detail-description">${escapeHtml(ticket.description)}</div><div class="detail-grid"><div class="detail-field"><span>Sucursal</span><strong>${escapeHtml(ticket.branch)}</strong></div><div class="detail-field"><span>Área</span><strong>${escapeHtml(ticket.area)}</strong></div><div class="detail-field"><span>Prioridad</span><strong>${escapeHtml(ticket.priority)}</strong></div><div class="detail-field"><span>Reportó</span><strong>${escapeHtml(reporterLabel)}</strong></div><div class="detail-field"><span>Creado</span><strong>${formatDate(ticket.createdAt)}</strong></div><div class="detail-field"><span>Última actualización</span><strong>${formatDate(ticket.updatedAt)}</strong></div></div>${files ? `<h3>Adjuntos</h3><div class="detail-attachments">${files}</div>` : ""}`;
     els.dialog.showModal();
   }
 
@@ -338,7 +406,7 @@
   function resetForm(preserveMessage = false) {
     const branch = els.branch.value; els.form.reset(); els.branch.value = branch; els.priority.value = "Media";
     labelItems = []; renderLabelItems(); updateBajasCount(); updateNegativeMatch();
-    selectedFiles = []; renderSelectedFiles(); updateCounters(); if (!preserveMessage) clearMessage();
+    selectedFiles = []; renderSelectedFiles(); updateCounters(); matchReporter(); if (!preserveMessage) clearMessage();
   }
   function readLocal() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); } catch { return []; } }
   function saveLocal() { localStorage.setItem(STORE_KEY, JSON.stringify(tickets)); }

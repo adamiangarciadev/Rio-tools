@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#FF5F5C">
   <title>Incidentes · RIO Tools</title>
-  <link rel="stylesheet" href="styles.css?v=26de244bb8">
+  <link rel="stylesheet" href="styles.css?v=1521f66665">
     <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
-  <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
+  <link rel="stylesheet" href="../../assets/app-shell.css?v=5ec76f62d6" />
   <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="../../assets/rio-identity.css?v=c9458779b8" />
+  <link rel="stylesheet" href="../../assets/rio-identity.css?v=881ead61e6" />
 <script src="../../assets/rio-access.js?v=935accae1e"></script>
-<script src="../../assets/rio-context.js?v=cd7fc2e406"></script>
-<link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
+<script src="../../assets/rio-context.js?v=7c68f538e7"></script>
+<link rel="stylesheet" href="../../assets/rio-context.css?v=dc13656472">
 </head>
 <body class="rio-app" data-rio-app="incidentes">
   <header class="topbar module-topbar">
@@ -48,7 +48,9 @@
           <div class="form-grid">
             <label class="field field--full">
               <span>Código de colaborador <b>*</b></span>
-              <input id="reporterCode" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Ej: 247" required>
+              <input id="reporterCode" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Ej: 247" list="employeeCodes" required>
+              <datalist id="employeeCodes"></datalist>
+              <small id="reporterMatch">Cargando padrón de empleados…</small>
             </label>
           </div>
 
@@ -156,10 +158,10 @@
   </dialog>
   <div id="toast" class="toast" role="status"></div>
 
-  <script src="api-config.js?v=8235a15985"></script>
-  <script src="app.js?v=8e1cbd7435"></script>
-  <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>
-  <script src="../../assets/app-catalog.js?v=e3275bc34d"></script>
-  <script src="../../assets/app-shell.js?v=420f7666a0"></script>
+  <script src="api-config.js?v=b2c9101fa2"></script>
+  <script src="app.js?v=088f3c7c66"></script>
+  <script src="../../assets/rio-report-problem.js?v=3824aec97a"></script>
+  <script src="../../assets/app-catalog.js?v=01f4c50ba3"></script>
+  <script src="../../assets/app-shell.js?v=a8d9a0da22"></script>
 </body>
 </html>
