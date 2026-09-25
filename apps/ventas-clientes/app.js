@@ -1165,9 +1165,13 @@
 
   function formatDateShort(value) {
     if (!value) return "-";
-    const date = new Date(value);
+    const text = String(value).trim();
+    const dateOnly = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const date = dateOnly
+      ? new Date(Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])))
+      : new Date(value);
     if (Number.isNaN(date.getTime())) return String(value);
-    return new Intl.DateTimeFormat("es-AR").format(date);
+    return new Intl.DateTimeFormat("es-AR", dateOnly ? { timeZone: "UTC" } : undefined).format(date);
   }
 
   function formatDateTime(value) {
