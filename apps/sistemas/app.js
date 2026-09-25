@@ -3,7 +3,7 @@
   const API_URL = String(window.RIO_INCIDENTES_API_URL || "").trim();
   const STORE_KEY = "rio_incidentes_v1";
   let tickets = [], selected = null, assignee = null;
-  const PADRON_URL = "../../data/ASISTENCIA_RIO%20-%20PADRON.csv";
+  const PADRON_URLS = ["../../data/legajos-empleados.csv", "../../data/ASISTENCIA_RIO%20-%20PADRON.csv"];
   const padron = new Map();
   const $ = s => document.querySelector(s);
   const els = { rows:$("#ticketRows"), empty:$("#emptyState"), count:$("#resultCount"), search:$("#searchInput"), status:$("#statusFilter"), branch:$("#branchFilter"), priority:$("#priorityFilter"), dialog:$("#ticketDialog"), badge:$("#connectionBadge") };
@@ -15,7 +15,7 @@
     $("#saveButton").addEventListener("click",saveTracking);
     $("#detailAssigneeCode").addEventListener("input",matchAssignee);
   }
-  async function loadPadron(){try{const response=await fetch(PADRON_URL,{cache:"no-store"});if(!response.ok)throw new Error("Padrón no disponible");const lines=(await response.text()).replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean);const headers=parseCsvLine(lines.shift()).map(norm);const idIndex=headers.indexOf("vendedor_id"),nameIndex=headers.indexOf("apellido_nombre"),branchIndex=headers.indexOf("sucursal_base"),roleIndex=headers.indexOf("rol");lines.forEach(line=>{const cols=parseCsvLine(line);const code=String(cols[idIndex]||"").trim();if(code)padron.set(code,{code,name:String(cols[nameIndex]||"").trim(),branch:String(cols[branchIndex]||"").trim(),role:String(cols[roleIndex]||"").trim()})})}catch(error){console.error(error)}}
+  async function loadPadron(){for(const url of PADRON_URLS){try{const response=await fetch(url,{cache:"no-store"});if(!response.ok)continue;const lines=(await response.text()).replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean);const headers=parseCsvLine(lines.shift()).map(norm);const idIndex=["codigo","vendedor_id","id"].map(x=>headers.indexOf(x)).find(x=>x>=0),nameIndex=["nombre","apellido_nombre","vendedor_nombre"].map(x=>headers.indexOf(x)).find(x=>x>=0),lastNameIndex=headers.indexOf("apellido"),branchIndex=headers.indexOf("sucursal_base"),roleIndex=headers.indexOf("rol");lines.forEach(line=>{const cols=parseCsvLine(line),code=String(cols[idIndex]||"").trim(),name=[cols[nameIndex],lastNameIndex>=0?cols[lastNameIndex]:""].map(x=>String(x||"").trim()).filter(Boolean).join(" ");if(code&&name&&!padron.has(code))padron.set(code,{code,name,branch:branchIndex>=0?String(cols[branchIndex]||"").trim():"",role:roleIndex>=0?String(cols[roleIndex]||"").trim():""})})}catch(error){console.error(error)}}}
   function parseCsvLine(line){const result=[];let value="",quoted=false;for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'&&quoted&&line[i+1]==='"'){value+='"';i++}else if(char==='"'){quoted=!quoted}else if(char===','&&!quoted){result.push(value);value=""}else value+=char}result.push(value);return result}
   async function loadTickets(){
     try{

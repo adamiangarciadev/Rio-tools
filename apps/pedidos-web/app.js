@@ -50,6 +50,7 @@
   const LS_WHATSAPP_PEDIDOS = 'rio_pedidos_whatsapp_v1';
   const CLAVE_EDICION_ENVIO_RETIRO_LOCAL = 'RIO2026';
   const PADRON_URLS = [
+    '../../data/legajos-empleados.csv',
     '../../data/ASISTENCIA_RIO%20-%20PADRON.csv',
     '../asistencia/ASISTENCIA_RIO%20-%20PADRON.csv',
   ];
@@ -251,33 +252,32 @@
   }
 
   async function cargarPadronUsuarios_() {
+    const map = new Map();
     for (const url of PADRON_URLS) {
       try {
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) continue;
         const text = await res.text();
         const rows = parseCsv_(text);
-        const map = new Map();
 
         rows.forEach((row) => {
           const codigo = String(row.vendedor_id || row.id || row.codigo || '')
             .trim();
-          const nombre = String(
+          const nombre = [
             row.apellido_nombre || row.nombre || row.vendedor_nombre || '',
-          ).trim();
-          if (codigo && nombre) map.set(codigo, nombre);
+            row.apellido || '',
+          ].map((value) => String(value).trim()).filter(Boolean).join(' ');
+          // El primer padrón es el reporte vigente; los siguientes solo completan
+          // legajos históricos que todavía pueden aparecer en pedidos anteriores.
+          if (codigo && nombre && !map.has(codigo)) map.set(codigo, nombre);
         });
-
-        if (map.size) {
-          PADRON_USUARIOS = map;
-          console.info(`[RIO] Padron usuarios cargado: ${map.size}`);
-          return true;
-        }
       } catch (err) {
         console.warn('[RIO] No se pudo cargar padron desde', url, err);
       }
     }
-    return false;
+    PADRON_USUARIOS = map;
+    if (map.size) console.info(`[RIO] Padron usuarios cargado: ${map.size}`);
+    return map.size > 0;
   }
 
   function parseCsv_(text) {

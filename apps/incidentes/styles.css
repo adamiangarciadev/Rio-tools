@@ -6,3 +6,4 @@
 
 /* Workspace redesign: incidentes */
 .rio-app .workspace-grid{gap:24px}.rio-app .field>span{color:var(--rio-text)}.rio-app .drop-zone{background:#f7f3fc;border-color:#bba6dc}.rio-app .ticket-card{background:#fff;border-color:var(--rio-border)}.rio-app .quick-action small{font-size:11px;white-space:normal}.rio-app .quick-action strong{white-space:normal}.rio-app .workflow-panel{background:#f7f3fc}.rio-app .eyebrow{display:none}.rio-app .connection-badge.online{background:#e5f4eb;color:#266b46}.rio-app .quick-actions{gap:10px}@media(max-width:1250px){.rio-app .workspace-grid{grid-template-columns:1fr}.rio-app .form-panel{position:static}}
+.field small.match-ok{color:var(--ok);font-weight:700}.field small.match-error{color:var(--danger);font-weight:700}
