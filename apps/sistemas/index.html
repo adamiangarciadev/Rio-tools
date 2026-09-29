@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#FF5F5C">
   <title>Gestión de incidentes · RIO Tools</title>
-  <link rel="stylesheet" href="styles.css?v=f6ce948db6">
+  <link rel="stylesheet" href="styles.css?v=pedidos-laterales-1">
   <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
   <link rel="stylesheet" href="../../assets/app-shell.css?v=5ec76f62d6" />
   <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
@@ -42,16 +42,30 @@
       <label><span>Prioridad</span><select id="priorityFilter"><option value="">Todas</option><option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option></select></label>
     </section>
 
-    <section class="panel">
+    <div class="work-layout">
+    <section class="panel incidents-panel">
       <div class="section-title"><div><p class="eyebrow">BANDEJA DE TRABAJO</p><h2>Incidentes recibidos</h2></div><span id="resultCount">0 incidentes</span></div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Incidente</th><th>Sucursal</th><th>Prioridad</th><th>Estado</th><th>Responsable</th><th>Actualizado</th></tr></thead>
           <tbody id="ticketRows"></tbody>
         </table>
-        <div id="emptyState" class="empty" hidden>No hay incidentes con estos filtros.</div>
+        <div id="emptyState" class="empty" hidden>No hay incidentes generales con estos filtros.</div>
       </div>
     </section>
+      <aside class="request-sidebar" aria-label="Pedidos operativos">
+        <section class="request-panel request-panel--labels">
+          <div class="request-heading"><div><span class="request-icon" aria-hidden="true">🏷</span><h2>Pedidos de etiquetas</h2></div><strong id="labelRequestCount" class="request-count">0</strong></div>
+          <div id="labelRequestGroups" class="request-groups"></div>
+          <p id="labelRequestEmpty" class="request-empty">No hay pedidos de etiquetas con estos filtros.</p>
+        </section>
+        <section class="request-panel request-panel--removals">
+          <div class="request-heading"><div><span class="request-icon" aria-hidden="true">−</span><h2>Bajas</h2></div><strong id="removalRequestCount" class="request-count">0</strong></div>
+          <div id="removalRequestGroups" class="request-groups"></div>
+          <p id="removalRequestEmpty" class="request-empty">No hay bajas con estos filtros.</p>
+        </section>
+      </aside>
+    </div>
   </main>
 
   <dialog id="ticketDialog">
@@ -74,7 +88,7 @@
   </dialog>
 
   <script src="../incidentes/api-config.js?v=b2c9101fa2"></script>
-  <script src="app.js?v=c056f5da0d"></script>
+  <script src="app.js?v=ocultar-resueltos-2"></script>
   <script src="../../assets/rio-report-problem.js?v=3824aec97a"></script>
   <script src="../../assets/app-catalog.js?v=01f4c50ba3"></script>
   <script src="../../assets/app-shell.js?v=a8d9a0da22"></script>
