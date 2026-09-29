@@ -5,3 +5,19 @@ small.match-ok{color:#228168}small.match-error{color:var(--danger)}
 
 /* Workspace redesign: sistemas */
 .rio-app .metrics{gap:20px}.rio-app .filters{padding:22px;gap:18px}.rio-app .panel{margin-top:22px}.rio-app .section-title{padding:22px}.rio-app .management-grid{gap:18px}.rio-app .eyebrow{display:none}
+
+/* Pedidos operativos separados de la bandeja general */
+.work-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,390px);gap:18px;align-items:start}
+.work-layout .panel{margin-top:0}.incidents-panel{min-width:0}
+.request-sidebar{display:grid;gap:16px;position:sticky;top:18px;max-height:calc(100vh - 36px);overflow-y:auto;padding-right:3px}
+.request-panel{border:1px solid;border-radius:16px;padding:16px;color:#172331;box-shadow:0 8px 24px rgba(18,24,32,.08)}
+.request-panel--labels{background:#eaf4ff;border-color:#aed2f4}.request-panel--removals{background:#fff0ef;border-color:#efbab5}
+.request-heading,.request-heading>div,.branch-heading,.request-card__top{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.request-heading{margin-bottom:14px}.request-heading h2{font-size:18px;margin:0}.request-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#fff9;font-weight:900}
+.request-count,.branch-heading span{display:grid;place-items:center;min-width:28px;height:28px;padding:0 8px;border-radius:999px;background:#fff;font-size:13px}
+.request-groups{display:grid;gap:14px}.branch-group{display:grid;gap:7px}.branch-heading{padding:0 2px}.branch-heading h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.06em}.branch-heading span{min-width:22px;height:22px;font-size:11px}
+.request-card{width:100%;display:grid;gap:6px;text-align:left;border:1px solid #fff;background:#fffc;border-radius:11px;padding:11px;color:inherit;font:inherit;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+.request-card:hover{transform:translateY(-1px);box-shadow:0 6px 15px rgba(18,24,32,.1)}.request-card:focus-visible{outline:3px solid #328bd6;outline-offset:2px}.request-card__top b{font-size:11px}.request-card>strong{font-size:13px;line-height:1.35}.request-card small{color:#647180;font-size:11px}.request-status{border:1px solid currentColor;border-radius:999px;padding:3px 7px;font-size:10px}
+.request-empty{margin:0;padding:18px 6px;text-align:center;color:#647180;font-size:13px}.request-empty[hidden]{display:none}
+@media(max-width:1100px){.work-layout{grid-template-columns:1fr}.request-sidebar{position:static;grid-template-columns:1fr 1fr;max-height:none;overflow:visible;padding:0;grid-row:1}.incidents-panel{grid-row:2}}
+@media(max-width:680px){.request-sidebar{grid-template-columns:1fr}.work-layout{gap:14px}}
