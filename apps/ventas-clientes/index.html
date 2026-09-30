@@ -22,7 +22,7 @@
 <script src="../../assets/rio-access.js?v=935accae1e" data-require-supervision="true"></script>
 <script src="../../assets/rio-context.js?v=cd7fc2e406"></script>
 <link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
-<link rel="stylesheet" href="workspace.css?v=b451f24189">
+<link rel="stylesheet" href="workspace.css?v=dc590147ab">
 </head>
 <body class="rio-app" data-rio-app="ventas-clientes">
   <header class="container module-topbar">
@@ -134,12 +134,12 @@
                     <span>Sel.</span>
                   </label>
                 </th>
-                <th>Cliente</th>
-                <th>Contacto</th>
-                <th>Sucursal</th>
-                <th>Segmento</th>
-                <th>Total periodo</th>
-                <th>Ultima compra</th>
+                <th data-sort-column="name" aria-sort="none"><span class="column-heading">Cliente<button class="sort-vector" type="button" data-column-sort="name" aria-label="Ordenar por cliente"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6l3-3 3 3M11 10l-3 3-3-3"/></svg></button></span></th>
+                <th data-sort-column="contact" aria-sort="none"><span class="column-heading">Contacto<button class="sort-vector" type="button" data-column-sort="contact" aria-label="Ordenar por contacto"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6l3-3 3 3M11 10l-3 3-3-3"/></svg></button></span></th>
+                <th data-sort-column="branch" aria-sort="none"><span class="column-heading">Sucursal<button class="sort-vector" type="button" data-column-sort="branch" aria-label="Ordenar por sucursal"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6l3-3 3 3M11 10l-3 3-3-3"/></svg></button></span></th>
+                <th data-sort-column="segment" aria-sort="none"><span class="column-heading">Segmento<button class="sort-vector" type="button" data-column-sort="segment" aria-label="Ordenar por segmento"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6l3-3 3 3M11 10l-3 3-3-3"/></svg></button></span></th>
+                <th data-sort-column="periodTotal" aria-sort="descending"><span class="column-heading">Total periodo<button class="sort-vector active" type="button" data-column-sort="periodTotal" aria-label="Ordenar total del periodo en forma ascendente"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6l3-3 3 3M11 10l-3 3-3-3"/></svg></button></span></th>
+                <th data-sort-column="lastPurchase" aria-sort="none"><span class="column-heading">Ultima compra<button class="sort-vector" type="button" data-column-sort="lastPurchase" aria-label="Ordenar por ultima compra"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6l3-3 3 3M11 10l-3 3-3-3"/></svg></button></span></th>
               </tr>
             </thead>
             <tbody id="clientRows">
@@ -234,7 +234,7 @@
   </template>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="api-config.js?v=ff715bf1c8"></script>
-  <script src="app.js?v=ae8407f9d1"></script>
+  <script src="app.js?v=91cd625e47"></script>
   <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>
   <script src="../../assets/app-catalog.js?v=e3275bc34d"></script>
   <script src="../../assets/app-shell.js?v=420f7666a0"></script>
