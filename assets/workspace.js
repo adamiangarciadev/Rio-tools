@@ -32,12 +32,12 @@
       const row=document.createElement('div');row.className='tool-row';link.before(row);row.append(link);
       const name=link.querySelector('.item-title').textContent.trim(), id=link.getAttribute('href');
       const fav=document.createElement('button');fav.className='favorite-button';fav.type='button';fav.innerHTML=icon('star');row.append(fav);
-      const tool={link,row,fav,name,id,cat,text:normalize(name+' '+link.querySelector('.item-desc').textContent+' '+cat.name)};tools.push(tool);
+      const tool={link,row,fav,name,id,cat,restricted:cat.restricted||link.hasAttribute('data-supervision-access'),text:normalize(name+' '+link.querySelector('.item-desc').textContent+' '+cat.name)};tools.push(tool);
       fav.addEventListener('click',()=>{const exists=favorites.includes(id);favorites=exists?favorites.filter(x=>x!==id):[...favorites,id];const persisted=save('rio_workspace_favorites',favorites);render();toast(persisted?(exists?'Quitada de tus favoritos':'Guardada en tus favoritos'):'Favorito actualizado para esta visita; el navegador no permite guardarlo.');});
     });
   });
   function normalize(text){return text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
-  const accessible=tool=>window.RioContext.canUse({slug:tool.id.split('/').filter(Boolean).pop(),restricted:tool.cat.restricted});
+  const accessible=tool=>window.RioContext.canUse({slug:tool.id.split('/').filter(Boolean).pop(),restricted:tool.restricted});
   function makeFilter(cat, container, sidebar){const button=document.createElement('button');button.type='button';button.className=sidebar?'nav-button':'filter';button.dataset.area=cat.id;button.innerHTML=(sidebar?icon(cat.icon):'');button.append(document.createTextNode(cat.name));if(cat.restricted)button.setAttribute('data-supervision-access','');button.addEventListener('click',()=>{area=cat.id;mode='all';$('toolSearch').value='';render();window.scrollTo({top:0,behavior:'instant'});});container.append(button);}
   makeFilter({id:'all',name:'Todas'},$('filters'),false);
   categories.forEach(cat=>{makeFilter(cat,$('filters'),false);makeFilter(cat,$('areaNav'),true);});

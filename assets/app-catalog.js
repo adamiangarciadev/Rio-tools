@@ -1,4 +1,5 @@
 window.RioCatalog = [
+  {"slug":"confirmar-remitos","name":"Confirmar remitos","description":"Cierre de varios remitos con filtros por fecha y sucursal.","area":"Sistemas","areaId":"4","restricted":true},
   {"slug":"mercaderia-transito-v2","name":"Mercadería en Tránsito","description":"Lectura automática de PDF y seguimiento por sucursal.","area":"Operaciones","areaId":"0","restricted":false},
   {
     "slug": "entrada-mercaderia",
@@ -132,8 +133,8 @@ window.RioCatalog = [
     "slug": "margenes",
     "name": "Márgenes",
     "description": "Dashboard interactivo de ventas, costos, ganancias, sucursales y proveedores.",
-    "area": "Supervisores",
-    "areaId": "5",
+    "area": "Sistemas",
+    "areaId": "4",
     "restricted": true
   },
   {
@@ -164,16 +165,16 @@ window.RioCatalog = [
     "slug": "sistemas",
     "name": "Gestión de Incidentes",
     "description": "Recepción, asignación y seguimiento de incidentes reportados por los locales.",
-    "area": "Supervisores",
-    "areaId": "5",
+    "area": "Sistemas",
+    "areaId": "4",
     "restricted": true
   },
   {
     "slug": "remitos-deposito",
     "name": "Remitos Depósito",
     "description": "Carga manual, numeración por cliente e historial de remitos.",
-    "area": "Supervisores",
-    "areaId": "5",
+    "area": "Sistemas",
+    "areaId": "4",
     "restricted": true
   },
   {
