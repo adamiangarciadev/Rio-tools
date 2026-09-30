@@ -2,6 +2,10 @@
   "use strict";
 
   const API_URL = window.VENTAS_CLIENTES_API_URL || "";
+  const CACHE_DB_NAME = "rio-ventas-clientes";
+  const CACHE_DB_VERSION = 1;
+  const CACHE_STORE = "data";
+  const DASHBOARD_CACHE_KEY = "dashboard";
   const PERIOD_LABELS = {
     month: "Mes base",
     last3: "Ultimos 3 meses",
@@ -56,7 +60,9 @@
   const state = {
     loading: false,
     apiOk: false,
+    usingCache: false,
     sort: "periodTotal",
+    sortDirection: "desc",
     selectedClientId: "",
     selectedClients: new Set(),
     dashboard: {
@@ -79,9 +85,11 @@
 
   init();
 
-  function init() {
+  async function init() {
     bindEvents();
-    checkApi().finally(loadDashboard);
+    const restored = await restoreDashboardCache();
+    await checkApi(restored);
+    if (!restored) await loadDashboard();
   }
 
   function bindEvents() {
@@ -130,7 +138,20 @@
     $$("[data-sort]").forEach((button) => {
       button.addEventListener("click", () => {
         state.sort = button.dataset.sort || "periodTotal";
+        state.sortDirection = "desc";
         $$("[data-sort]").forEach((item) => item.classList.toggle("active", item === button));
+        renderClients();
+      });
+    });
+
+    $$("[data-column-sort]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const nextSort = button.dataset.columnSort || "periodTotal";
+        state.sortDirection = state.sort === nextSort
+          ? (state.sortDirection === "asc" ? "desc" : "asc")
+          : getDefaultSortDirection(nextSort);
+        state.sort = nextSort;
+        $$("[data-sort]").forEach((item) => item.classList.remove("active"));
         renderClients();
       });
     });
@@ -166,6 +187,11 @@
         sucursales: Array.isArray(data.sucursales) ? data.sucursales : [],
         meses: Array.isArray(data.meses) ? data.meses : []
       };
+      state.usingCache = false;
+      await cacheSet(DASHBOARD_CACHE_KEY, {
+        savedAt: Date.now(),
+        dashboard: state.dashboard
+      });
 
       populateFilters();
       setDefaultDateRange();
@@ -186,18 +212,24 @@
       el.sourceBadge.textContent = "Datos no disponibles";
       el.sourceBadge.dataset.state = "error";
       el.statusText.textContent = error.message || "No se pudo conectar con la API.";
-      renderEmpty(error.message || "Falta configurar la API publicada de ventas por cliente.");
+      if (state.dashboard.clientes.length) {
+        el.sourceBadge.textContent = "Cache del navegador";
+        el.sourceBadge.dataset.state = "ok";
+        el.statusText.textContent = "No se pudo actualizar. Se mantienen los datos guardados en este navegador.";
+      } else {
+        renderEmpty(error.message || "Falta configurar la API publicada de ventas por cliente.");
+      }
     } finally {
       state.loading = false;
       setBusy(false);
     }
   }
 
-  async function checkApi() {
+  async function checkApi(silent = false) {
     try {
       el.apiBadge.textContent = "Probando API";
       el.apiBadge.dataset.state = "loading";
-      el.statusText.textContent = "Probando conexion con la Web App...";
+      if (!silent) el.statusText.textContent = "Probando conexion con la Web App...";
 
       const data = await apiGet("ping");
       if (!data.ok) throw new Error(data.error || "La API respondio con error.");
@@ -205,13 +237,42 @@
       state.apiOk = true;
       el.apiBadge.textContent = "API activa";
       el.apiBadge.dataset.state = "ok";
-      el.statusText.textContent = `API activa: ${data.app || "ventas-clientes"} · ${formatDateTime(data.ts)}`;
+      if (!silent) el.statusText.textContent = `API activa: ${data.app || "ventas-clientes"} · ${formatDateTime(data.ts)}`;
       return true;
     } catch (error) {
       state.apiOk = false;
       el.apiBadge.textContent = "API no disponible";
       el.apiBadge.dataset.state = "error";
-      el.statusText.textContent = error.message || "No se pudo consultar la API.";
+      if (!silent) el.statusText.textContent = error.message || "No se pudo consultar la API.";
+      return false;
+    }
+  }
+
+  async function restoreDashboardCache() {
+    try {
+      const cached = await cacheGet(DASHBOARD_CACHE_KEY);
+      if (!cached?.dashboard || !Array.isArray(cached.dashboard.clientes)) return false;
+
+      state.dashboard = {
+        meta: cached.dashboard.meta || {},
+        clientes: normalizeClients(cached.dashboard.clientes),
+        sucursales: Array.isArray(cached.dashboard.sucursales) ? cached.dashboard.sucursales : [],
+        meses: Array.isArray(cached.dashboard.meses) ? cached.dashboard.meses : []
+      };
+      state.usingCache = true;
+      populateFilters();
+      setDefaultDateRange();
+      if (!state.selectedClientId && state.dashboard.clientes.length) {
+        state.selectedClientId = state.dashboard.clientes[0].clienteId;
+      }
+      render();
+      el.sourceBadge.textContent = "Cache del navegador";
+      el.sourceBadge.dataset.state = "ok";
+      const savedAt = cached.savedAt ? formatDateTime(new Date(cached.savedAt).toISOString()) : "fecha desconocida";
+      el.statusText.textContent = `Base guardada en este navegador (${savedAt}). Usa Actualizar cuando quieras traer cambios.`;
+      return true;
+    } catch (error) {
+      console.warn("No se pudo leer el cache local de ventas-clientes.", error);
       return false;
     }
   }
@@ -359,7 +420,7 @@
       el.apiBadge.textContent = "API activa";
       el.apiBadge.dataset.state = "ok";
     }
-    el.sourceBadge.textContent = meta.totalFilas ? "Base historica" : "Sin datos";
+    el.sourceBadge.textContent = state.usingCache ? "Cache del navegador" : (meta.totalFilas ? "Base historica" : "Sin datos");
     el.sourceBadge.dataset.state = meta.totalFilas ? "ok" : "empty";
     if (state.range.active) {
       el.statusText.textContent = `${formatNumber(visible.length)} clientes compraron entre ${state.range.desde} y ${state.range.hasta}. Total rango: ${formatMoney(state.range.meta.totalRango || sumClientRangeTotal(visible))}.`;
@@ -376,13 +437,14 @@
 
   function renderClients(preset) {
     const clients = preset || getVisibleClients();
+    const direction = state.sortDirection === "asc" ? 1 : -1;
     const sorted = [...clients].sort((a, b) => {
-      const av = getSortValue(a);
-      const bv = getSortValue(b);
-      return bv - av || String(a.nombre || "").localeCompare(String(b.nombre || ""), "es");
+      const comparison = compareSortValues(getSortValue(a), getSortValue(b));
+      return comparison * direction || compareText(a.nombre, b.nombre);
     });
 
-    el.rankingSubtitle.textContent = `${formatNumber(sorted.length)} clientes visibles, ordenados por ${getSortLabel()}.`;
+    updateSortHeaders();
+    el.rankingSubtitle.textContent = `${formatNumber(sorted.length)} clientes visibles, ordenados por ${getSortLabel()} (${state.sortDirection === "asc" ? "ascendente" : "descendente"}).`;
     el.clientRows.innerHTML = "";
 
     if (!sorted.length) {
@@ -516,8 +578,51 @@
 
   function getSortValue(client) {
     if (state.sort === "frequencyScore") return Number(client.frequencyScore || 0);
-    if (state.sort === "lastPurchaseTs") return Number(client.lastPurchaseTs || 0);
+    if (state.sort === "lastPurchaseTs" || state.sort === "lastPurchase") return getClientLastPurchaseTs(client);
+    if (state.sort === "name") return client.nombre || "";
+    if (state.sort === "contact") return cleanPhone(client.telefonoMovil) || cleanPhone(client.telefono) || "";
+    if (state.sort === "branch") return state.range.active
+      ? ((client.sucursalesRango || []).join(", ") || client.sucursalPrincipal || "")
+      : (client.sucursalPrincipal || "");
+    if (state.sort === "segment") return client.segmento || "";
     return getPeriodTotal(client);
+  }
+
+  function getClientLastPurchaseTs(client) {
+    if (state.range.active) return Date.parse(client.ultimaCompraRango || "") || 0;
+    return Number(client.lastPurchaseTs || Date.parse(client.ultimaCompra || "") || 0);
+  }
+
+  function compareSortValues(a, b) {
+    if (typeof a === "number" && typeof b === "number") return a - b;
+    return compareText(a, b);
+  }
+
+  function compareText(a, b) {
+    return String(a || "").localeCompare(String(b || ""), "es", {
+      sensitivity: "base",
+      numeric: true
+    });
+  }
+
+  function getDefaultSortDirection(sort) {
+    return sort === "periodTotal" || sort === "lastPurchase" || sort === "lastPurchaseTs" ? "desc" : "asc";
+  }
+
+  function updateSortHeaders() {
+    $$("[data-sort-column]").forEach((header) => {
+      const active = header.dataset.sortColumn === state.sort;
+      const button = header.querySelector("[data-column-sort]");
+      header.setAttribute("aria-sort", active ? (state.sortDirection === "asc" ? "ascending" : "descending") : "none");
+      button?.classList.toggle("active", active);
+      if (button) {
+        button.dataset.direction = active ? state.sortDirection : "none";
+        const label = header.firstChild?.textContent?.trim() || "esta columna";
+        button.setAttribute("aria-label", active
+          ? `Ordenar ${label} en forma ${state.sortDirection === "asc" ? "descendente" : "ascendente"}`
+          : `Ordenar por ${label}`);
+      }
+    });
   }
 
   function setDefaultDateRange() {
@@ -670,8 +775,12 @@
 
   function getSortLabel() {
     if (state.sort === "frequencyScore") return "frecuencia";
-    if (state.sort === "lastPurchaseTs") return "compra reciente";
-    return "venta";
+    if (state.sort === "lastPurchaseTs" || state.sort === "lastPurchase") return "ultima compra";
+    if (state.sort === "name") return "cliente";
+    if (state.sort === "contact") return "contacto";
+    if (state.sort === "branch") return "sucursal";
+    if (state.sort === "segment") return "segmento";
+    return "total del periodo";
   }
 
   function normalizeClients(clients) {
@@ -1218,6 +1327,52 @@
     if (value.includes("espaciado") && value.includes("alto")) return "espaciado-alto";
     if (value.includes("inactivo")) return "inactivo";
     return "base";
+  }
+
+  function openCacheDb() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        reject(new Error("IndexedDB no esta disponible."));
+        return;
+      }
+      const request = window.indexedDB.open(CACHE_DB_NAME, CACHE_DB_VERSION);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(CACHE_STORE)) db.createObjectStore(CACHE_STORE);
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("No se pudo abrir el cache."));
+    });
+  }
+
+  async function cacheGet(key) {
+    const db = await openCacheDb();
+    try {
+      return await new Promise((resolve, reject) => {
+        const request = db.transaction(CACHE_STORE, "readonly").objectStore(CACHE_STORE).get(key);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error("No se pudo leer el cache."));
+      });
+    } finally {
+      db.close();
+    }
+  }
+
+  async function cacheSet(key, value) {
+    try {
+      const db = await openCacheDb();
+      try {
+        await new Promise((resolve, reject) => {
+          const request = db.transaction(CACHE_STORE, "readwrite").objectStore(CACHE_STORE).put(value, key);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error || new Error("No se pudo guardar el cache."));
+        });
+      } finally {
+        db.close();
+      }
+    } catch (error) {
+      console.warn("No se pudo guardar el cache local de ventas-clientes.", error);
+    }
   }
 
   function escapeHtml(value) {

@@ -31,6 +31,13 @@
 .rio-app[data-rio-app="ventas-clientes"] table{table-layout:fixed;min-width:850px!important;width:100%}
 .rio-app[data-rio-app="ventas-clientes"] th,.rio-app[data-rio-app="ventas-clientes"] td{color:#332d29!important;padding:14px 12px!important;overflow-wrap:normal;word-break:normal}
 .rio-app[data-rio-app="ventas-clientes"] th{font-size:10px;background:#f2ece6!important;white-space:nowrap;letter-spacing:.02em}
+.rio-app[data-rio-app="ventas-clientes"] .column-heading{display:inline-flex;align-items:center;gap:5px}
+.rio-app[data-rio-app="ventas-clientes"] .sort-vector{display:inline-grid!important;place-items:center;width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;padding:2px!important;border:0!important;border-radius:4px!important;background:transparent!important;color:#8b7b72!important;cursor:pointer}
+.rio-app[data-rio-app="ventas-clientes"] .sort-vector:hover,.rio-app[data-rio-app="ventas-clientes"] .sort-vector.active{background:#eaded7!important;color:#792a25!important}
+.rio-app[data-rio-app="ventas-clientes"] .sort-vector svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rio-app[data-rio-app="ventas-clientes"] .sort-vector.active[data-direction="asc"] svg{clip-path:inset(0 0 50% 0)}
+.rio-app[data-rio-app="ventas-clientes"] .sort-vector.active[data-direction="desc"] svg{clip-path:inset(50% 0 0 0)}
+.rio-app[data-rio-app="ventas-clientes"] th:nth-child(6) .column-heading{justify-content:flex-end;width:100%}
 .rio-app[data-rio-app="ventas-clientes"] td{font-size:12px}
 .rio-app[data-rio-app="ventas-clientes"] th:nth-child(1){width:50px}
 .rio-app[data-rio-app="ventas-clientes"] th:nth-child(2){width:24%}
