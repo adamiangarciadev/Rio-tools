@@ -146,13 +146,15 @@
     $("#generalFields").hidden = mode !== "general";
     $("#labelsWorkflow").hidden = mode !== "labels";
     $("#negativeWorkflow").hidden = mode !== "negative";
+    $("#orphanCouponWorkflow").hidden = mode !== "orphanCoupon";
+    $("#orphanCouponWorkflow").querySelectorAll("input,select").forEach(node => node.disabled = mode !== "orphanCoupon");
     $("#generalFields").querySelectorAll("input,select,textarea").forEach(node => node.disabled = mode !== "general");
     updateSubmitLabel();
     clearMessage();
   }
 
   function updateSubmitLabel() {
-    els.submit.textContent = mode === "labels" ? "Crear pedido de etiquetas" : mode === "negative" ? "Informar stock negativo" : "Crear incidente";
+    els.submit.textContent = mode === "labels" ? "Crear pedido de etiquetas" : mode === "negative" ? "Informar stock negativo" : mode === "orphanCoupon" ? "Informar cupón huérfano" : "Crear incidente";
   }
 
   async function loadEquivalences() {
@@ -285,7 +287,7 @@
     if (!els.branch.value || !els.reporter.value.trim()) return setMessage("Completá la sucursal y el código de colaborador.", "error");
     const reporter = matchReporter();
     if (employees.size && !reporter) return setMessage("Ingresá un legajo que figure en el padrón.", "error");
-    if (mode === "general" && !els.form.reportValidity()) return setMessage("Completá todos los campos obligatorios.", "error");
+    if ((mode === "general" || mode === "orphanCoupon") && !els.form.reportValidity()) return setMessage("Completá todos los campos obligatorios.", "error");
     saveBranch();
     els.submit.disabled = true; els.submit.textContent = "Creando…";
     try {
@@ -294,6 +296,7 @@
       let created = [];
       if (mode === "labels") created = await createLabelTickets(common);
       else if (mode === "negative") created = [await persistTicket(createNegativePayload(common))];
+      else if (mode === "orphanCoupon") created = [await persistTicket(createOrphanCouponPayload(common))];
       else created = [await persistTicket({ ...common, area: els.area.value, priority: els.priority.value, title: els.title.value.trim(), description: els.description.value.trim() })];
       resetForm(true);
       const ids = created.map(item => item.id).join(" y ");
@@ -326,6 +329,16 @@
     if (!variant) throw new Error("Seleccioná una combinación válida de artículo, color y talle.");
     if (!Number.isFinite(stock) || stock >= 0) throw new Error("El stock informado debe ser un número negativo.");
     return { ...common, area: "Stock", priority: "Alta", title: `Stock negativo · ${variant.article} · ${variant.color} · Talle ${variant.size}`, description: `Código: ${variant.code}\nArtículo: ${variant.article}\nColor: ${variant.color}\nTalle: ${variant.size}\nStock mostrado por el sistema: ${stock}` };
+  }
+
+  function createOrphanCouponPayload(common) {
+    const invoiceType = $("#couponInvoiceType").value;
+    const invoiceNumber = $("#couponInvoiceNumber").value.trim();
+    const amount = Number($("#couponAmount").value);
+    if (!["Electrónica", "Fiscal"].includes(invoiceType) || !invoiceNumber) throw new Error("Completá el tipo y el número de factura.");
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error("Ingresá un monto de cupón mayor a cero.");
+    const formattedAmount = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(amount);
+    return { ...common, area: "Sistemas", priority: "Media", title: `Cupón huérfano · Factura ${invoiceNumber}`, description: `Cupón huérfano\nCódigo de colaborador: ${common.reporterCode}\nTipo de factura: ${invoiceType}\nNúmero de factura: ${invoiceNumber}\nMonto del cupón: ${formattedAmount}\nFacturado con MPAGO: ${$("#couponMpago").checked ? "Sí" : "No"}` };
   }
 
   async function persistTicket(payload) {

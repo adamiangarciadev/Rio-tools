@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#FF5F5C">
   <title>Incidentes · RIO Tools</title>
-  <link rel="stylesheet" href="styles.css?v=1521f66665">
+  <link rel="stylesheet" href="styles.css?v=bd0ed34151">
     <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
   <link rel="stylesheet" href="../../assets/app-shell.css?v=5ec76f62d6" />
   <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
@@ -42,6 +42,7 @@
           <button class="quick-action active" type="button" data-mode="general"><span>＋</span><strong>Incidente general</strong><small>Cualquier problema</small></button>
           <button class="quick-action" type="button" data-mode="labels"><span>🏷</span><strong>Reetiquetado</strong><small>Baja + etiquetas</small></button>
           <button class="quick-action" type="button" data-mode="negative"><span>−</span><strong>Stock negativo</strong><small>Artículo y variante</small></button>
+          <button class="quick-action" type="button" data-mode="orphanCoupon"><span>🎟</span><strong>Cupón huérfano</strong><small>Factura y monto</small></button>
         </div>
 
         <form id="incidentForm" novalidate>
@@ -83,6 +84,16 @@
               <label class="field"><span>Stock que muestra el sistema</span><input id="negativeStock" type="number" max="-1" value="-1"></label>
             </div>
             <div id="negativeMatch" class="match-result">Seleccioná artículo, color y talle.</div>
+          </section>
+
+          <section id="orphanCouponWorkflow" class="workflow-panel" hidden>
+            <div class="workflow-note"><strong>Informar cupón huérfano</strong><span>Completá los datos de la factura y del cupón.</span></div>
+            <div class="form-grid">
+              <label class="field"><span>Tipo de factura <b>*</b></span><select id="couponInvoiceType" required disabled><option value="">Seleccionar tipo</option><option value="Electrónica">Electrónica</option><option value="Fiscal">Fiscal</option></select></label>
+              <label class="field"><span>Número de factura <b>*</b></span><input id="couponInvoiceNumber" maxlength="50" placeholder="Ej: 0001-00012345" required disabled></label>
+              <label class="field"><span>Monto del cupón <b>*</b></span><input id="couponAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Ej: 15000" required disabled></label>
+              <label class="coupon-checkbox"><input id="couponMpago" type="checkbox" disabled><span>Facturado con MPAGO</span></label>
+            </div>
           </section>
 
           <div id="generalFields" class="form-grid workflow-general">
@@ -159,7 +170,7 @@
   <div id="toast" class="toast" role="status"></div>
 
   <script src="api-config.js?v=b2c9101fa2"></script>
-  <script src="app.js?v=088f3c7c66"></script>
+  <script src="app.js?v=e40fce6dd3"></script>
   <script src="../../assets/rio-report-problem.js?v=3824aec97a"></script>
   <script src="../../assets/app-catalog.js?v=01f4c50ba3"></script>
   <script src="../../assets/app-shell.js?v=a8d9a0da22"></script>
