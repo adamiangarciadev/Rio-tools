@@ -28,3 +28,5 @@ La carga manual acepta CSV o los `.eml` de los ejemplos, con adjuntos CSV base64
 ## Verificación
 
 `node tools/test-precios-web.cjs` verifica cruces, faltantes, cero, CSV, duplicados y programación. Con los mails de ejemplo disponibles en Downloads también comprueba todas sus filas y la conservación de códigos y talles. La exportación se verificó en navegador serializando y releyendo el XLSX de cinco talles del artículo 05-21013: conserva siete columnas, códigos de texto, precios numéricos y formato de porcentaje.
+
+Las filas del mismo proveedor, artículo y clasificación con iguales precios en ambas listas se unifican en pantalla y en Excel. La columna talle reúne sus valores separados por /; los talles con precios distintos mantienen filas separadas.

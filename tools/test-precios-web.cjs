@@ -47,4 +47,8 @@ assert.deepEqual(tienda.articles,['001','002','03.10']);assert.equal(tienda.empt
 const matched=core.matchTienda(rows,tienda);assert.equal(matched.length,3);assert.equal(matched[0].articulo,'001');assert.equal(matched[2].missing,true);assert.equal(matched[2].lista1,null);
 assert.throws(()=>core.tienda('Nombre,Precio\nX,1'));
 const tiendaPath='C:/Users/usuario/Downloads/tiendanube-6839142-17908666868888855328425855070.csv';
+const unified=core.unify([{...rows[0],talle:'2 2'},{...rows[0],talle:'1 1'},{...rows[0],talle:''},{...rows[0],talle:'1 1'},{...rows[0],talle:'3 3',lista3:2000}]);
+assert.equal(unified.length,2);assert.equal(unified[0].talle,'1 1 / 2 2');assert.equal(unified[1].lista3,2000);
+assert.equal(core.unify([{...rows[0],proveedor:'A'},{...rows[0],proveedor:'B'}]).length,2);
+assert.deepEqual(core.unify(unified),unified);
 if(fs.existsSync(tiendaPath)){const actual=core.tienda(new TextDecoder('windows-1252').decode(fs.readFileSync(tiendaPath)));assert.equal(actual.sourceRows.length,1974);assert.equal(actual.sourceRows[0].sku,'05-48#BLA#90');assert.equal(actual.sourceRows[0].articulo,'05-48');console.log(`Tiendanube real: ${actual.sourceRows.length} filas, ${actual.articles.length} artículos, ${actual.emptyCount} sin SKU.`);}

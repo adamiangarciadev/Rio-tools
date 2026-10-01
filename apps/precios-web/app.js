@@ -7,7 +7,7 @@
   function options(id, values) { const input=$(id); input.replaceChildren(new Option('Todas / todos','')); [...new Set(values)].sort().forEach(v => input.add(new Option(v || (id==='provider'?'Sin proveedor':'Sin clasificación'),v || '__empty__'))); }
   function load(report, manual=false) {
     if (!Array.isArray(report.rows) || !report.rows.length) throw new Error('Todavía no hay un par de listas disponible.');
-    master=report.rows; data=imported?core.matchTienda(master,imported):master;
+    master=core.unify(report.rows); data=imported?core.matchTienda(master,imported):master;
     const available=new Set(data.map(r=>r.id));selected=new Set([...selected].filter(id=>available.has(id))); page=0;
     if(imported)renderTienda();
     options('provider',data.map(r=>r.proveedor)); options('classification',data.map(r=>r.clasificacion));

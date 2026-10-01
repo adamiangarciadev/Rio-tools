@@ -63,6 +63,15 @@ var PreciosCore = (function () {
     const index=new Map(); rows.forEach(r=>{if(!index.has(r.articulo))index.set(r.articulo,[]);index.get(r.articulo).push(r);});
     return imported.articles.flatMap(articulo=>index.get(articulo)||[{id:'tienda-missing:'+JSON.stringify(articulo),proveedor:'',articulo,clasificacion:'Sin coincidencia',talle:'',lista1:null,lista3:null,diferencia:null,missing:true}]);
   }
-  return { norm, csv, parse, merge, condition, tienda, matchTienda };
+  function unify(rows) {
+    const groups=new Map();
+    rows.forEach(row=>{
+      const key=JSON.stringify([row.proveedor,row.articulo,row.clasificacion,row.lista1,row.lista3,!!row.conflicto,!!row.missing]);
+      if(!groups.has(key))groups.set(key,{row:{...row,id:'unified:'+key},sizes:new Set()});
+      const group=groups.get(key); if(row.talle)group.sizes.add(row.talle);
+    });
+    return [...groups.values()].map(group=>({...group.row,talle:[...group.sizes].sort((a,b)=>a.localeCompare(b,'es',{numeric:true})).join(' / ')}));
+  }
+  return { norm, csv, parse, merge, condition, tienda, matchTienda, unify };
 })();
 if (typeof module !== 'undefined') module.exports = PreciosCore;
