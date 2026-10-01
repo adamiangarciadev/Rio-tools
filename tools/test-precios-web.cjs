@@ -42,3 +42,9 @@ const latest=context.buscarListaPrecios_(1);
 assert.equal(latest.source.messageId,'evening');
 assert.equal(latest.text,'csv evening');
 console.log('Último mail: envío de la tarde elegido por encima de mañana y mediodía.');
+const tienda=core.tienda('SKU;Nombre\n001#NEG#01;Uno\n001#BLA#02;Dos\n002;Tres\n;Sin SKU\n03.10#A;Cuatro');
+assert.deepEqual(tienda.articles,['001','002','03.10']);assert.equal(tienda.emptyCount,1);assert.equal(tienda.sourceRows.length,5);
+const matched=core.matchTienda(rows,tienda);assert.equal(matched.length,3);assert.equal(matched[0].articulo,'001');assert.equal(matched[2].missing,true);assert.equal(matched[2].lista1,null);
+assert.throws(()=>core.tienda('Nombre,Precio\nX,1'));
+const tiendaPath='C:/Users/usuario/Downloads/tiendanube-6839142-17908666868888855328425855070.csv';
+if(fs.existsSync(tiendaPath)){const actual=core.tienda(new TextDecoder('windows-1252').decode(fs.readFileSync(tiendaPath)));assert.equal(actual.sourceRows.length,1974);assert.equal(actual.sourceRows[0].sku,'05-48#BLA#90');assert.equal(actual.sourceRows[0].articulo,'05-48');console.log(`Tiendanube real: ${actual.sourceRows.length} filas, ${actual.articles.length} artículos, ${actual.emptyCount} sin SKU.`);}

@@ -4,7 +4,8 @@ var PreciosCore = (function () {
   const norm = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase();
   function csv(text) {
     text = text.replace(/^\uFEFF/, '');
-    const delimiter = text.split(/\r?\n/)[0].includes(';') ? ';' : ',';
+    const first = text.split(/\r?\n/)[0];
+    const delimiter = (first.match(/;/g)||[]).length > (first.match(/,/g)||[]).length ? ';' : ',';
     const rows = []; let row = [], field = '', quoted = false;
     for (let i = 0; i < text.length; i++) {
       const c = text[i];
@@ -51,7 +52,18 @@ var PreciosCore = (function () {
     }).sort((a,b) => a.proveedor.localeCompare(b.proveedor) || a.articulo.localeCompare(b.articulo) || a.talle.localeCompare(b.talle));
   }
   function condition(value) { const n = norm(value); return n.includes('DISC') ? 'Discontinuo' : n.includes('LINEA') ? 'Línea' : n ? 'Otra clasificación' : 'Sin clasificación'; }
-  return { norm, csv, parse, merge, condition };
+  function tienda(text) {
+    const table=csv(text), headers=(table.shift()||[]).map(norm), index=headers.indexOf('SKU');
+    if(index<0)throw new Error('El archivo de Tiendanube no tiene una columna SKU.');
+    const sourceRows=table.map((row,i)=>{const sku=String(row[index]||'').trim();return {fila:i+2,sku,articulo:sku.split('#')[0].trim()};});
+    if(!sourceRows.length)throw new Error('El CSV de Tiendanube está vacío.');
+    return {sourceRows,articles:[...new Set(sourceRows.filter(r=>r.articulo).map(r=>r.articulo))],emptyCount:sourceRows.filter(r=>!r.articulo).length};
+  }
+  function matchTienda(rows, imported) {
+    const index=new Map(); rows.forEach(r=>{if(!index.has(r.articulo))index.set(r.articulo,[]);index.get(r.articulo).push(r);});
+    return imported.articles.flatMap(articulo=>index.get(articulo)||[{id:'tienda-missing:'+JSON.stringify(articulo),proveedor:'',articulo,clasificacion:'Sin coincidencia',talle:'',lista1:null,lista3:null,diferencia:null,missing:true}]);
+  }
+  return { norm, csv, parse, merge, condition, tienda, matchTienda };
 })();
 
 // Crear un proyecto separado y copiar también core.js como Core.gs.

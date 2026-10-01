@@ -4,6 +4,12 @@ Comparación de los CSV de zNube LISTA1 y LISTA3 por proveedor + artículo + tal
 
 La selección persiste al cambiar filtros y páginas. La exportación incluye todos los seleccionados, aunque estén ocultos por un filtro, en un XLSX con las siete columnas pedidas; códigos y talles son texto, precios y porcentajes son números.
 
+## Selección desde Tiendanube
+
+El CSV original se lee como UTF-8 o Windows-1252. Se localiza la columna por el encabezado SKU (columna Q del archivo de referencia). Se conserva como texto, se toma la parte anterior al primer `#` y se buscan coincidencias exactas por artículo. Las variantes repetidas se reúnen en artículos únicos y se incluyen todos sus talles del reporte de precios. Todas las coincidencias se seleccionan automáticamente. Los artículos sin coincidencia permanecen en la tabla y en el Excel con precios vacíos.
+
+El detalle del archivo y la segunda hoja `CSV Tiendanube` conservan todas las filas originales, incluidos repetidos y SKU vacíos, con su estado de coincidencia. La primera hoja mantiene las siete columnas de precios. La actualización del reporte conserva el archivo importado y las selecciones existentes.
+
 ## Activación con el Gmail actual
 
 1. Ingresar en https://script.google.com con el Gmail que recibe los reportes y crear un proyecto independiente.
