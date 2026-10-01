@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Precios WEB · RÍO</title>
+<link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/rio-theme.css"><link rel="stylesheet" href="../../assets/rio-identity.css"><link rel="stylesheet" href="../../assets/app-shell.css"><link rel="stylesheet" href="styles.css">
+<script src="../../assets/rio-access.js"></script><script src="../../assets/rio-context.js?v=precios-web-1"></script>
+</head><body class="rio-app" data-rio-app="precios-web">
+<header class="module-topbar"><a class="btn ghost" href="../../index.html">Volver</a><div><h1>Precios WEB</h1><p>Mayorista y minorista, artículo por artículo.</p></div></header>
+<main class="prices-main">
+<section class="panel"><button class="btn" id="refresh">Consultar actualización</button><p id="status" role="status" aria-live="polite">Preparando listas…</p><p id="dates"></p><p class="hint">Último mail de cada lista recibido en Gmail. Se revisan novedades cada cinco minutos. Diferencia: (Lista 3 − Lista 1) / Lista 1.</p>
+<details><summary>Cargar listas manualmente</summary><p>Elegí los dos CSV o los dos mails .eml descargados de Gmail. Esta carga queda solo en esta pantalla.</p><label>Lista 1 <input id="file1" type="file" accept=".csv,.eml"></label><label>Lista 3 <input id="file3" type="file" accept=".csv,.eml"></label><button id="import" class="btn">Cargar ambas listas</button></details></section>
+<section class="panel filters"><label>Artículo <input type="search" id="article" placeholder="Buscar código de artículo"></label><label>Proveedor <select id="provider"><option value="">Todos</option></select></label><label>Condición <select id="condition"><option value="">Todas</option><option>Línea</option><option>Discontinuo</option><option>Otra clasificación</option><option>Sin clasificación</option></select></label><label>Clasificación <select id="classification"><option value="">Todas</option></select></label><label>Precios <select id="complete"><option value="">Todos</option><option value="missing">Falta una lista</option><option value="both">Ambas listas</option></select></label></section>
+<section class="panel"><div class="actions"><button id="select" class="btn">Seleccionar todos los filtrados</button><button id="clear" class="btn">Quitar selección</button><label><input id="selectedOnly" type="checkbox"> Ver seleccionados</label><button id="export" class="btn primary" disabled>Exportar seleccionados a Excel</button></div><p id="count"></p>
+<div class="table-wrap"><table><thead><tr><th>Seleccionar</th><th>Proveedor</th><th>Artículo</th><th>Clasificación</th><th>Talle</th><th>Lista 1</th><th>Lista 3</th><th>Diferencia porcentual</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="actions pager"><button id="prev" class="btn">Anterior</button><span id="page"></span><button id="next" class="btn">Siguiente</button></div></section></main>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script><script src="core.js"></script><script src="api-config.js"></script><script src="app.js"></script><script src="../../assets/app-catalog.js?v=precios-web-1"></script><script src="../../assets/app-shell.js"></script>
+</body></html>

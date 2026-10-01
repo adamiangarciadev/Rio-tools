@@ -1,4 +1,5 @@
 window.RioCatalog = [
+  {"slug":"precios-web","name":"Precios WEB","description":"Lista mayorista y minorista, filtros y exportación a Excel.","area":"E-commerce","areaId":"1","restricted":false},
   {"slug":"confirmar-remitos","name":"Confirmar remitos","description":"Cierre de varios remitos con filtros por fecha y sucursal.","area":"Sistemas","areaId":"4","restricted":true},
   {"slug":"mercaderia-transito-v2","name":"Mercadería en Tránsito","description":"Lectura automática de PDF y seguimiento por sucursal.","area":"Operaciones","areaId":"0","restricted":false},
   {

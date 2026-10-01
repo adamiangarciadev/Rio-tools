@@ -21,12 +21,13 @@
   }
   const profileApps = {
     ADMINISTRACION: ['supervisores','asistencia-dashboard','check-depositos'],
-    WEB: ['categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']
+    WEB: ['precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']
   };
   const localProfiles = new Set(['AV2','NAZCA','QUILMES','CORRIENTES','DEPOSITO','LAMARCA','SARMIENTO','PUEYRREDON']);
   const webOnlyApps = new Set(['pedidos-web','clientes-contactar','pedidos-dashboard','categorizador']);
   const localOrdersProfiles = new Set(['AV2','CORRIENTES','QUILMES']);
   const inProfile = slug => {
+    if (slug === 'precios-web') return branch === 'WEB';
     if (slug === 'revision-stock') return branch === 'DEPOSITO' && !!window.RioAccess?.isUnlocked();
     if (profileApps[branch] && !profileApps[branch].includes(slug)) return false;
     if (!localProfiles.has(branch)) return true;
