@@ -1,4 +1,5 @@
 window.RioCatalog = [
+  {"slug":"stock-proveedores","name":"Stock para proveedores","description":"Stock total Río por proveedor o conjunto, con una hoja por proveedor en Excel.","area":"Depósito","areaId":"2","restricted":true},
   {
     "slug": "entrada-mercaderia",
     "name": "Entrada de Mercadería",
