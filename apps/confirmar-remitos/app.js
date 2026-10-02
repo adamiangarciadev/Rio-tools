@@ -109,6 +109,14 @@
     try {
       if (archiveView()) {
         records = []; hasNext = false; render();
+        if (!knownBranches.length) {
+          const status = await request('status');
+          if (!Array.isArray(status.branches)) throw new Error('No se recibieron sucursales');
+          knownBranches = status.branches.filter(Boolean);
+          const previous = $('branch').value;
+          $('branch').innerHTML = '<option value="">Todas las sucursales</option>' + [...new Set(knownBranches)].sort().map(branch => `<option>${esc(branch)}</option>`).join('');
+          $('branch').value = previous;
+        }
         const data = await request('trace_list', {branch:$('branch').value, search:$('search').value.trim(), from:$('from').value, to:$('to').value, closed:$('view').value === 'closed', offset:page * 50});
         if (!Array.isArray(data)) throw new Error('Respuesta sin listado');
         records = data.map(record => ({...record.data,id:record.id,version:record.version,estado:record.estado}));
