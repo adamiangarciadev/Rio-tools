@@ -28,7 +28,7 @@ jobs:
       - name: Prepare lightweight site artifact
         run: |
           mkdir -p .pages
-          cp index.html .pages/
+          cp index.html privacidad.html condiciones.html .pages/
           cp -R assets apps data .pages/
           find .pages -type f \( -name '*.gs' -o -name '*.md' \) -delete
           touch .pages/.nojekyll
