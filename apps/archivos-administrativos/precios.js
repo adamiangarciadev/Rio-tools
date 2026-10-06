@@ -1,7 +1,16 @@
 /* Descargas administrativas; comparte el reporte y los filtros de Precios WEB. */
 var ListasAdministrativas = (() => {
   'use strict';
-  const brands = ['Andressa','Exclusive','Kaury','Trenda','Tiento','Brigitte','Sexy Lali','Natubel','Marcela Koury','Lara','Bakhou','Sigry','Belén','B&K','Gabela','Vella'].sort((a,b)=>a.localeCompare(b,'es'));
+  const brands = ['Andressa','Exclusive','Kaury','Trenda','Tiento','Brigitte','Sexy Lali','Natubel','Marcela Koury','Lara','Bakhou','Sigry','Belén','B&K','Gabela','Vella','XY'].sort((a,b)=>a.localeCompare(b,'es'));
+  const cacheKey = 'rio_listas_administrativas_reporte_v1';
+  const validReport = report => !!report?.ok && Array.isArray(report.rows) && report.rows.length>0;
+  function readCache(storage,source) {
+    try {const cached=JSON.parse(storage.getItem(cacheKey));return cached?.source===source&&validReport(cached.report)?cached.report:null;}catch{return null;}
+  }
+  function saveCache(storage,source,report) {
+    if(!validReport(report))return false;
+    try {storage.setItem(cacheKey,JSON.stringify({source,report}));return true;}catch{return false;}
+  }
   const norm = value => PreciosCore.norm(value);
   const compare = (a,b) => a.localeCompare(b,'es',{numeric:true,sensitivity:'base'});
   function prepare(report, list, selected = brands, options = {}) {
@@ -93,16 +102,27 @@ var ListasAdministrativas = (() => {
       });
     }
     updateBrands();
-    let report=null;
+    let report=null,notice='',loading=false;
+    try {report=readCache(window.localStorage,window.PRECIOS_API_URL);}catch{}
+    if(report){updateBrands(report.rows);notice='Mostrando la última copia guardada en este navegador.';render();}
     async function load(){
-      buttons.forEach(b=>b.disabled=true);status.textContent='Consultando las listas de Precios WEB…';
+      if(loading)return;
+      loading=true;document.getElementById('lpActualizar').disabled=true;
+      if(report){notice='Mostrando la copia guardada mientras se consultan los precios actualizados.';render();}
+      else {buttons.forEach(b=>b.disabled=true);status.textContent='Consultando las listas de Precios WEB…';}
       try{
         const response=await fetch(window.PRECIOS_API_URL+'?accion=reporte&_='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(45000)});
         if(!response.ok)throw new Error(`Precios WEB respondió HTTP ${response.status}. Revisá que la implementación de Apps Script esté publicada y accesible.`);
-        report=await response.json();if(!report.ok||!Array.isArray(report.rows)||!report.rows.length)throw new Error(report.error||'No hay precios disponibles.');
+        const nextReport=await response.json();if(!validReport(nextReport))throw new Error(nextReport.error||'No hay precios disponibles.');
+        report=nextReport;
+        let saved=false;try {saved=saveCache(window.localStorage,window.PRECIOS_API_URL,report);}catch{}
+        notice=saved?'Copia actualizada y guardada en este navegador.':'Precios actualizados. No se pudo guardar la copia en este navegador.';
         updateBrands(report.rows);
         render();
-      }catch(e){report=null;status.textContent='No se pudieron cargar las listas: '+e.message;}
+      }catch(e){
+        if(report){notice='No se pudo actualizar: '+e.message+' Se conserva la última copia disponible.';render();}
+        else status.textContent='No se pudieron cargar las listas: '+e.message;
+      }finally{loading=false;document.getElementById('lpActualizar').disabled=false;}
     }
     function render(){
       if(!report)return;
@@ -113,6 +133,7 @@ var ListasAdministrativas = (() => {
       if(stats.some(s=>s.missing||s.conflicts))status.textContent+=' Se excluyen los artículos sin precio o con clasificación contradictoria.';
       if(report.syncError)status.textContent+=' Aviso de la fuente: '+report.syncError;
       const date=report.sources?.lista1?.date; if(date)status.textContent+=' Datos: '+new Date(date).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'})+'.';
+      if(notice)status.textContent+=' '+notice;
     }
     picker.addEventListener('change',render);
     document.getElementById('lpMedias').addEventListener('change',render);
@@ -123,6 +144,6 @@ var ListasAdministrativas = (() => {
     document.getElementById('lpActualizar').addEventListener('click',load);load();
   }
   if(typeof document!=='undefined')document.addEventListener('DOMContentLoaded',init);
-  return {brands,prepare,pdf};
+  return {brands,prepare,pdf,readCache,saveCache};
 })();
 if(typeof module!=='undefined')module.exports=ListasAdministrativas;
