@@ -1,0 +1,81 @@
+/* Integración con la navegación e identidad compartidas de RÍO Tools. */
+@media screen{
+ .rio-app[data-rio-app="movimientos-caja"] main{max-width:1240px;padding-bottom:150px}
+ .rio-app[data-rio-app="movimientos-caja"] .rio-section-nav{display:none}
+ .rio-app[data-rio-app="movimientos-caja"] .intro .rio-module-description{display:none}
+ .rio-app[data-rio-app="movimientos-caja"] .intro .eyebrow{color:var(--rio-coral-ink)}
+ .rio-app[data-rio-app="movimientos-caja"] .intro h1{font-family:var(--rio-font);letter-spacing:-.035em}
+ .rio-app[data-rio-app="movimientos-caja"] .close-steps{top:68px;background:var(--rio-bg);border-color:var(--rio-border)}
+ .rio-app[data-rio-app="movimientos-caja"] .close-steps a,.rio-app[data-rio-app="movimientos-caja"] .dock-actions{font-family:'Gotham Rounded RIO',var(--rio-font)}
+ .rio-app[data-rio-app="movimientos-caja"] .close-steps a:hover{background:var(--rio-surface-2)}
+ .rio-app[data-rio-app="movimientos-caja"] .step-heading>span,.rio-app[data-rio-app="movimientos-caja"] .section-footer button{background:var(--rio-surface-3);color:var(--rio-coral-ink)}
+ .rio-app[data-rio-app="movimientos-caja"] .primary{background:var(--rio-coral);border-color:var(--rio-coral);color:#401f1d}
+ .rio-app[data-rio-app="movimientos-caja"] .primary:hover{background:#ff7774;border-color:#ff7774;color:#401f1d}
+ .rio-app[data-rio-app="movimientos-caja"] .movement,.rio-app[data-rio-app="movimientos-caja"] .paper-head,.rio-app[data-rio-app="movimientos-caja"] .panel{border-color:var(--rio-border);background:var(--rio-surface)}
+ .rio-app[data-rio-app="movimientos-caja"] .panel{padding:0}
+ .rio-app[data-rio-app="movimientos-caja"] .close-dock{left:234px;padding:16px 32px;background:#fffdfbf5;border-color:var(--rio-border)}
+ .rio-app[data-rio-app="movimientos-caja"] .f9-amount input{background:transparent!important;border:0!important;box-shadow:none!important}
+ .rio-app[data-rio-app="movimientos-caja"] #date{background:var(--rio-bg-soft)!important;color:var(--rio-muted)!important}
+ .rio-app[data-rio-app="movimientos-caja"] .f9-amount{background:var(--rio-surface-2);border-color:var(--rio-border-strong)}
+ .rio-app[data-rio-app="movimientos-caja"] #startStep,.rio-app[data-rio-app="movimientos-caja"] #movementSections,.rio-app[data-rio-app="movimientos-caja"] #reviewStep{scroll-margin-top:170px}
+}
+@media screen and (max-width:850px){.rio-app[data-rio-app="movimientos-caja"] .close-dock{left:0;padding:12px 18px}}
+@media screen and (max-width:600px){
+ .rio-app[data-rio-app="movimientos-caja"] .close-steps{top:112px}
+ .rio-app[data-rio-app="movimientos-caja"] .panel{padding:0}
+ .rio-app[data-rio-app="movimientos-caja"] .f9-amount input[data-money]{font-size:26px}
+ .rio-app[data-rio-app="movimientos-caja"] #startStep,.rio-app[data-rio-app="movimientos-caja"] #movementSections,.rio-app[data-rio-app="movimientos-caja"] #reviewStep{scroll-margin-top:205px}
+}
+@media print{.rio-app[data-rio-app="movimientos-caja"] main{max-width:none;margin:0;padding:10mm!important}.rio-app[data-rio-app="movimientos-caja"] .panel{padding:0!important}}
+
+/* Shared physical drawer: keep LOCAL and WEB ownership visible. */
+#sharedPanel { margin-block: 18px; }
+#sharedPanel label { margin-block: 12px; }
+#sharedPanel input[type="checkbox"] { width:auto; display:inline-block; margin-right:8px; }
+#sharedBreakdown td:not(:first-child), #sharedBreakdown th:not(:first-child) { text-align:right; white-space:nowrap; }
+#sharedBreakdown table { min-width:540px; width:100%; }
+#sharedPanel .table-wrap { overflow-x:auto; }
+#sharedPanel h4 { margin-top:16px; }
+@media print { #sharedBreakdown table { min-width:0; font-size:9pt; } #sharedPanel { break-inside:auto; } #sharedPanel tr, #webDetails li { break-inside:avoid; } #sharedPanel select { border:0; appearance:none; } }
+
+@media screen and (max-width:760px) { #sharedBreakdown table { min-width:0; } #sharedBreakdown tr { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; } #sharedBreakdown td { white-space:normal; font-size:11px; overflow-wrap:anywhere; } #sharedBreakdown td:first-child { text-align:left; padding-right:0; font-weight:600; } }
+
+/* Preserve the original printed daily sheet; the shared dashboard stays on screen. */
+#printSheet { display:none; }
+.rio-app[data-rio-app="movimientos-caja"] button[hidden] { display:none!important; }
+@media print {
+ #sheet { display:none!important; }
+ #printSheet { display:block; padding:0; background:white; }
+ #printSheet .planilla-brand { display:flex; }
+ #printSheet .paper-head { align-items:flex-start; }
+ #printSheet .print-f9-line { margin:8px 0; }
+ #printSheet .print-f9-line strong { display:block; font-size:10px; margin:0 0 3px; }
+ #printSheet .print-f9-line span { font-size:16px; font-weight:bold; }
+ #printSheet .closing-field strong { text-align:right; }
+ #printSheet .table-wrap { padding:0; }
+}
+
+@media print { #printSheet .print-hide-responsible { display:none!important; } }
+
+@media print {
+ .rio-app[data-rio-app="movimientos-caja"] main > .no-print { display:none!important; }
+ #printSheet, #printSheet * { font-family:Arial,sans-serif!important; color:black; }
+ #printSheet .paper-head { display:flex; flex-wrap:nowrap; align-items:flex-start; gap:20px; margin-bottom:8px; }
+ #printSheet .paper-head > div { width:48%; max-width:none; }
+ #printSheet .paper-head h2 { font-size:14px; margin:0 0 6px; }
+ #printSheet .paper-head label { font-size:10px; }
+ #printSheet input, #printSheet select { min-height:0; height:auto; padding:2px; border:0!important; border-radius:0!important; background:transparent!important; font-size:10px; }
+ #printSheet .paper-head input { max-width:130px; }
+ #printSheet .movement { margin-bottom:8px; }
+ #printSheet h3 { color:white!important; background:#3d3d3b!important; font-size:11px; padding:5px 8px; }
+ #printSheet table { border-collapse:collapse; font-size:9px; }
+ #printSheet th { background:#faf9f7!important; color:black!important; font-size:9px; padding:4px; border:1px solid #999!important; }
+ #printSheet td { color:black; font-size:9px; padding:4px; border:1px solid #999!important; }
+ #printSheet .section-footer { padding:4px; font-size:10px; }
+ #printSheet .panel { border:1px solid #888!important; border-radius:0!important; overflow:visible; }
+ #printSheet .bottom-grid { grid-template-columns:1fr 1fr; gap:10px; }
+ #printSheet .closing-field { font-size:9px; padding:2px 6px; grid-template-columns:1fr 100px; }
+ #printSheet dl { margin:4px 6px; font-size:10px; }
+ #printSheet dl > div { padding:4px 0; }
+ #printSheet .final { font-size:12px; padding:5px!important; }
+}

@@ -1,0 +1,2 @@
+// Proyecto independiente. Sólo se publica la clave publishable; nunca claves secretas.
+window.CajaConfig={url:'https://xdccttfqcorxpskmpmwn.supabase.co',key:'sb_publishable_66KUi_YlmHSuml4PH6XA_g_y-YeKTIE',gatewayKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkY2N0dGZxY29yeHBza21wbXduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMTA4NzAsImV4cCI6MjEwNjc4Njg3MH0.njuOGKZU9c7ESty6MhYLK8ERggR2vI3mKB2Ko9FkycU'};

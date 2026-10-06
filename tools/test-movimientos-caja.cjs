@@ -1,0 +1,16 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {calculate,cents}=require('../apps/movimientos-caja/calculations.js');
+const base={cashSales:10000,counted:5700,mp:2000,cards:3000,go:1000,expenses:[{amount:1000}],vouchers:[{kind:'cash',amount:300},{kind:'goods',amount:400}],withdrawals:[{amount:2000}],deposits:[{kind:'cash',amount:1000},{kind:'external',amount:9000}],shipping:[{cash:500,digital:200}]};
+test('arqueo balanceado reconstruye venta y no duplica depósitos externos y descuenta envíos',()=>{const t=calculate(base);assert.equal(t.expected,5700);assert.equal(t.cash,10000);assert.equal(t.final,15700);assert.equal(t.deposits,10000);assert.equal(t.surplus,0);assert.equal(t.shortage,0);});
+test('sobrante se resta y faltante se suma sin alterar venta informada',()=>{const s=calculate({...base,counted:5750}),f=calculate({...base,counted:5600});assert.equal(s.surplus,50);assert.equal(s.shortage,0);assert.equal(f.shortage,100);assert.equal(f.surplus,0);assert.equal(s.final,15700);assert.equal(f.final,15700);});
+test('montos decimales no acumulan error y entradas inválidas se rechazan',()=>{assert.equal(calculate({...base,expenses:[{amount:.1},{amount:.2}]}).expenses,.3);for(const n of [-1,'abc',Infinity,1000000000])assert.throws(()=>cents(n));});
+test('F9 establece venta total y deriva efectivo esperado sin usar efectivo manual',()=>{const t=calculate({...base,f9:16400,cashSales:999});assert.equal(t.saleTotal,16400);assert.equal(t.cashSales,10000);assert.equal(t.expected,5700);assert.equal(t.final,15700);});
+test('cambiar F9 recalcula sobrante/faltante y venta final',()=>{const t=calculate({...base,f9:16500});assert.equal(t.cashSales,10100);assert.equal(t.shortage,100);assert.equal(t.surplus,0);assert.equal(t.final,15800);const s=calculate({...base,f9:16350});assert.equal(s.surplus,50);assert.equal(s.final,15650);});
+test('F9 cero es un importe explícito, y las planillas anteriores conservan su cálculo',()=>{assert.equal(calculate({...base,f9:0}).saleTotal,0);assert.equal(calculate(base).saleTotal,16400);assert.throws(()=>calculate({...base,f9:-1}));});
+
+test('suma Shipnow y Expreso en ambos medios y resta exactamente una vez',()=>{const t=calculate({...base,f9:16400,shipping:[{name:'Shipnow',cash:500,digital:200},{name:'Expreso',cash:300,digital:100}]});assert.equal(t.saleTotal,16400);assert.equal(t.shipping,1100);assert.equal(t.final,15300);assert.equal(t.expected,5700);assert.equal(t.surplus,0);});
+test('saldo inicial y otros ingresos antiguos no participan del nuevo cálculo',()=>{assert.deepEqual(calculate({...base,f9:16400,opening:1000,cashIn:500}),calculate({...base,f9:16400}));});
+test('sin envíos la venta final coincide con el F9',()=>{assert.equal(calculate({...base,f9:16400,shipping:[]}).final,16400);});
+
+test('medios de pago superiores al F9 permiten calcular el cierre y registrar diferencia',()=>{const t=calculate({...base,f9:1000});assert.equal(t.cashSales,-5400);assert.equal(t.saleTotal,1000);assert.equal(t.surplus,15400);assert.equal(t.final,300);});
