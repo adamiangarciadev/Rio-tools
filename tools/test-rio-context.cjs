@@ -78,7 +78,7 @@ test('administration tools require access and become available after authenticat
  test('profile menus contain exactly the requested applications, even after supervisor unlock',()=>{
   const catalogCode=fs.readFileSync('assets/app-catalog.js','utf8');
   const sandbox={window:{}};vm.runInNewContext(catalogCode,sandbox);
-  const expected={ADMINISTRACION:['supervisores','asistencia-dashboard','check-depositos'],WEB:['precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']};
+  const expected={ADMINISTRACION:['supervisores','asistencia-dashboard','check-depositos'],WEB:['archivos-administrativos','precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']};
   for(const [profile,slugs] of Object.entries(expected)){
     const api=boot(profile,'',true).api;
     assert.deepEqual(Array.from(sandbox.window.RioCatalog.filter(api.canUse),item=>item.slug).sort(),slugs.sort());
@@ -96,3 +96,11 @@ test('stock equalization requires BOTH depot and supervisor session, including d
     }
   }
 });
+
+ test('administrative downloads are available to every store including WEB',()=>{
+ for(const branch of ['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB','DEPOSITO']){
+ const {api,redirect}=boot(branch,'archivos-administrativos');
+ assert.equal(api.canUse({slug:'archivos-administrativos',restricted:false}),true,branch);
+ assert.equal(redirect,'',branch);
+ }
+ });
