@@ -86,7 +86,7 @@ var ListasAdministrativas = (() => {
     });
     return {doc,...result};
   }
-  function init(){
+  async function init(){
     const picker=document.getElementById('lpMarcas');if(!picker)return;
     const status=document.getElementById('lpEstado'),buttons=[...document.querySelectorAll('[data-price-list]')];
     function updateBrands(rows = []) {
@@ -104,6 +104,11 @@ var ListasAdministrativas = (() => {
     updateBrands();
     let report=null,notice='',loading=false;
     try {report=readCache(window.localStorage,window.PRECIOS_API_URL);}catch{}
+    try {
+      const cache=await caches.open(cacheKey);
+      const saved=await cache.match(new URL('./reporte-cache',location.href).href);
+      if(saved){const envelope=await saved.json();if(envelope.source===window.PRECIOS_API_URL&&validReport(envelope.report)&&(!report||new Date(envelope.report.updatedAt)>=new Date(report.updatedAt)))report=envelope.report;}
+    }catch{}
     if(report){updateBrands([...report.rows,...report.l20Rows||[]]);notice='Mostrando la última copia guardada en este navegador.';render();}
     async function load(){
       if(loading)return;
@@ -116,6 +121,11 @@ var ListasAdministrativas = (() => {
         const nextReport=await response.json();if(!validReport(nextReport))throw new Error(nextReport.error||'No hay precios disponibles.');
         report=nextReport;
         let saved=false;try {saved=saveCache(window.localStorage,window.PRECIOS_API_URL,report);}catch{}
+        if(!saved){try {
+          const cache=await caches.open(cacheKey);
+          await cache.put(new URL('./reporte-cache',location.href).href,new Response(JSON.stringify({source:window.PRECIOS_API_URL,report}),{headers:{'Content-Type':'application/json'}}));
+          saved=true;
+        }catch{}}
         notice=saved?'Copia actualizada y guardada en este navegador.':'Precios actualizados. No se pudo guardar la copia en este navegador.';
         updateBrands([...report.rows,...report.l20Rows||[]]);
         render();
