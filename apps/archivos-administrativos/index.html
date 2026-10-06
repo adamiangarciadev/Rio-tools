@@ -15,7 +15,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- CSS PRINCIPAL DE LA SUITE -->
-  <link rel="stylesheet" href="./styles.css?v=e9d01a7474" />
+  <link rel="stylesheet" href="./styles.css?v=medias-4" />
   <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
   <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
   <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
@@ -49,6 +49,16 @@
          ADMINISTRACION / ARCHIVOS
          ========================= -->
     <section class="adm-wrap">
+      <article class="adm-panel" id="panel-precios">
+        <header class="adm-head"><h2 class="adm-title">Listas de precios</h2><p class="adm-sub">PDF A4 horizontal con los precios de línea de Precios WEB.</p></header>
+        <div class="adm-body">
+          <details><summary>Marcas incluidas</summary><div id="lpMarcas" class="lp-marcas"></div></details>
+          <p><label><input id="lpMedias" type="checkbox"> Incluir medias</label></p>
+          <p class="adm-hint">Marcas por nombre y artículos de menor a mayor. Bombachas y packs juntos; trajes de baño y bombachas de malla agrupados en Verano.</p>
+          <div class="lp-acciones"><button class="adm-btn adm-btn-primary" data-price-list="1" type="button" disabled>Descargar lista 1</button><button class="adm-btn adm-btn-primary" data-price-list="3" type="button" disabled>Descargar lista 3</button><button class="adm-btn" id="lpActualizar" type="button">Actualizar</button></div>
+          <p id="lpEstado" class="adm-hint" role="status" aria-live="polite"></p>
+        </div>
+      </article>
       <article class="adm-panel" id="panel-tarjetas" hidden>
         <header class="adm-head"><h2 class="adm-title">Tarjetas de tu local</h2><p class="adm-sub" id="tarjetasLocal"></p></header>
         <div class="adm-body"><p class="adm-hint">Una hoja A4 con 10 tarjetas iguales: logo RÍO, dirección, teléfono y QR directo a WhatsApp. Recortá por las líneas punteadas.</p>
@@ -124,6 +134,10 @@
   </main>
 
   <!-- JS ÚNICO DE LA SUITE -->
+  <script src="../../assets/vendor/jspdf/jspdf.umd.min.js"></script>
+  <script src="../precios-web/core.js?v=grupo-2"></script>
+  <script src="../precios-web/api-config.js"></script>
+  <script src="./precios.js?v=medias-4"></script>
   <script src="./app.js?v=b0b7c92085"></script>
 
   <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>

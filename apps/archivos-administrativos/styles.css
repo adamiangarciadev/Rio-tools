@@ -20,6 +20,10 @@
   --radius: 14px;
 }
 
+.lp-marcas { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:12px; font-size:13px; }
+.lp-marcas label { display:flex; align-items:center; gap:6px; }
+.lp-acciones { display:flex; flex-wrap:wrap; gap:8px; }
+
 /* -------------------------
    RESET BÁSICO
    ------------------------- */
