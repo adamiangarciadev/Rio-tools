@@ -29,6 +29,7 @@ function doGet(event) {
     else if (params.action === "dashboard") result = getDashboard(params.token);
     else if (params.action === "adminDashboard") result = getAdminDashboard(params.token);
     else if (params.action === "updateGoals") result = updateGoals(params.token, params.goals);
+    else if (params.action === "updateSales") result = updateSales(params.token, params.date, params.sales);
     else if (params.action === "logout") result = logout(params.token);
     else result = { status: "ok", service: "RIO Objetivos de venta" };
     return jsonp_(params.callback, { ok: true, data: result });
@@ -89,6 +90,39 @@ function requireAdmin_(token) {
   if (role !== "admin") throw new Error("La sesión de Sistemas venció o no es válida.");
 }
 
+function updateSales(token, dateKey, salesJson) {
+  requireAdmin_(token);
+  const today = Utilities.formatDate(new Date(), APP.timezone, "yyyy-MM-dd");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateKey || "")) ||
+      Utilities.formatDate(parseLocalDate_(dateKey), APP.timezone, "yyyy-MM-dd") !== dateKey || dateKey > today) {
+    throw new Error("Elegí una fecha válida que no sea futura.");
+  }
+  const updates = JSON.parse(String(salesJson || "{}"));
+  if (!updates || typeof updates !== "object" || Array.isArray(updates) || !Object.keys(updates).length) throw new Error("Ingresá al menos una venta.");
+  Object.keys(updates).forEach(function (id) {
+    if (!APP.stores.some(function (store) { return store.id === id; })) throw new Error("Local inválido.");
+    const amount = updates[id];
+    if (typeof amount !== "number" || !Number.isFinite(amount) || amount < 0 || amount > 9999999999) throw new Error("Monto inválido para " + id + ".");
+  });
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const state = readState_();
+    if (dateKey.slice(0, 7) !== state.month) throw new Error("La fecha debe pertenecer al período " + state.month + ".");
+    Object.keys(updates).forEach(function (id) {
+      upsertSale_(state, id, dateKey, Math.round(updates[id] * 100) / 100);
+      const record = state.sales[id].find(function (item) { return item.date === dateKey; });
+      record.source = "manual";
+      record.updatedAt = new Date().toISOString();
+    });
+    state.updatedAt = new Date().toISOString();
+    writeState_(state);
+    return adminDashboard_();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function logout(token) {
   CacheService.getScriptCache().remove("session:" + String(token || ""));
   return true;
@@ -135,6 +169,8 @@ function processSalesEmails() {
         const sales = parseSalesCsv_(csvAttachment.getDataAsString("UTF-8"));
         APP.stores.forEach(function (store) {
           if (Object.prototype.hasOwnProperty.call(sales, normalize_(store.csvName))) {
+            const manual = (state.sales[store.id] || []).some(function (item) { return item.date === dateKey && item.source === "manual"; });
+            if (manual) return;
             upsertSale_(state, store.id, dateKey, sales[normalize_(store.csvName)]);
           }
         });
@@ -261,7 +297,7 @@ function adminDashboard_() {
     stores: APP.stores.map(function (store) {
       const goal = goalForStore_(state, store);
       const accumulated = (state.sales[store.id] || []).reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
-      return { id: store.id, name: store.name, goal: goal, accumulated: accumulated, progressPercent: percent_(accumulated, goal) };
+      return { id: store.id, name: store.name, goal: goal, accumulated: accumulated, progressPercent: percent_(accumulated, goal), sales: (state.sales[store.id] || []).map(function (item) { return { date: item.date, amount: item.amount, source: item.source || "email" }; }) };
     })
   };
 }
@@ -309,7 +345,7 @@ function upsertSale_(state, storeId, dateKey, amount) {
     return;
   }
   const store = APP.stores.find(function (item) { return item.id === storeId; });
-  const accumulatedBefore = records.reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
+  const accumulatedBefore = records.reduce(function (sum, item) { return sum + (item.date < dateKey ? Number(item.amount || 0) : 0); }, 0);
   const day = parseLocalDate_(dateKey);
   const remainingAtStart = Math.max(0, goalForStore_(state, store) - accumulatedBefore);
   records.push({

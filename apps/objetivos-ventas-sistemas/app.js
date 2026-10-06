@@ -8,6 +8,42 @@
   let token = sessionStorage.getItem(SESSION_KEY) || "";
   let dashboard = null;
 
+  $("salesDate").addEventListener("change", renderSales);
+  $("salesForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const sales = {};
+    document.querySelectorAll("[data-sale-id]").forEach((input) => {
+      if (input.value.trim() !== "") sales[input.dataset.saleId] = Number(input.value);
+    });
+    $("salesMessage").textContent = "";
+    $("salesMessage").style.color = "var(--rio-danger)";
+    if (!Object.keys(sales).length) { $("salesMessage").textContent = "Ingresá al menos una venta."; return; }
+    setBusy($("saveSalesButton"), true, "Guardando…", "Guardar ventas del día");
+    try {
+      const data = await api("updateSales", { token, date: $("salesDate").value, sales: JSON.stringify(sales) });
+      if (!data || data.role !== "admin" || !Array.isArray(data.stores)) throw new Error("La API necesita actualizarse para permitir la carga manual.");
+      render(data);
+      $("salesMessage").style.color = "var(--rio-ok)";
+      $("salesMessage").textContent = "Ventas guardadas. El acumulado de cada local ya está actualizado.";
+    } catch (error) {
+      $("salesMessage").textContent = error.message || "No se pudieron guardar las ventas.";
+    } finally {
+      setBusy($("saveSalesButton"), false, "Guardando…", "Guardar ventas del día");
+    }
+  });
+
+  function renderSales() {
+    if (!dashboard) return;
+    $("salesMessage").textContent = "";
+    const supported = dashboard.stores.every((store) => Array.isArray(store.sales));
+    $("saveSalesButton").disabled = !supported;
+    if (!supported) $("salesMessage").textContent = "La carga manual estará disponible cuando se actualice la API de ventas.";
+    $("salesStores").innerHTML = dashboard.stores.map((store) => {
+      const sale = (store.sales || []).find((item) => item.date === $("salesDate").value);
+      return `<tr><td><label for="sale-${store.id}">${store.name}${sale ? " · cargado" : " · sin dato"}</label></td><td><input id="sale-${store.id}" class="goal-input" data-sale-id="${store.id}" type="number" min="0" max="9999999999" step="0.01" placeholder="Sin cambios" value="${sale ? sale.amount : ""}"></td></tr>`;
+    }).join("");
+  }
+
   $("loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     setBusy($("loginButton"), true, "Ingresando…", "Ingresar");
@@ -51,6 +87,13 @@
 
   function render(data) {
     dashboard = data;
+    const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
+    $("salesDate").min = data.month + "-01";
+    const [year, month] = data.month.split("-").map(Number);
+    const monthEnd = data.month + "-" + new Date(year, month, 0).getDate();
+    $("salesDate").max = today < monthEnd ? today : monthEnd;
+    if (!$("salesDate").value || $("salesDate").value.slice(0, 7) !== data.month) $("salesDate").value = $("salesDate").max;
+    renderSales();
     const totalGoal = data.stores.reduce((sum, store) => sum + store.goal, 0);
     const totalSales = data.stores.reduce((sum, store) => sum + store.accumulated, 0);
     $("period").textContent = "Período " + data.month + (data.updatedAt ? " · actualizado " + new Date(data.updatedAt).toLocaleString("es-AR") : "");
@@ -64,7 +107,7 @@
     return new Promise((resolve, reject) => {
       const callbackName = "rioAdminJsonp_" + Date.now() + "_" + Math.random().toString(36).slice(2);
       const script = document.createElement("script");
-      const timeout = setTimeout(() => finish(new Error("La API tardó demasiado en responder.")), 20000);
+      const timeout = setTimeout(() => finish(new Error("La API tardó demasiado en responder. Volvé a intentar en unos instantes.")), 60000);
       function finish(error, payload) { clearTimeout(timeout); delete window[callbackName]; script.remove(); if (error) reject(error); else if (!payload || !payload.ok) reject(new Error(payload && payload.error ? payload.error : "Respuesta inválida.")); else resolve(payload.data); }
       window[callbackName] = (payload) => finish(null, payload);
       script.onerror = () => finish(new Error("No se pudo conectar con la API."));

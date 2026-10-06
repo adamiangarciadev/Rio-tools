@@ -54,8 +54,18 @@
     <header><div><h1>Objetivos mensuales</h1><p id="period"></p></div><div class="actions"><button id="saveButton">Guardar objetivos</button><button id="logoutButton" class="secondary">Salir</button></div></header>
     <section class="summary"><article class="stat"><span>Objetivo general</span><strong id="totalGoal"></strong></article><article class="stat"><span>Venta acumulada</span><strong id="totalSales"></strong></article><article class="stat"><span>Cumplimiento</span><strong id="totalPercent"></strong></article></section>
     <section class="panel"><div style="overflow:auto"><table><thead><tr><th>Local</th><th>Venta acumulada</th><th>Avance</th><th>Objetivo mensual</th></tr></thead><tbody id="stores"></tbody></table></div><div id="message" class="message"></div></section>
+    <section class="panel" style="margin-top:16px">
+      <h2>Carga manual de ventas</h2>
+      <p>Elegí el día e ingresá la venta total de cada local. Al guardar, se reemplaza el monto de ese día; los campos vacíos quedan sin cambios. Las ventas manuales se conservan aunque llegue luego el mail.</p>
+      <form id="salesForm">
+        <label>Fecha de venta<input id="salesDate" type="date" required></label>
+        <div style="overflow:auto"><table><thead><tr><th>Local</th><th>Venta del día ($)</th></tr></thead><tbody id="salesStores"></tbody></table></div>
+        <button id="saveSalesButton" type="submit" style="margin-top:16px">Guardar ventas del día</button>
+        <div id="salesMessage" class="message" role="status" aria-live="polite"></div>
+      </form>
+    </section>
   </main>
-  <script src="./app.js?v=6a11740726"></script>
+  <script src="./app.js?v=manual-sales-20261006"></script>
 <script src="../../assets/app-catalog.js?v=e3275bc34d"></script>
 <script src="../../assets/app-shell.js?v=420f7666a0"></script>
 </body>
