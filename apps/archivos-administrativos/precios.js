@@ -49,6 +49,7 @@ var ListasAdministrativas = (() => {
     if (!result.count) throw new Error('No hay artículos de línea con precio para estas marcas.');
     if (result.unknownType) throw new Error('El reporte todavía no incluye el tipo de prenda para separar Verano. Falta completar ese dato en la fuente.');
     const doc=new JsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const font='helvetica';
     const margin=6, columns=8, width=(297-margin*2)/columns, top=25, bottom=200, line=3.25;
     let column=0,y=top,page=1;
     const dateValue=report.sources?.['lista'+list]?.date || report.updatedAt;
@@ -57,26 +58,26 @@ var ListasAdministrativas = (() => {
     const dateText=date.toLocaleDateString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'});
     const money=new Intl.NumberFormat('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
     function header(){
-      doc.setTextColor(35);doc.setFont('times','normal');doc.setFontSize(34);doc.text('RÍO',margin,17);
-      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('LISTA DE PRECIOS · LÍNEA',43,10);
-      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text('lenceriario.com  |  ventas@lenceriario.com',43,15);
+      if(options.logo)doc.addImage(options.logo,'PNG',margin,4,25,16.89);
+      doc.setTextColor(48,43,42);doc.setFont(font,'bold');doc.setFontSize(10);doc.text('LISTA DE PRECIOS · LÍNEA',43,10);
+      doc.setFont(font,'normal');doc.setFontSize(7);doc.text('lenceriario.com  |  ventas@lenceriario.com',43,15);
       doc.text(`${list===20?'L20':'LISTA '+list} · FECHA ${dateText}`,291,10,{align:'right'});
-      doc.setFontSize(6);doc.text('Marcas en orden alfabético · Artículos de menor a mayor',43,20);
+      doc.setFontSize(6);doc.text(options.contact||'',43,20);
       doc.text(`Página ${page}`,291,205,{align:'right'});
     }
     function next(){column++;y=top;if(column===columns){doc.addPage();column=0;page++;header();}}
     function section(g,continued){
       const x=margin+column*width;
       doc.setFillColor(240);doc.setDrawColor(100);doc.setLineWidth(.15);doc.rect(x,y,width,6,'FD');
-      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text(g.brand.toUpperCase(),x+width/2,y+4.1,{align:'center'});y+=6;
-      doc.setFillColor(65);doc.rect(x,y,width,4,'F');doc.setTextColor(255);doc.setFontSize(5.5);doc.text(g.section.toUpperCase()+(continued?' (CONT.)':''),x+width/2,y+2.8,{align:'center'});doc.setTextColor(35);y+=4;
+      doc.setFont(font,'bold');doc.setFontSize(8);doc.text(g.brand.toUpperCase(),x+width/2,y+4.1,{align:'center'});y+=6;
+      doc.setFillColor(255,95,92);doc.rect(x,y,width,4,'F');doc.setTextColor(48,43,42);doc.setFontSize(5.5);doc.text(g.section.toUpperCase()+(continued?' (CONT.)':''),x+width/2,y+2.8,{align:'center'});y+=4;
     }
     header();
     result.sections.forEach(g=>{
       if(y+10+line>bottom) next();section(g,false);
       g.rows.forEach(r=>{
         const label=r.article+(r.showSizes?' · T '+r.sizes:'');
-        doc.setFont('helvetica','normal');doc.setFontSize(5.6);
+        doc.setFont(font,'normal');doc.setFontSize(5.6);
         const labels=doc.splitTextToSize(label,width*.47-1.5),height=Math.max(line,labels.length*2.3+1);
         if(y+height>bottom){next();section(g,true);}
         const x=margin+column*width;
@@ -89,6 +90,20 @@ var ListasAdministrativas = (() => {
   async function init(){
     const picker=document.getElementById('lpMarcas');if(!picker)return;
     const status=document.getElementById('lpEstado'),buttons=[...document.querySelectorAll('[data-price-list]')];
+    let identityPromise;
+    function identity(){
+      if(!identityPromise)identityPromise=(async()=>{
+        const paths=['../../assets/identity/rio-logo-coral-render.png','../envios/locales.csv'];
+        const responses=await Promise.all(paths.map(path=>fetch(path)));
+        if(responses.some(r=>!r.ok))throw new Error('No se pudieron cargar el logo o los datos de las sucursales.');
+        const buffers=await Promise.all(responses.slice(0,1).map(r=>r.arrayBuffer()));
+        const base64=buffer=>{let s='';new Uint8Array(buffer).forEach(b=>s+=String.fromCharCode(b));return btoa(s);};
+        const rows=PreciosCore.csv(await responses[1].text());const headers=rows.shift();
+        const contacts=rows.map(row=>Object.fromEntries(headers.map((h,i)=>[h,row[i]])));
+        return {logo:'data:image/png;base64,'+base64(buffers[0]),contacts};
+      })().catch(error=>{identityPromise=null;throw error;});
+      return identityPromise;
+    }
     function updateBrands(rows = []) {
       const previous=new Map([...picker.querySelectorAll('input')].map(input=>[norm(input.value),input.checked]));
       const defaults=new Set(brands.map(norm));
@@ -148,8 +163,18 @@ var ListasAdministrativas = (() => {
     }
     picker.addEventListener('change',render);
     document.getElementById('lpMedias').addEventListener('change',render);
-    buttons.forEach(button=>button.addEventListener('click',()=>{
-      try{const list=Number(button.dataset.priceList),selected=[...picker.querySelectorAll('input:checked')].map(i=>i.value);const output=pdf(report,list,selected,window.jspdf.jsPDF,{includeMedias:document.getElementById('lpMedias').checked});output.doc.save(list===20?'rio-l20-linea.pdf':`rio-lista-${list}-linea.pdf`);}
+    buttons.forEach(button=>button.addEventListener('click',async()=>{
+      try{
+        const assets=await identity();
+        const branch=window.RioContext?.branch;
+        const name=({AV2:'AVELLANEDA',WEB:'AVELLANEDA (WEB)'})[branch]||branch;
+        const local=assets.contacts.find(r=>r.SUCURSAL===name);
+        if(!local)throw new Error('Elegí una sucursal de local o WEB en la suite para incluir su dirección y WhatsApp en el PDF.');
+        const contact=`${window.RioContext.label(branch)} · ${local.DIRECCION} ${local.ALTURA}, ${local.LOCALIDAD} · WhatsApp: ${local.TELEFONO}`;
+        const list=Number(button.dataset.priceList),selected=[...picker.querySelectorAll('input:checked')].map(i=>i.value);
+        const output=pdf(report,list,selected,window.jspdf.jsPDF,{...assets,contact,includeMedias:document.getElementById('lpMedias').checked});
+        output.doc.save(list===20?'rio-l20-linea.pdf':`rio-lista-${list}-linea.pdf`);
+      }
       catch(e){status.textContent=e.message;}
     }));
     document.getElementById('lpActualizar').addEventListener('click',load);load();
