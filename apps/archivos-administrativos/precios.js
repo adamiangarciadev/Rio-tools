@@ -82,7 +82,7 @@ var ListasAdministrativas = (() => {
         if(y+height>bottom){next();section(g,true);}
         const x=margin+column*width;
         doc.setDrawColor(150);doc.rect(x,y,width,height);doc.line(x+width*.48,y,x+width*.48,y+height);
-        doc.text(labels,x+.7,y+2.3);doc.text('$ '+money.format(r.price),x+width-.7,y+2.3,{align:'right'});y+=height;
+        doc.text(labels,x+width*.24,y+2.3,{align:'center'});doc.text('$ '+money.format(r.price),x+width*.74,y+2.3,{align:'center'});y+=height;
       });
     });
     return {doc,...result};
