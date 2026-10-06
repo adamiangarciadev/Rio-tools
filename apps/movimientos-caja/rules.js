@@ -8,6 +8,7 @@
   for(const key of ['responsible','notes'])if(d[key]!==undefined)d[key]=upper(d[key]);
   for(const section of ['expenses','vouchers','withdrawals','deposits','shipping'])for(const r of d[section]||[]){
    for(const key of ['name','signature','concept','person','otherAccount'])if(r[key]!==undefined)r[key]=upper(r[key]);
+   if(section==='deposits')r.kind='external';
    if(r.account&&r.account!=='other')r.account=upper(r.account);
    if(section==='expenses'&&concepts.includes(r.concept))r.name=r.concept+(personConcepts.has(r.concept)&&r.person?' - '+r.person.trim():'');
   }

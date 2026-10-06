@@ -9,8 +9,8 @@
     const sum=(rows,key='amount')=>(rows||[]).reduce((s,r)=>s+cents(r[key]),0);
     const expenses=sum(d.expenses), vouchersCash=(d.vouchers||[]).filter(r=>r.kind==='cash').reduce((s,r)=>s+cents(r.amount),0);
     const vouchersGoods=(d.vouchers||[]).filter(r=>r.kind==='goods').reduce((s,r)=>s+cents(r.amount),0);
-    const withdrawals=sum(d.withdrawals), depositsCash=(d.deposits||[]).filter(r=>r.kind==='cash').reduce((s,r)=>s+cents(r.amount),0);
-    const depositsExternal=(d.deposits||[]).filter(r=>r.kind==='external').reduce((s,r)=>s+cents(r.amount),0);
+    const withdrawals=sum(d.withdrawals), depositsCash=0;
+    const depositsExternal=sum(d.deposits);
     const deposits=sum(d.deposits), shippingCash=sum(d.shipping,'cash'), shippingDigital=sum(d.shipping,'digital');
     const hasF9=d.f9!==undefined&&d.f9!==null&&d.f9!=='';
     const saleTotal=hasF9?cents(d.f9):cents(d.cashSales)+cents(d.mp)+cents(d.cards)+cents(d.go)+vouchersGoods;

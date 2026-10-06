@@ -53,8 +53,7 @@ begin
     else raise exception 'Tipo de vale inválido'; end if;
    elsif section='deposits' then
     deposits:=deposits+caja_private.amount(r->'amount');
-    if r->>'kind'='cash' then dc:=dc+caja_private.amount(r->'amount');
-    elsif r->>'kind' is distinct from 'external' then raise exception 'Tipo de depósito inválido'; end if;
+    -- Every deposit is an external collection; it never represents cash withdrawn from this drawer.
    else sc:=sc+caja_private.amount(r->'cash');sd:=sd+caja_private.amount(r->'digital'); end if;
   end loop;
  end loop;
@@ -82,7 +81,7 @@ revoke all on function caja_private.amount(jsonb), caja_private.validate_sheet()
 -- Executes after cash_validate: keeps validation of LOCAL inputs, then reconciles the shared drawer.
 create or replace function caja_private.shared_sheet() returns trigger
 language plpgsql set search_path='' as $$
-declare w public.cash_sheets%rowtype; t jsonb:=new.totals; local_sale numeric; local_expected numeric; expected numeric; diff numeric; shipping numeric; local_final numeric; web_external numeric; web_cash numeric; web_expected numeric;
+declare w public.cash_sheets%rowtype; t jsonb:=new.totals; local_sale numeric; local_expected numeric; expected numeric; diff numeric; shipping numeric; local_final numeric; web_external numeric; web_cash numeric; web_expected numeric; web_goods numeric; web_out numeric;
 begin
  if new.branch='WEB' then
   new.data:=new.data-'webClose'-'sharedDrawer'-'f9Mode';
@@ -93,9 +92,17 @@ begin
   if not found then raise exception 'WEB debe guardar el cierre del mismo día antes de cerrar Avellaneda'; end if;
   if new.data->'webClose'->>'id' is distinct from w.id::text or new.data->'webClose'->>'version' is distinct from w.version::text then raise exception 'El cierre WEB cambió. Actualizá e incorporá la versión actual antes de guardar'; end if;
   new.data:=jsonb_set(new.data,'{webClose}',jsonb_build_object('id',w.id,'version',w.version,'data',w.data));
-  select coalesce(sum(caja_private.amount(value->'amount')),0) into web_external from jsonb_array_elements(w.data->'deposits') where value->>'kind'='external';
-  web_cash:=(w.totals->>'cashSales')::numeric-case when w.totals ? 'depositsExternal' then 0 else web_external end;
-  web_expected:=(w.totals->>'expected')::numeric-case when w.totals ? 'depositsExternal' then 0 else web_external end;
+  select coalesce(sum(caja_private.amount(value->'amount')),0) into web_external from jsonb_array_elements(w.data->'deposits');
+  select coalesce(sum(caja_private.amount(value->'amount')),0) into web_goods from jsonb_array_elements(w.data->'vouchers') where value->>'kind'='goods';
+  select coalesce(sum(caja_private.amount(value->'amount')),0) into web_out from (
+   select value from jsonb_array_elements(w.data->'expenses')
+   union all select value from jsonb_array_elements(w.data->'withdrawals')
+   union all select value from jsonb_array_elements(w.data->'vouchers') where value->>'kind'='cash'
+  ) movements;
+  if w.data ? 'f9' and w.data->'f9'<>'null'::jsonb and w.data->>'f9'<>'' then
+   web_cash:=caja_private.amount(w.data->'f9')-caja_private.amount(w.data->'mp')-caja_private.amount(w.data->'cards')-caja_private.amount(w.data->'go')-web_goods-web_external;
+  else web_cash:=caja_private.amount(w.data->'cashSales'); end if;
+  web_expected:=web_cash-web_out;
   local_sale:=(t->>'saleTotal')::numeric;
   if new.data->>'f9Mode'='combined' then local_sale:=local_sale-(w.totals->>'saleTotal')::numeric; end if;
   if local_sale<0 then raise exception 'El F9 total no puede ser menor que el F9 WEB'; end if;

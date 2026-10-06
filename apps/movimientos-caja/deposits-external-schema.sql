@@ -1,4 +1,47 @@
--- Executes after cash_validate: keeps validation of LOCAL inputs, then reconciles the shared drawer.
+create or replace function caja_private.validate_sheet() returns trigger
+language plpgsql set search_path='' as $$
+declare d jsonb:=new.data; r jsonb; section text;
+ expenses numeric:=0; vc numeric:=0; vg numeric:=0; withdrawals numeric:=0; dc numeric:=0; deposits numeric:=0;
+ sc numeric:=0; sd numeric:=0; expected numeric; difference numeric; cash numeric; final numeric; sale_total numeric; cash_sales numeric;
+begin
+ if tg_op='UPDATE' then
+  if new.version<>old.version+1 then raise exception 'Versión inválida'; end if;
+  new.created_at:=old.created_at; new.created_by:=old.created_by;
+  new.updated_by:=coalesce(auth.uid(),old.updated_by);
+ end if;
+ new.updated_at:=now();
+ if d->>'date' is null or (d->>'date')::date<>new.business_date or length(trim(coalesce(d->>'responsible','')))=0 or length(d->>'responsible')>120 or length(coalesce(d->>'notes',''))>4000 then raise exception 'Fecha o responsable inválidos'; end if;
+ foreach section in array array['expenses','vouchers','withdrawals','deposits','shipping'] loop
+  if jsonb_typeof(d->section) is distinct from 'array' or jsonb_array_length(d->section)>100 then raise exception 'Filas inválidas'; end if;
+  for r in select value from jsonb_array_elements(d->section) loop
+   if jsonb_typeof(r) is distinct from 'object' or length(trim(coalesce(r->>'name','')))=0 or length(r->>'name')>240 or length(coalesce(r->>'signature',''))>240 then raise exception 'Detalle inválido'; end if;
+   if section='expenses' then expenses:=expenses+caja_private.amount(r->'amount');
+   elsif section='withdrawals' then withdrawals:=withdrawals+caja_private.amount(r->'amount');
+   elsif section='vouchers' then
+    if r->>'kind'='cash' then vc:=vc+caja_private.amount(r->'amount');
+    elsif r->>'kind'='goods' then vg:=vg+caja_private.amount(r->'amount');
+    else raise exception 'Tipo de vale inválido'; end if;
+   elsif section='deposits' then
+    deposits:=deposits+caja_private.amount(r->'amount');
+    -- Every deposit is an external collection; it never represents cash withdrawn from this drawer.
+   else sc:=sc+caja_private.amount(r->'cash');sd:=sd+caja_private.amount(r->'digital'); end if;
+  end loop;
+ end loop;
+ if d ? 'f9' and d->'f9'<>'null'::jsonb and d->>'f9'<>'' then
+  sale_total:=caja_private.amount(d->'f9');
+  cash_sales:=sale_total-caja_private.amount(d->'mp')-caja_private.amount(d->'cards')-caja_private.amount(d->'go')-vg-(deposits-dc);
+ else
+  cash_sales:=caja_private.amount(d->'cashSales');
+  sale_total:=cash_sales+caja_private.amount(d->'mp')+caja_private.amount(d->'cards')+caja_private.amount(d->'go')+vg;
+ end if;
+ expected:=cash_sales-expenses-vc-withdrawals-dc;
+ difference:=caja_private.amount(d->'counted')-expected;
+ cash:=caja_private.amount(d->'counted')+expenses+vc+withdrawals+dc;
+ final:=cash+caja_private.amount(d->'mp')+caja_private.amount(d->'cards')+caja_private.amount(d->'go')+vg+case when d ? 'f9' and d->'f9'<>'null'::jsonb and d->>'f9'<>'' then deposits-dc else 0 end-greatest(difference,0)+greatest(-difference,0)-sc-sd;
+ new.totals:=jsonb_build_object('saleTotal',sale_total,'cashSales',cash_sales,'expenses',expenses,'vouchersCash',vc,'vouchersGoods',vg,'vouchers',vc+vg,'withdrawals',withdrawals,'deposits',deposits,'depositsExternal',deposits-dc,'shippingCash',sc,'shippingDigital',sd,'shipping',sc+sd,'expected',expected,'difference',difference,'cash',cash,'surplus',greatest(difference,0),'shortage',greatest(-difference,0),'final',final);
+ return new;
+end $$;
+
 create or replace function caja_private.shared_sheet() returns trigger
 language plpgsql set search_path='' as $$
 declare w public.cash_sheets%rowtype; t jsonb:=new.totals; local_sale numeric; local_expected numeric; expected numeric; diff numeric; shipping numeric; local_final numeric; web_external numeric; web_cash numeric; web_expected numeric; web_goods numeric; web_out numeric;
@@ -37,6 +80,3 @@ begin
  end if;
  return new;
 end $$;
-revoke all on function caja_private.shared_sheet() from public, anon, authenticated;
-grant execute on function caja_private.shared_sheet() to service_role;
-create trigger cash_z_shared before insert or update on public.cash_sheets for each row execute function caja_private.shared_sheet();
