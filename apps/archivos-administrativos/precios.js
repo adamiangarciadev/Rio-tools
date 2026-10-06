@@ -80,7 +80,19 @@ var ListasAdministrativas = (() => {
   function init(){
     const picker=document.getElementById('lpMarcas');if(!picker)return;
     const status=document.getElementById('lpEstado'),buttons=[...document.querySelectorAll('[data-price-list]')];
-    brands.forEach(brand=>{const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.value=brand;input.checked=true;label.append(input,document.createTextNode(brand));picker.append(label);});
+    function updateBrands(rows = []) {
+      const previous=new Map([...picker.querySelectorAll('input')].map(input=>[norm(input.value),input.checked]));
+      const defaults=new Set(brands.map(norm));
+      const available=new Map(brands.map(brand=>[norm(brand),brand]));
+      rows.forEach(row=>{const brand=String(row.proveedor||'').trim();if(brand&&!available.has(norm(brand)))available.set(norm(brand),brand);});
+      picker.replaceChildren();
+      [...available.values()].sort(compare).forEach(brand=>{
+        const label=document.createElement('label'),input=document.createElement('input');
+        input.type='checkbox';input.value=brand;input.checked=previous.has(norm(brand))?previous.get(norm(brand)):defaults.has(norm(brand));
+        label.append(input,document.createTextNode(brand));picker.append(label);
+      });
+    }
+    updateBrands();
     let report=null;
     async function load(){
       buttons.forEach(b=>b.disabled=true);status.textContent='Consultando las listas de Precios WEB…';
@@ -88,6 +100,7 @@ var ListasAdministrativas = (() => {
         const response=await fetch(window.PRECIOS_API_URL+'?accion=reporte&_='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(45000)});
         if(!response.ok)throw new Error(`Precios WEB respondió HTTP ${response.status}. Revisá que la implementación de Apps Script esté publicada y accesible.`);
         report=await response.json();if(!report.ok||!Array.isArray(report.rows)||!report.rows.length)throw new Error(report.error||'No hay precios disponibles.');
+        updateBrands(report.rows);
         render();
       }catch(e){report=null;status.textContent='No se pudieron cargar las listas: '+e.message;}
     }
