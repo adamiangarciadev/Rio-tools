@@ -10,16 +10,17 @@
     const expenses=sum(d.expenses), vouchersCash=(d.vouchers||[]).filter(r=>r.kind==='cash').reduce((s,r)=>s+cents(r.amount),0);
     const vouchersGoods=(d.vouchers||[]).filter(r=>r.kind==='goods').reduce((s,r)=>s+cents(r.amount),0);
     const withdrawals=sum(d.withdrawals), depositsCash=(d.deposits||[]).filter(r=>r.kind==='cash').reduce((s,r)=>s+cents(r.amount),0);
+    const depositsExternal=(d.deposits||[]).filter(r=>r.kind==='external').reduce((s,r)=>s+cents(r.amount),0);
     const deposits=sum(d.deposits), shippingCash=sum(d.shipping,'cash'), shippingDigital=sum(d.shipping,'digital');
     const hasF9=d.f9!==undefined&&d.f9!==null&&d.f9!=='';
     const saleTotal=hasF9?cents(d.f9):cents(d.cashSales)+cents(d.mp)+cents(d.cards)+cents(d.go)+vouchersGoods;
-    const cashSales=hasF9?saleTotal-cents(d.mp)-cents(d.cards)-cents(d.go)-vouchersGoods:cents(d.cashSales);
+    const cashSales=hasF9?saleTotal-cents(d.mp)-cents(d.cards)-cents(d.go)-vouchersGoods-depositsExternal:cents(d.cashSales);
     const expected=cashSales-expenses-vouchersCash-withdrawals-depositsCash;
     const difference=cents(d.counted)-expected, surplus=Math.max(difference,0), shortage=Math.max(-difference,0);
     // Reconstruct cash sales from counted cash and cash movements.
     const cash=cents(d.counted)+expenses+vouchersCash+withdrawals+depositsCash;
-    const final=cash+cents(d.mp)+cents(d.cards)+cents(d.go)+vouchersGoods-surplus+shortage-shippingCash-shippingDigital;
-    return Object.fromEntries(Object.entries({expenses,vouchersCash,vouchersGoods,vouchers:vouchersCash+vouchersGoods,withdrawals,deposits,shippingCash,shippingDigital,shipping:shippingCash+shippingDigital,saleTotal,cashSales,expected,difference,surplus,shortage,cash,final}).map(([k,v])=>[k,v/100]));
+    const final=cash+cents(d.mp)+cents(d.cards)+cents(d.go)+vouchersGoods+(hasF9?depositsExternal:0)-surplus+shortage-shippingCash-shippingDigital;
+    return Object.fromEntries(Object.entries({expenses,vouchersCash,vouchersGoods,vouchers:vouchersCash+vouchersGoods,withdrawals,deposits,depositsExternal,shippingCash,shippingDigital,shipping:shippingCash+shippingDigital,saleTotal,cashSales,expected,difference,surplus,shortage,cash,final}).map(([k,v])=>[k,v/100]));
   }
   function shared(d,branch){
     const own=calculate(d);

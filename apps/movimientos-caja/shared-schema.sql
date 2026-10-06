@@ -1,7 +1,7 @@
 -- Executes after cash_validate: keeps validation of LOCAL inputs, then reconciles the shared drawer.
 create or replace function caja_private.shared_sheet() returns trigger
 language plpgsql set search_path='' as $$
-declare w public.cash_sheets%rowtype; t jsonb:=new.totals; local_sale numeric; local_expected numeric; expected numeric; diff numeric; shipping numeric; local_final numeric;
+declare w public.cash_sheets%rowtype; t jsonb:=new.totals; local_sale numeric; local_expected numeric; expected numeric; diff numeric; shipping numeric; local_final numeric; web_external numeric; web_cash numeric; web_expected numeric;
 begin
  if new.branch='WEB' then
   new.data:=new.data-'webClose'-'sharedDrawer'-'f9Mode';
@@ -12,15 +12,18 @@ begin
   if not found then raise exception 'WEB debe guardar el cierre del mismo día antes de cerrar Avellaneda'; end if;
   if new.data->'webClose'->>'id' is distinct from w.id::text or new.data->'webClose'->>'version' is distinct from w.version::text then raise exception 'El cierre WEB cambió. Actualizá e incorporá la versión actual antes de guardar'; end if;
   new.data:=jsonb_set(new.data,'{webClose}',jsonb_build_object('id',w.id,'version',w.version,'data',w.data));
+  select coalesce(sum(caja_private.amount(value->'amount')),0) into web_external from jsonb_array_elements(w.data->'deposits') where value->>'kind'='external';
+  web_cash:=(w.totals->>'cashSales')::numeric-case when w.totals ? 'depositsExternal' then 0 else web_external end;
+  web_expected:=(w.totals->>'expected')::numeric-case when w.totals ? 'depositsExternal' then 0 else web_external end;
   local_sale:=(t->>'saleTotal')::numeric;
   if new.data->>'f9Mode'='combined' then local_sale:=local_sale-(w.totals->>'saleTotal')::numeric; end if;
   if local_sale<0 then raise exception 'El F9 total no puede ser menor que el F9 WEB'; end if;
   local_expected:=(t->>'expected')::numeric+local_sale-(t->>'saleTotal')::numeric;
   local_final:=local_sale-(t->>'shipping')::numeric;
-  expected:=local_expected+(w.totals->>'expected')::numeric;
+  expected:=local_expected+web_expected;
   diff:=caja_private.amount(new.data->'counted')-expected;
   shipping:=(t->>'shipping')::numeric+(w.totals->>'shipping')::numeric;
-  new.totals:=t||jsonb_build_object('localSaleTotal',local_sale,'localExpected',local_expected,'localFinal',local_final,'webSaleTotal',(w.totals->>'saleTotal')::numeric,'webExpected',(w.totals->>'expected')::numeric,'webFinal',(w.totals->>'saleTotal')::numeric-(w.totals->>'shipping')::numeric,'saleTotal',local_sale+(w.totals->>'saleTotal')::numeric,'cashSales',(t->>'cashSales')::numeric+local_sale-(t->>'saleTotal')::numeric,'expected',expected,'difference',diff,'surplus',greatest(diff,0),'shortage',greatest(-diff,0),'shipping',shipping,'final',local_sale+(w.totals->>'saleTotal')::numeric-shipping,'cash',(t->>'cash')::numeric+(w.totals->>'cashSales')::numeric-(w.totals->>'expected')::numeric,'localCounted',caja_private.amount(new.data->'counted')-(w.totals->>'expected')::numeric);
+  new.totals:=t||jsonb_build_object('localSaleTotal',local_sale,'localExpected',local_expected,'localFinal',local_final,'webSaleTotal',(w.totals->>'saleTotal')::numeric,'webExpected',web_expected,'webFinal',(w.totals->>'saleTotal')::numeric-(w.totals->>'shipping')::numeric,'saleTotal',local_sale+(w.totals->>'saleTotal')::numeric,'cashSales',(t->>'cashSales')::numeric+local_sale-(t->>'saleTotal')::numeric,'expected',expected,'difference',diff,'surplus',greatest(diff,0),'shortage',greatest(-diff,0),'shipping',shipping,'final',local_sale+(w.totals->>'saleTotal')::numeric-shipping,'cash',(t->>'cash')::numeric+web_cash-web_expected,'localCounted',caja_private.amount(new.data->'counted')-web_expected);
  else
   new.data:=new.data-'webClose';
  end if;

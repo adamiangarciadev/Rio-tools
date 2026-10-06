@@ -1,34 +1,4 @@
-create schema if not exists caja_private;
-revoke all on schema caja_private from public, anon, authenticated;
-
-create table public.cash_sheets (
- id uuid primary key default gen_random_uuid(),
- branch text not null check (branch in ('AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB','DEPOSITO','ADMINISTRACION')),
- business_date date not null,
- data jsonb not null,
- totals jsonb not null default '{}'::jsonb,
- version integer not null default 1 check(version>0),
- created_by uuid default auth.uid() references auth.users(id),
- updated_by uuid default auth.uid() references auth.users(id),
- created_at timestamptz not null default now(),
- updated_at timestamptz not null default now(),
- unique(branch,business_date),
- check(jsonb_typeof(data)='object' and octet_length(data::text)<200000)
-);
-alter table public.cash_sheets enable row level security;
-revoke all on public.cash_sheets from anon, authenticated;
-create policy cash_no_direct_access on public.cash_sheets for all to anon, authenticated using (false) with check (false);
-create function caja_private.amount(v jsonb) returns numeric
-language plpgsql immutable set search_path='' as $$
-declare n numeric;
-begin
- if v is null or v='null'::jsonb or v='""'::jsonb then return 0; end if;
- n:=(v#>>'{}')::numeric;
- if n<0 or n>999999999 or n::text in ('NaN','Infinity','-Infinity') then raise exception 'Monto inválido'; end if;
- return round(n,2);
-end $$;
-
-create function caja_private.validate_sheet() returns trigger
+create or replace function caja_private.validate_sheet() returns trigger
 language plpgsql set search_path='' as $$
 declare d jsonb:=new.data; r jsonb; section text;
  expenses numeric:=0; vc numeric:=0; vg numeric:=0; withdrawals numeric:=0; dc numeric:=0; deposits numeric:=0;
@@ -72,14 +42,7 @@ begin
  new.totals:=jsonb_build_object('saleTotal',sale_total,'cashSales',cash_sales,'expenses',expenses,'vouchersCash',vc,'vouchersGoods',vg,'vouchers',vc+vg,'withdrawals',withdrawals,'deposits',deposits,'depositsExternal',deposits-dc,'shippingCash',sc,'shippingDigital',sd,'shipping',sc+sd,'expected',expected,'difference',difference,'cash',cash,'surplus',greatest(difference,0),'shortage',greatest(-difference,0),'final',final);
  return new;
 end $$;
-create trigger cash_validate before insert or update on public.cash_sheets
-for each row execute function caja_private.validate_sheet();
--- These invoker functions are only reached by the table trigger; the schema is not exposed by the API.
-grant usage on schema caja_private to service_role;
-grant execute on function caja_private.amount(jsonb), caja_private.validate_sheet() to service_role;
-revoke all on function caja_private.amount(jsonb), caja_private.validate_sheet() from public, anon;
 
--- Executes after cash_validate: keeps validation of LOCAL inputs, then reconciles the shared drawer.
 create or replace function caja_private.shared_sheet() returns trigger
 language plpgsql set search_path='' as $$
 declare w public.cash_sheets%rowtype; t jsonb:=new.totals; local_sale numeric; local_expected numeric; expected numeric; diff numeric; shipping numeric; local_final numeric; web_external numeric; web_cash numeric; web_expected numeric;
@@ -110,6 +73,3 @@ begin
  end if;
  return new;
 end $$;
-revoke all on function caja_private.shared_sheet() from public, anon, authenticated;
-grant execute on function caja_private.shared_sheet() to service_role;
-create trigger cash_z_shared before insert or update on public.cash_sheets for each row execute function caja_private.shared_sheet();
