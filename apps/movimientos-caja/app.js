@@ -85,7 +85,7 @@
    const shipping=copy.querySelector('#shipping tbody');
    for(const row of shipping.rows)row.cells[0].textContent='LOCAL · '+row.cells[0].textContent;
    for(const r of w.shipping||[]){const tr=document.createElement('tr');tr.innerHTML='<td>WEB · '+esc(r.name)+'</td><td class="print-value">'+money(r.cash)+'</td><td class="print-value">'+money(r.digital)+'</td><td>'+money((CajaMath.cents(r.cash)+CajaMath.cents(r.digital))/100)+'</td>';shipping.append(tr);}
-   const closing=[['Total MPago + MPQR',Number(data.mp||0)+Number(w.mp||0)],['Tarjetas LOCAL',Number(data.cards||0)],['Tarjetas WEB',Number(w.cards||0)],['Transferencias cobradas en cuenta',t.local.depositsExternal+t.web.depositsExternal],['Total Go Cuotas',Number(data.go||0)+Number(w.go||0)],['Efectivo contado TOTAL',Number(data.counted||0)]];
+   const closing=[['Total MPago + MPQR',Number(data.mp||0)+Number(w.mp||0)],['Tarjetas LOCAL',Number(data.cards||0)],['Tarjetas WEB',Number(w.cards||0)],['Total Go Cuotas',Number(data.go||0)+Number(w.go||0)],['Efectivo contado TOTAL',Number(data.counted||0)]];
    copy.querySelector('#closingInputs').innerHTML=closing.map(([label,value])=>'<div class="closing-field"><span>'+label+'</span><strong>'+money(value)+'</strong></div>').join('');
    copy.querySelector('#printNotes').textContent=(data.notes?'LOCAL: '+data.notes:'')+(w.notes?'\nWEB: '+w.notes:'');
    copy.querySelector('#responsiblePrint').textContent=data.responsible+' · LEGAJO '+data.responsibleCode+' / WEB: '+w.responsible+' · LEGAJO '+(w.responsibleCode||'');
@@ -93,6 +93,8 @@
   // Copy live values explicitly: edited form controls are properties rather than HTML attributes.
   const originals=$('sheet').querySelectorAll('input,select,textarea');
   for(const control of originals){if(!control.id)continue;const target=copy.querySelector('#'+control.id);if(target&&'value' in target)target.value=control.value;}
+  const omittedPrintLabels=new Set(['Venta total LOCAL + WEB (F9)','Venta total (F9)','Venta en efectivo calculada','Total de efectivo esperado · caja compartida','Total de efectivo esperado al cierre']);
+  for(const row of copy.querySelectorAll('#summary > div'))if(omittedPrintLabels.has(row.querySelector('dt')?.textContent))row.remove();
   copy.querySelector('#responsible').classList.add('print-hide-responsible');
   copy.querySelector('#printNotes').style.whiteSpace='pre-wrap';
   copy.removeAttribute('id');for(const el of copy.querySelectorAll('[id]'))el.removeAttribute('id');
