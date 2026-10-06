@@ -14,11 +14,11 @@ var ListasAdministrativas = (() => {
   const norm = value => PreciosCore.norm(value);
   const compare = (a,b) => a.localeCompare(b,'es',{numeric:true,sensitivity:'base'});
   function prepare(report, list, selected = brands, options = {}) {
-    if (![1,3].includes(list)) throw new Error('Lista inválida.');
+    if (![1,3,20].includes(list)) throw new Error('Lista inválida.');
     if (!report.ok || !Array.isArray(report.rows)) throw new Error(report.error || 'Reporte de precios inválido.');
     const allowed = new Map(selected.map(b=>[norm(b),b])), key = 'lista'+list;
     const grouped = new Map(); let missing = 0, conflicts = 0, unknownType = 0;
-    report.rows.forEach(row => {
+    (list===20?report.l20Rows||[]:report.rows).forEach(row => {
       const brand = allowed.get(norm(row.proveedor));
       if (!brand || PreciosCore.condition(row.clasificacion)!=='Línea') return;
       // Una discrepancia entre listas no permite asegurar que sea de línea en ambas.
@@ -60,7 +60,7 @@ var ListasAdministrativas = (() => {
       doc.setTextColor(35);doc.setFont('times','normal');doc.setFontSize(34);doc.text('RÍO',margin,17);
       doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('LISTA DE PRECIOS · LÍNEA',43,10);
       doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text('lenceriario.com  |  ventas@lenceriario.com',43,15);
-      doc.text(`LISTA ${list} · FECHA ${dateText}`,291,10,{align:'right'});
+      doc.text(`${list===20?'L20':'LISTA '+list} · FECHA ${dateText}`,291,10,{align:'right'});
       doc.setFontSize(6);doc.text('Marcas en orden alfabético · Artículos de menor a mayor',43,20);
       doc.text(`Página ${page}`,291,205,{align:'right'});
     }
@@ -104,7 +104,7 @@ var ListasAdministrativas = (() => {
     updateBrands();
     let report=null,notice='',loading=false;
     try {report=readCache(window.localStorage,window.PRECIOS_API_URL);}catch{}
-    if(report){updateBrands(report.rows);notice='Mostrando la última copia guardada en este navegador.';render();}
+    if(report){updateBrands([...report.rows,...report.l20Rows||[]]);notice='Mostrando la última copia guardada en este navegador.';render();}
     async function load(){
       if(loading)return;
       loading=true;document.getElementById('lpActualizar').disabled=true;
@@ -117,7 +117,7 @@ var ListasAdministrativas = (() => {
         report=nextReport;
         let saved=false;try {saved=saveCache(window.localStorage,window.PRECIOS_API_URL,report);}catch{}
         notice=saved?'Copia actualizada y guardada en este navegador.':'Precios actualizados. No se pudo guardar la copia en este navegador.';
-        updateBrands(report.rows);
+        updateBrands([...report.rows,...report.l20Rows||[]]);
         render();
       }catch(e){
         if(report){notice='No se pudo actualizar: '+e.message+' Se conserva la última copia disponible.';render();}
@@ -127,18 +127,19 @@ var ListasAdministrativas = (() => {
     function render(){
       if(!report)return;
       const selected=[...picker.querySelectorAll('input:checked')].map(i=>i.value);
-      const stats=[1,3].map(n=>prepare(report,n,selected,{includeMedias:document.getElementById('lpMedias').checked}));
+      const stats=[1,3,20].map(n=>prepare(report,n,selected,{includeMedias:document.getElementById('lpMedias').checked}));
       buttons.forEach((b,i)=>b.disabled=!stats[i].count||!!stats[i].unknownType);
-      status.textContent=stats.some(s=>s.unknownType)?'El reporte de Precios WEB aún no trae el tipo de prenda. La descarga se habilitará al incorporar ese dato para separar Verano correctamente.':`Lista 1: ${stats[0].count} filas · Lista 3: ${stats[1].count} filas. `;
+      status.textContent=stats.some(s=>s.unknownType)?'El reporte de Precios WEB aún no trae el tipo de prenda. La descarga se habilitará al incorporar ese dato para separar Verano correctamente.':`Lista 1: ${stats[0].count} filas · Lista 3: ${stats[1].count} filas · L20: ${stats[2].count} filas. `;
+      if(!report.l20Rows?.length)status.textContent+=' L20 pendiente: '+(report.l20Error||'actualizá el script de Precios WEB para incorporar esta lista.')+' ';
       if(stats.some(s=>s.missing||s.conflicts))status.textContent+=' Se excluyen los artículos sin precio o con clasificación contradictoria.';
       if(report.syncError)status.textContent+=' Aviso de la fuente: '+report.syncError;
-      const date=report.sources?.lista1?.date; if(date)status.textContent+=' Datos: '+new Date(date).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'})+'.';
+      [1,3,20].forEach(n=>{const date=report.sources?.['lista'+n]?.date;if(date)status.textContent+=` ${n===20?'L20':'Lista '+n}: `+new Date(date).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'})+'.';});
       if(notice)status.textContent+=' '+notice;
     }
     picker.addEventListener('change',render);
     document.getElementById('lpMedias').addEventListener('change',render);
     buttons.forEach(button=>button.addEventListener('click',()=>{
-      try{const list=Number(button.dataset.priceList),selected=[...picker.querySelectorAll('input:checked')].map(i=>i.value);const output=pdf(report,list,selected,window.jspdf.jsPDF,{includeMedias:document.getElementById('lpMedias').checked});output.doc.save(`rio-lista-${list}-linea.pdf`);}
+      try{const list=Number(button.dataset.priceList),selected=[...picker.querySelectorAll('input:checked')].map(i=>i.value);const output=pdf(report,list,selected,window.jspdf.jsPDF,{includeMedias:document.getElementById('lpMedias').checked});output.doc.save(list===20?'rio-l20-linea.pdf':`rio-lista-${list}-linea.pdf`);}
       catch(e){status.textContent=e.message;}
     }));
     document.getElementById('lpActualizar').addEventListener('click',load);load();
