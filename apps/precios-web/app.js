@@ -50,7 +50,7 @@
       const tr=document.createElement('tr'), td=document.createElement('td'), checkbox=document.createElement('input');
       checkbox.type='checkbox'; checkbox.checked=selected.has(r.id); checkbox.setAttribute('aria-label',`Seleccionar ${r.articulo}, talle ${r.talle || 'sin talle'}`);
       checkbox.addEventListener('change',()=>{checkbox.checked?selected.add(r.id):selected.delete(r.id); $('selectedOnly').checked?filter():render();}); td.append(checkbox); tr.append(td);
-      [r.proveedor,r.articulo,r.clasificacion+(r.conflicto?' ⚠ Clasificación distinta':''),r.talle||'—',r.lista1===null?'Sin precio':money.format(r.lista1),r.lista3===null?'Sin precio':money.format(r.lista3),r.diferencia===null?'—':percent.format(r.diferencia)].forEach(value=>{const cell=document.createElement('td');cell.textContent=value;tr.append(cell);});
+      [r.proveedor,r.articulo,r.clasificacion+(r.conflicto?' ⚠ Clasificación distinta':''),r.talle||'—',r.lista1===null?'Sin precio':money.format(r.lista1),r.lista3===null?'Sin precio':money.format(r.lista3),r.diferencia===null?'—':percent.format(r.diferencia),r.grupo||'—'].forEach(value=>{const cell=document.createElement('td');cell.textContent=value;tr.append(cell);});
       $('rows').append(tr);
     });
     $('count').textContent=`${filtered.length.toLocaleString('es-AR')} filas filtradas · ${selected.size.toLocaleString('es-AR')} seleccionadas en total`;
@@ -78,8 +78,8 @@
   $('prev').onclick=()=>{page--;render();};$('next').onclick=()=>{page++;render();};$('refresh').onclick=refresh;
   $('export').onclick=()=>{
     if(!window.XLSX){status('No se cargó la herramienta de Excel. Revisá la conexión y recargá la página.',true);return;}
-    const rows=[['proveedor','articulo','clasificacion','talle','lista1','lista3','diferencia porcentual'],...data.filter(r=>selected.has(r.id)).map(r=>[r.proveedor,r.articulo,r.clasificacion,r.talle,r.lista1,r.lista3,r.diferencia])];
-    const sheet=XLSX.utils.aoa_to_sheet(rows);sheet['!cols']=[24,22,38,16,18,18,25].map(wch=>({wch}));sheet['!autofilter']={ref:sheet['!ref']};
+    const rows=[['proveedor','articulo','clasificacion','talle','lista1','lista3','diferencia porcentual','grupo'],...data.filter(r=>selected.has(r.id)).map(r=>[r.proveedor,r.articulo,r.clasificacion,r.talle,r.lista1,r.lista3,r.diferencia,r.grupo||''])];
+    const sheet=XLSX.utils.aoa_to_sheet(rows);sheet['!cols']=[24,22,38,16,18,18,25,28].map(wch=>({wch}));sheet['!autofilter']={ref:sheet['!ref']};
     for(let i=1;i<rows.length;i++)for(let c=4;c<=6;c++){const cell=sheet[XLSX.utils.encode_cell({r:i,c})];if(cell)cell.z=c===6?'0.00%':'#,##0.00';}
     const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,sheet,'Precios WEB');
     if(imported){const known=new Set(master.map(r=>r.articulo));const original=XLSX.utils.aoa_to_sheet([['Fila CSV','SKU original','Artículo','Coincidencia'],...imported.sourceRows.map(r=>[r.fila,r.sku,r.articulo,!r.articulo?'Sin SKU':known.has(r.articulo)?'Encontrado':'Sin coincidencia'])]);original['!cols']=[12,36,24,24].map(wch=>({wch}));XLSX.utils.book_append_sheet(book,original,'CSV Tiendanube');}

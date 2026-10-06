@@ -6,6 +6,21 @@ const header = 'Proveedor - Descripción,Artículo - Código,Clasificación,Tall
 const one = core.parse(header+'"Proveedor, A",001,LINEA LINEA,01,LISTA1,"1.000,00"\nB,002,DISC DISCONTINUO,,LISTA1,"0,00"','LISTA1');
 const three = core.parse(header+'"Proveedor, A",001,LINEA LINEA,01,LISTA3,"1.500,00"\nB,002,PROMO PROMO,,LISTA3,"10,00"\nC,003,,,LISTA3,"12,00"','LISTA3');
 const rows=core.merge(one,three);
+const groupedHeader='Grupo - Descripción,'+header;
+const groupedOne=core.parse(groupedHeader+'Trajes de baño,B,001,LINEA LINEA,85,LISTA1,"100,00"','LISTA1');
+const groupedThree=core.parse(groupedHeader+'Bombachas de malla,B,001,LINEA LINEA,85,LISTA3,"200,00"','LISTA3');
+assert.equal(groupedOne.values().next().value.grupo,'Trajes de baño');
+const flexible=core.parse('Grupo – Descripción,Proveedor-Descripción,Artículo - Código,Clasificación - Descripción,Talle - Código,Lista de precios - Número,Precio\nMallas,A,001,LINEA LINEA,85,LISTA1,"100,00"','LISTA1');
+assert.equal(flexible.values().next().value.grupo,'Mallas');
+assert.throws(()=>core.parse('Proveedor,Precio\nA,"100,00"','LISTA1'),/faltan columnas Artículo, Clasificación, Talle, Lista de precios.*Encabezados recibidos: Proveedor \| Precio/);
+const groupedRows=core.merge(groupedOne,groupedThree);
+const equivalent=core.merge(core.parse(header+'A,001,LINEA,85,LISTA1,"100,00"','LISTA1'),core.parse(header+'A,001,LINEA LINEA,85,LISTA3,"200,00"','LISTA3'));
+assert.equal(equivalent[0].conflicto,false);
+assert.equal(groupedRows[0].grupoLista3,'Bombachas de malla');
+assert.equal(groupedRows[0].conflictoGrupo,true);
+assert.equal(core.unify([{...groupedRows[0],grupo:'A'},{...groupedRows[0],grupo:'B'}]).length,2);
+assert.equal(core.merge(one,three)[0].grupo,'');
+assert.throws(()=>core.parse(groupedHeader+'A,B,001,LINEA LINEA,85,LISTA1,"100,00"\nB,B,001,LINEA LINEA,85,LISTA1,"100,00"','LISTA1'),/Duplicado contradictorio/);
 assert.equal(rows.find(r=>r.articulo==='001').diferencia,.5);
 assert.equal(rows.find(r=>r.articulo==='001').talle,'01');
 assert.equal(rows.find(r=>r.articulo==='002').diferencia,null);
@@ -17,6 +32,19 @@ assert.throws(()=>core.parse(header+'B,1,,,LISTA3,"1,00"','LISTA1'));
 assert.throws(()=>core.parse(header+'B,1,,,LISTA1,"1,00"\nB,1,,,LISTA1,"2,00"','LISTA1'));
 assert.throws(()=>core.parse(header+'B,1,,,LISTA1,"precio"','LISTA1'));
 const example = n => `C:/Users/usuario/Downloads/Reporte zNube - PRECIOS LISTA${n} (1).eml`;
+const newExample = n => `C:/Users/usuario/Downloads/Reporte zNube - PRECIOS LISTA${n} (3).eml`;
+if(fs.existsSync(newExample(1))&&fs.existsSync(newExample(3))){
+  const read=n=>{const eml=fs.readFileSync(newExample(n),'utf8'),part=eml.split(/\r?\n(?=Content-Type:)/i).find(p=>/^Content-Type:\s*application\/octet-stream/i.test(p));return Buffer.from(part.split(/\r?\n\r?\n/).slice(1).join('\n\n').split(/\r?\n--/)[0].replace(/\s/g,''),'base64').toString('utf8');};
+  const updated=core.merge(core.parse(read(1),'LISTA1'),core.parse(read(3),'LISTA3'));
+  global.PreciosCore=core;
+  const administrative=require('../apps/archivos-administrativos/precios.js');
+  for(const n of [1,3]){
+    const result=administrative.prepare({ok:true,rows:updated},n,administrative.brands,{includeMedias:true});
+    assert.equal(result.unknownType,0);assert.equal(result.conflicts,0);assert.equal(result.count,1143);
+    assert.equal(result.sections.filter(g=>g.section==='Verano').reduce((total,g)=>total+g.rows.length,0),108);
+  }
+  console.log('Mails nuevos: Grupo conservado, 1143 filas por lista, 108 de Verano.');
+}
 if(fs.existsSync(example(1))&&fs.existsSync(example(3))){
   function attachment(path){ const eml=fs.readFileSync(path,'utf8'), section=eml.split(/\r?\n(?=Content-Type:)/i).find(p=>/^Content-Type:\s*application\/octet-stream/i.test(p));return Buffer.from(section.split(/\r?\n\r?\n/).slice(1).join('\n\n').split(/\r?\n--/)[0].replace(/\s/g,''),'base64').toString('utf8'); }
   const a=core.parse(attachment(example(1)),'LISTA1'),b=core.parse(attachment(example(3)),'LISTA3'),joined=core.merge(a,b);

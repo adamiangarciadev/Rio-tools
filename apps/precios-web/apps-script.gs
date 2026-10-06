@@ -1,5 +1,6 @@
 // Crear un proyecto separado y copiar también core.js como Core.gs.
 const PRECIOS_TZ = 'America/Argentina/Buenos_Aires';
+const PRECIOS_SCHEMA_VERSION = 2;
 
 function instalarPreciosWeb() {
   ScriptApp.getProjectTriggers().forEach(t => {
@@ -23,12 +24,12 @@ function actualizarPreciosWeb() {
     const now = new Date();
     const one = buscarListaPrecios_(1), three = buscarListaPrecios_(3);
     const props = PropertiesService.getScriptProperties(), id = props.getProperty('reportFileId');
-    const fingerprint = JSON.stringify([one.source.messageId,three.source.messageId]);
+    const fingerprint = JSON.stringify([PRECIOS_SCHEMA_VERSION,one.source.messageId,three.source.messageId]);
     if(id && props.getProperty('completedSources')===fingerprint){props.setProperty('syncError','');return;}
     const day = Utilities.formatDate(new Date(Math.min(new Date(one.source.date).getTime(),new Date(three.source.date).getTime())),PRECIOS_TZ,'yyyy-MM-dd');
     // Se validan ambas listas antes de reemplazar el reporte anterior.
     const rows = PreciosCore.merge(PreciosCore.parse(one.text, 'LISTA1'), PreciosCore.parse(three.text, 'LISTA3'));
-    const report = {ok:true,day,updatedAt:now.toISOString(),sources:{lista1:one.source,lista3:three.source},rows};
+    const report = {ok:true,schemaVersion:PRECIOS_SCHEMA_VERSION,day,updatedAt:now.toISOString(),sources:{lista1:one.source,lista3:three.source},rows};
     const json = JSON.stringify(report);
     if (id) DriveApp.getFileById(id).setContent(json);
     else {

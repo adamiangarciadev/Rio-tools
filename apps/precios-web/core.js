@@ -25,18 +25,32 @@ var PreciosCore = (function () {
     return Number(raw.replace(/\./g, '').replace(',', '.'));
   }
   function parse(text, expected) {
-    const table = csv(text), headers = (table.shift() || []).map(norm);
-    const columns = ['PROVEEDOR - DESCRIPCION', 'ARTICULO - CODIGO', 'CLASIFICACION', 'TALLE', 'LISTA DE PRECIOS - NUMERO', 'PRECIO'].map(h => headers.indexOf(h));
-    if (columns.includes(-1)) throw new Error('El CSV no tiene las columnas del reporte de precios zNube.');
+    const table = csv(text), originalHeaders = table.shift() || [];
+    const cleanHeader = value => norm(value).replace(/[\uFEFF\u200B]/g,'').replace(/[\u2010-\u2015]/g,'-').replace(/\s*-\s*/g,' - ').replace(/\s+/g,' ').trim();
+    const headers = originalHeaders.map(cleanHeader);
+    const fields = [
+      ['Proveedor',['PROVEEDOR - DESCRIPCION','PROVEEDOR']],
+      ['Artículo',['ARTICULO - CODIGO','ARTICULO']],
+      ['Clasificación',['CLASIFICACION','CLASIFICACION - DESCRIPCION']],
+      ['Talle',['TALLE','TALLE - CODIGO']],
+      ['Lista de precios',['LISTA DE PRECIOS - NUMERO','LISTA DE PRECIO - NUMERO']],
+      ['Precio',['PRECIO']]
+    ];
+    const findColumn = names => names.reduce((found,name)=>found>=0?found:headers.indexOf(name),-1);
+    const columns = fields.map(([,names])=>findColumn(names));
+    const missing = fields.filter((_,i)=>columns[i]<0).map(([name])=>name);
+    if (missing.length) throw new Error('CSV '+expected+': faltan columnas '+missing.join(', ')+'. Encabezados recibidos: '+originalHeaders.join(' | '));
+    const groupColumn = findColumn(['GRUPO - DESCRIPCION','GRUPO']);
     const entries = new Map();
     table.forEach((row, index) => {
       const values = columns.map(i => String(row[i] == null ? '' : row[i]).trim());
       const [proveedor, articulo, clasificacion, talle, lista, raw] = values;
       if (!articulo || norm(lista) !== expected) throw new Error('Fila ' + (index + 2) + ': artículo o lista inválidos.');
       const id = JSON.stringify([proveedor, articulo, talle]);
-      const item = { id, proveedor, articulo, clasificacion, talle, precio: price(raw) };
+      const grupo = groupColumn < 0 ? '' : String(row[groupColumn] || '').trim();
+      const item = { id, proveedor, articulo, clasificacion, grupo, talle, precio: price(raw) };
       const previous = entries.get(id);
-      if (previous && (previous.precio !== item.precio || previous.clasificacion !== clasificacion)) throw new Error('Duplicado contradictorio: ' + articulo + ' / ' + talle);
+      if (previous && (previous.precio !== item.precio || previous.clasificacion !== clasificacion || previous.grupo !== grupo)) throw new Error('Duplicado contradictorio: ' + articulo + ' / ' + talle);
       entries.set(id, item);
     });
     if (!entries.size) throw new Error('La lista está vacía.');
@@ -45,13 +59,23 @@ var PreciosCore = (function () {
   function merge(one, three) {
     return [...new Set([...one.keys(), ...three.keys()])].map(id => {
       const a = one.get(id), b = three.get(id), source = a || b;
-      return { id, proveedor: source.proveedor, articulo: source.articulo, clasificacion: source.clasificacion, talle: source.talle,
+      return { id, proveedor: source.proveedor, articulo: source.articulo, clasificacion: source.clasificacion, grupo: source.grupo || (b && b.grupo) || '',
+        grupoLista1: a ? a.grupo || '' : '', grupoLista3: b ? b.grupo || '' : '',
+        conflictoGrupo: !!(a && b && a.grupo && b.grupo && norm(a.grupo) !== norm(b.grupo)), talle: source.talle,
         lista1: a ? a.precio : null, lista3: b ? b.precio : null,
         diferencia: a && b && a.precio > 0 ? (b.precio - a.precio) / a.precio : null,
-        conflicto: !!(a && b && a.clasificacion !== b.clasificacion) };
+        conflicto: !!(a && b && classificationKey(a.clasificacion) !== classificationKey(b.clasificacion)) };
     }).sort((a,b) => a.proveedor.localeCompare(b.proveedor) || a.articulo.localeCompare(b.articulo) || a.talle.localeCompare(b.talle));
   }
   function condition(value) { const n = norm(value); return n.includes('DISC') ? 'Discontinuo' : n.includes('LINEA') ? 'Línea' : n ? 'Otra clasificación' : 'Sin clasificación'; }
+  function classificationKey(value) {
+    const n=norm(value);
+    // zNube permite exportar la descripción sola o precedida por su código.
+    if (n==='LINEA' || n==='LINEA LINEA') return 'LINEA';
+    if (n==='DISCONTINUO' || n==='DISC DISCONTINUO') return 'DISCONTINUO';
+    if (n==='PROMO' || n==='PROMO PROMO') return 'PROMO';
+    return n;
+  }
   function tienda(text) {
     const table=csv(text), headers=(table.shift()||[]).map(norm), index=headers.indexOf('SKU');
     if(index<0)throw new Error('El archivo de Tiendanube no tiene una columna SKU.');
@@ -66,7 +90,7 @@ var PreciosCore = (function () {
   function unify(rows) {
     const groups=new Map();
     rows.forEach(row=>{
-      const key=JSON.stringify([row.proveedor,row.articulo,row.clasificacion,row.lista1,row.lista3,!!row.conflicto,!!row.missing]);
+      const key=JSON.stringify([row.proveedor,row.articulo,row.clasificacion,row.grupo,row.grupoLista1,row.grupoLista3,!!row.conflictoGrupo,row.lista1,row.lista3,!!row.conflicto,!!row.missing]);
       if(!groups.has(key))groups.set(key,{row:{...row,id:'unified:'+key},sizes:new Set()});
       const group=groups.get(key); if(row.talle)group.sizes.add(row.talle);
     });

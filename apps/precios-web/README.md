@@ -1,5 +1,9 @@
 # Precios WEB
 
+El lector conserva la columna opcional `Grupo` o `Grupo - Descripción`, sin depender de su posición. El JSON incluye `grupo`, `grupoLista1`, `grupoLista3` y `conflictoGrupo`; pantalla y Excel muestran el grupo. Las listas administrativas usan este dato para reunir Trajes de baño y Bombachas de malla en Verano. Los reportes anteriores siguen siendo compatibles, pero no habilitan el PDF si falta ese dato.
+
+Para activar esta actualización, reemplazar el código del proyecto de Apps Script con `instalacion-completa.gs`, ejecutar `actualizarPreciosWeb` y actualizar la implementación existente con una nueva versión. La versión de esquema fuerza el reprocesamiento de los últimos mails aunque ya se hayan importado. Los archivos `Reporte zNube - PRECIOS LISTA1 (2).eml` y `LISTA3 (2).eml` proporcionados el 6 de octubre todavía contienen las seis columnas originales, sin Grupo.
+
 Comparación de los CSV de zNube LISTA1 y LISTA3 por proveedor + artículo + talle. La clasificación se muestra exactamente como llega; si difiere entre listas se usa la de LISTA1 y se advierte en pantalla. Se distinguen línea, discontinuos (incluidas promociones DISC), otras clasificaciones y sin clasificación. Si falta un precio o LISTA1 vale cero, el porcentaje queda vacío. Los artículos exclusivos de una lista también se muestran.
 
 La selección persiste al cambiar filtros y páginas. La exportación incluye todos los seleccionados, aunque estén ocultos por un filtro, en un XLSX con las siete columnas pedidas; códigos y talles son texto, precios y porcentajes son números.
