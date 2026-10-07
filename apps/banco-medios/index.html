@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Banco de Medios</title>
-  <link rel="stylesheet" href="styles.css?v=3b34d1425a" />
+  <link rel="stylesheet" href="styles.css?v=20261007" />
   <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
   <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
   <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
@@ -19,22 +19,33 @@
       <a class="btn-ghost" href="../../index.html">← Volver</a>
       <div class="module-topbar__title">
         <h1>Contenido para Redes/Pantallas/Estados</h1>
-        <p>Videos para descargar al celular y publicar en estados, pantallas o redes.</p>
+        <p>Videos e imágenes para ver, descargar y publicar en estados, pantallas o redes.</p>
       </div>
-      <div class="module-topbar__actions topbar-actions">
+      <div class="module-topbar__actions topbar-actions" data-video-section>
         <div id="totalCount" class="total">0 videos</div>
         <button id="refreshVideos" class="btn btn-link" type="button">Actualizar lista</button>
       </div>
     </header>
 
-    <section class="filters">
+    <nav class="media-tabs" aria-label="Tipo de contenido">
+      <button class="btn btn-link" type="button" data-media-tab="videos" aria-pressed="true">Videos de Drive</button>
+      <button class="btn btn-link" type="button" data-media-tab="images" aria-pressed="false">Imágenes de Dropbox</button>
+    </nav>
+    <section id="imagesPanel" hidden>
+      <div class="media-tabs"><button id="backImages" class="btn btn-link" type="button" hidden>← Carpeta anterior</button><button id="refreshImages" class="btn btn-link" type="button">Actualizar imágenes</button></div>
+      <p id="imagesStatus" role="status"></p>
+      <div id="imageFolders" class="media-tabs"></div>
+      <section id="imagesGrid" class="grid" aria-label="Imágenes de Dropbox"></section>
+      <div class="load-more-wrap"><button id="moreImages" class="btn btn-link" type="button" hidden>Cargar más imágenes</button></div>
+    </section>
+    <section class="filters" data-video-section>
       <input id="searchInput" type="text" placeholder="Buscar por nombre, local o marca" />
       <select id="localFilter"></select>
       <select id="marcaFilter"></select>
     </section>
 
-    <section id="videoGrid" class="grid"></section>
-    <div id="loadMoreWrap" class="load-more-wrap" hidden>
+    <section id="videoGrid" class="grid" data-video-section></section>
+    <div id="loadMoreWrap" class="load-more-wrap" data-video-section hidden>
       <button id="loadMoreVideos" class="btn btn-link" type="button">Cargar mas videos</button>
     </div>
   </main>
@@ -61,8 +72,9 @@
     </div>
   </div>
 
-  <script src="api-config.js?v=464f6d98db"></script>
+  <script src="api-config.js?v=20261007dropbox"></script>
   <script src="app.js?v=797398a3b7"></script>
+  <script src="images.js?v=20261007"></script>
   <footer>
     RIO Tools Suite | Plataforma operativa interna 
   </footer>

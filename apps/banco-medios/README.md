@@ -1,5 +1,15 @@
 # Banco de Medios
 
+## Imagenes de Dropbox
+
+La pestaña de Dropbox navega la carpeta compartida configurada y sus subcarpetas. Solo muestra JPG, JPEG, PNG, WEBP, GIF y BMP. No realiza operaciones de escritura. La busqueda y filtros existentes pertenecen a la pestaña de videos.
+
+Agregar `dropbox.gs` al mismo proyecto de Apps Script que `apps-script.gs`. Configurar en Propiedades del script `DROPBOX_APP_KEY`, `DROPBOX_APP_SECRET`, `DROPBOX_REFRESH_TOKEN` y `DROPBOX_SHARED_LINK`. Luego actualizar la implementacion existente (nueva version, manteniendo su URL). Nunca colocar credenciales en `api-config.js`.
+
+Para instalar desde la configuracion privada local, ejecutar `tools/preparar-banco-dropbox.ps1`. Copia al portapapeles el codigo combinado con una funcion temporal `configurarDropboxPrivado`. Pegar en el editor privado del proyecto existente, ejecutar esa funcion una vez y eliminarla antes de actualizar la implementacion. El archivo generado permanece fuera del repositorio, en LocalAppData/RioTools/BancoMedios.
+
+Las consultas usan `?accion=imagenes&path=/Marca&offset=0`. El servidor pagina las carpetas completas y entrega hasta 12 imagenes por pedido. La vista previa carga el original de forma diferida; carpetas con imagenes grandes pueden consumir mas datos. OneDrive aun no esta conectado: falta el enlace y el tipo de cuenta.
+
 Este modulo carga videos desde Google Drive mediante un endpoint de Google Apps Script.
 
 ## Carpeta origen
