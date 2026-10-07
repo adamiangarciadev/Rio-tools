@@ -17,7 +17,21 @@ Deno.serve(async req=>{
   const p=JSON.parse(raw);if(!branches.includes(p.branch))return reply({error:'Sucursal inválida'},400);
   const filter='branch=eq.'+encodeURIComponent(p.branch);
   let query:string,method:string,body:string|undefined;
-  if(p.action==='web_close'){
+  if(p.action==='admin_list'){
+   if(p.branch!=='ADMINISTRACION')return reply({error:'Esta consulta corresponde a Administración.'},403);
+   if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(p.month))return reply({error:'Mes inválido'},400);
+   const [year,month]=p.month.split('-').map(Number);if(year<1900||year>2200)return reply({error:'Mes inválido'},400);
+   const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+   const start=new Date(Date.UTC(year,month-1,1));
+   if(p.includePrevious&&today.slice(0,7)===p.month&&today.endsWith('-01'))start.setUTCDate(0);
+   const end=new Date(Date.UTC(year,month,1));
+   const range='business_date=gte.'+start.toISOString().slice(0,10)+'&business_date=lt.'+end.toISOString().slice(0,10);
+   query='?select=id,branch,business_date,version,totals,responsible:data->>responsible,cash_counted:data->counted,shared_drawer:data->sharedDrawer&branch=not.in.(ADMINISTRACION,DEPOSITO)&'+range+'&order=business_date.desc,branch.asc&limit=500';method='GET';
+  }else if(p.action==='admin_get'){
+   if(p.branch!=='ADMINISTRACION')return reply({error:'Esta consulta corresponde a Administración.'},403);
+   if(!/^[a-f0-9-]{36}$/.test(p.id))return reply({error:'Planilla inválida'},400);
+   query='?select=id,branch,business_date,version,data,totals,created_at,updated_at&id=eq.'+p.id+'&branch=not.in.(ADMINISTRACION,DEPOSITO)&limit=1';method='GET';
+  }else if(p.action==='web_close'){
    if(p.branch!=='AV2'||!/^\d{4}-\d{2}-\d{2}$/.test(p.date))return reply({error:'Consulta WEB inválida'},400);
    query='?select=id,business_date,version,data,totals&branch=eq.WEB&business_date=eq.'+p.date+'&limit=1';method='GET';
   }else if(p.action==='list'){

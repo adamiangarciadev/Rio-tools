@@ -78,7 +78,7 @@ test('administration tools require access and become available after authenticat
  test('profile menus contain exactly the requested applications, even after supervisor unlock',()=>{
   const catalogCode=fs.readFileSync('assets/app-catalog.js','utf8');
   const sandbox={window:{}};vm.runInNewContext(catalogCode,sandbox);
-  const expected={ADMINISTRACION:['supervisores','asistencia-dashboard','check-depositos'],WEB:['movimientos-caja','archivos-administrativos','precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']};
+  const expected={ADMINISTRACION:['control-cajas-locales','supervisores','asistencia-dashboard','check-depositos'],WEB:['movimientos-caja','archivos-administrativos','precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']};
   for(const [profile,slugs] of Object.entries(expected)){
     const api=boot(profile,'',true).api;
     assert.deepEqual(Array.from(sandbox.window.RioCatalog.filter(api.canUse),item=>item.slug).sort(),slugs.sort());
@@ -104,3 +104,5 @@ test('stock equalization requires BOTH depot and supervisor session, including d
  assert.equal(redirect,'',branch);
  }
  });
+
+test('control de cajas está reservado a Administración con sesión vigente',()=>{for(const b of ['AV2','WEB','SARMIENTO','DEPOSITO']){const v=boot(b,'control-cajas-locales',true);assert.equal(v.api.canUse({slug:'control-cajas-locales',restricted:true}),false);assert.ok(v.redirect);}assert.ok(boot('ADMINISTRACION','control-cajas-locales',false).redirect);assert.equal(boot('ADMINISTRACION','control-cajas-locales',true).redirect,'');});
