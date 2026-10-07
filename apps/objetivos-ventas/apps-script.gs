@@ -1,6 +1,7 @@
 const APP = Object.freeze({
   folderName: "RIO - Objetivos de ventas",
   dataFileName: "ventas-dashboard.json",
+  dataFileId: "15bLGvWxs2p1VZ1VNZyCAaK9nGPQkyBLD",
   sender: "znube@zoologic.com.ar",
   subject: "Cubo zNube",
   timezone: "America/Argentina/Buenos_Aires",
@@ -492,7 +493,7 @@ function getOrCreateFolder_() {
 }
 
 function findDataFile_() {
-  const folder = getOrCreateFolder_();
-  const files = folder.getFilesByName(APP.dataFileName);
-  return files.hasNext() ? files.next() : null;
+  // Usar siempre la base original, incluso al publicar desde otra cuenta.
+  // Si falta acceso, fallar en lugar de mostrar una base vacía por defecto.
+  return DriveApp.getFileById(APP.dataFileId);
 }
