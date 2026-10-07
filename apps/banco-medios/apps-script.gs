@@ -6,6 +6,8 @@ const MAX_ITEMS = 500;
 function doGet(e) {
   const action = String(e.parameter.accion || e.parameter.action || "videos").toLowerCase();
 
+  if (action === "imagenes") return dropboxImages(e.parameter);
+
   if (action !== "videos") {
     return jsonOutput({
       ok: false,

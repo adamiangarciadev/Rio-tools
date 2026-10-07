@@ -315,6 +315,10 @@ body{
 .modal[hidden]{
   display:none !important;
 }
+.media-tabs{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.media-tabs [aria-pressed="true"]{background:var(--text);color:var(--bg)}
+.media-image{width:100%;height:280px;object-fit:contain;background:#fff;display:block}
+[hidden]{display:none !important}
 body.modal-open{
   overflow:hidden;
 }
