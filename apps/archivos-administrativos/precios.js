@@ -90,6 +90,8 @@ var ListasAdministrativas = (() => {
   async function init(){
     const picker=document.getElementById('lpMarcas');if(!picker)return;
     const status=document.getElementById('lpEstado'),buttons=[...document.querySelectorAll('[data-price-list]')];
+    const canDownloadL20=()=>!!window.RioAccess?.isUnlocked();
+    buttons.find(b=>b.dataset.priceList==='20').hidden=!canDownloadL20();
     let identityPromise;
     function identity(){
       if(!identityPromise)identityPromise=(async()=>{
@@ -153,7 +155,7 @@ var ListasAdministrativas = (() => {
       if(!report)return;
       const selected=[...picker.querySelectorAll('input:checked')].map(i=>i.value);
       const stats=[1,3,20].map(n=>prepare(report,n,selected,{includeMedias:document.getElementById('lpMedias').checked}));
-      buttons.forEach((b,i)=>b.disabled=!stats[i].count||!!stats[i].unknownType);
+      buttons.forEach((b,i)=>b.disabled=!stats[i].count||!!stats[i].unknownType||(b.dataset.priceList==='20'&&!canDownloadL20()));
       status.textContent=stats.some(s=>s.unknownType)?'El reporte de Precios WEB aún no trae el tipo de prenda. La descarga se habilitará al incorporar ese dato para separar Verano correctamente.':`Lista 1: ${stats[0].count} filas · Lista 3: ${stats[1].count} filas · L20: ${stats[2].count} filas. `;
       if(!report.l20Rows?.length)status.textContent+=' L20 pendiente: '+(report.l20Error||'actualizá el script de Precios WEB para incorporar esta lista.')+' ';
       if(stats.some(s=>s.missing||s.conflicts))status.textContent+=' Se excluyen los artículos sin precio o con clasificación contradictoria.';
@@ -161,16 +163,24 @@ var ListasAdministrativas = (() => {
       [1,3,20].forEach(n=>{const date=report.sources?.['lista'+n]?.date;if(date)status.textContent+=` ${n===20?'L20':'Lista '+n}: `+new Date(date).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'})+'.';});
       if(notice)status.textContent+=' '+notice;
     }
+    const contactSelect=document.createElement('select');
+    contactSelect.id='lpSucursalContacto';contactSelect.className='adm-select';
+    if(window.RioContext?.branch==='ADMINISTRACION'){
+      const label=document.createElement('label');label.className='adm-label';label.textContent='Sucursal para el encabezado del PDF';label.append(contactSelect);status.before(label);
+      contactSelect.add(new Option('Elegí una sucursal',''));
+      identity().then(assets=>assets.contacts.forEach(local=>contactSelect.add(new Option(local.SUCURSAL,local.SUCURSAL)))).catch(e=>{status.textContent=e.message;});
+    }
     picker.addEventListener('change',render);
     document.getElementById('lpMedias').addEventListener('change',render);
     buttons.forEach(button=>button.addEventListener('click',async()=>{
       try{
+        if(button.dataset.priceList==='20'&&!canDownloadL20())throw new Error('La descarga de L20 requiere acceso de Supervisión o Administración.');
         const assets=await identity();
         const branch=window.RioContext?.branch;
-        const name=({AV2:'AVELLANEDA',WEB:'AVELLANEDA (WEB)'})[branch]||branch;
+        const name=branch==='ADMINISTRACION'?contactSelect.value:({AV2:'AVELLANEDA',WEB:'AVELLANEDA (WEB)'})[branch]||branch;
         const local=assets.contacts.find(r=>r.SUCURSAL===name);
         if(!local)throw new Error('Elegí una sucursal de local o WEB en la suite para incluir su dirección y WhatsApp en el PDF.');
-        const contact=`${window.RioContext.label(branch)} · ${local.DIRECCION} ${local.ALTURA}, ${local.LOCALIDAD} · WhatsApp: ${local.TELEFONO}`;
+        const contact=`${branch==='ADMINISTRACION'?local.SUCURSAL:window.RioContext.label(branch)} · ${local.DIRECCION} ${local.ALTURA}, ${local.LOCALIDAD} · WhatsApp: ${local.TELEFONO}`;
         const list=Number(button.dataset.priceList),selected=[...picker.querySelectorAll('input:checked')].map(i=>i.value);
         const output=pdf(report,list,selected,window.jspdf.jsPDF,{...assets,contact,includeMedias:document.getElementById('lpMedias').checked});
         output.doc.save(list===20?'rio-l20-linea.pdf':`rio-lista-${list}-linea.pdf`);

@@ -20,7 +20,7 @@
     }
   }
   const profileApps = {
-    ADMINISTRACION: ['control-cajas-locales','supervisores','asistencia-dashboard','check-depositos'],
+    ADMINISTRACION: ['archivos-administrativos','control-cajas-locales','supervisores','asistencia-dashboard','check-depositos'],
     WEB: ['movimientos-caja','archivos-administrativos','precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']
   };
   const localProfiles = new Set(['AV2','NAZCA','QUILMES','CORRIENTES','DEPOSITO','LAMARCA','SARMIENTO','PUEYRREDON']);
