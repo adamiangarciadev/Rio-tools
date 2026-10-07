@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#23253b"><title>Picking Salida V2 · RÍO</title>
+  <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
+  <script src="config.js"></script><script defer src="vendor/dexie.min.js"></script><script defer src="vendor/papaparse.min.js"></script>
+  <script defer src="shared/domain.js"></script><script defer src="storage.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar"><a href="../../index.html" class="brand" aria-label="Volver a RÍO Tools"><img src="../../assets/identity/rio-logo-coral.svg" alt="RÍO" onerror="this.hidden=true"><span><b>TOOLS</b></span></a><div class="top-right"><span id="connection" class="chip">Conectando</span><button id="login" class="quiet">Habilitar equipo</button></div></header>
+  <div id="environment" class="environment" role="status"></div>
+  <main>
+    <section class="page-heading"><div><p class="eyebrow">DEPÓSITO / SALIDA DE MERCADERÍA</p><h1>Picking Salida <span>V2</span></h1><p>Escaneá, revisá y seguí cada salida hasta su confirmación.</p></div><button id="newJob" class="primary">＋ Nuevo picking</button></section>
+    <nav class="tabs" aria-label="Secciones"><button data-tab="picking" class="active" aria-current="page">Preparar salida</button><button data-tab="history">Historial y pendientes <span id="pendingCount">0</span></button><button data-tab="health">Estado del servicio</button></nav>
+    <div id="notice" class="notice" role="status" aria-live="polite">Abriendo el almacenamiento del equipo…</div>
+    <div id="failedReads" class="notice error" role="alert" hidden><b>Lecturas sin guardar. No cierres esta pestaña.</b><p id="failedCodes"></p><button id="retryReads" class="quiet">Recuperar lecturas</button></div>
+    <section id="pickingPanel">
+      <div class="work-grid">
+        <div class="main-column">
+          <section class="card route-card"><div class="section-heading"><h2>Datos de la salida</h2><span id="draftTag" class="chip">Borrador</span></div><div class="form-grid">
+            <label>Responsable<select id="responsable" aria-label="Responsable"></select></label>
+            <label>Origen<select id="origen" aria-label="Origen"></select></label>
+            <label>Destino<select id="destino" aria-label="Destino"></select></label>
+            <label>Bultos<input id="bultos" aria-label="Bultos" type="number" min="0" max="9999" step="1" value="1"></label>
+          </div><p id="routeNote" class="muted small"></p></section>
+          <section class="card scan-card"><div class="section-heading"><div><p class="eyebrow">LECTOR DE CÓDIGOS</p><h2>Una lectura, una prenda</h2></div><span id="catalogState" class="chip">Cargando equivalencias</span></div>
+            <form id="scanForm"><label class="sr-only" for="scanInput">Código de la prenda</label><div class="scan-field"><span aria-hidden="true">▥</span><input id="scanInput" placeholder="Escaneá el código y presioná Enter" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="128"><button id="addScan" class="primary" type="submit">Agregar</button></div></form>
+            <div class="scan-help"><span id="lastScan">Listo para comenzar.</span><label class="check"><input type="checkbox" id="autoScan"> Lector sin Enter (pausa de 450 ms)</label></div>
+          </section>
+          <section class="card"><div class="section-heading"><h2>Prendas escaneadas <span id="scanCount" class="count">0</span></h2><button id="undo" class="quiet" disabled>Deshacer eliminación</button></div><div id="scanList" class="scan-list"><div class="empty">Tu próxima salida empieza con la primera lectura.</div></div><button id="showMore" class="quiet" hidden>Mostrar más lecturas</button></section>
+        </div>
+        <aside class="summary-column"><section class="card summary"><p class="eyebrow">RESUMEN DE LA SALIDA</p><div class="big-count"><strong id="unitCount">0</strong><span>prendas</span></div><div class="summary-row"><span>Artículos / variantes</span><b id="variantCount">0</b></div><div class="summary-row"><span>Sin equivalencia</span><b id="unknownCount">0</b></div><div id="articleList" class="article-list"></div><hr><div id="saveStatus" class="save-status">Guardado en este equipo</div><p id="saveExplanation" class="muted small">El respaldo central se confirma al finalizar y enviar.</p><button id="finish" class="primary full" disabled>Revisar y finalizar →</button><button id="backup" class="quiet full">Descargar respaldo del picking</button><label class="quiet import-label">Recuperar respaldo<input type="file" id="importBackup" accept="application/json,.json" hidden></label><p id="jobId" class="job-id"></p></section></aside>
+      </div>
+    </section>
+    <section id="historyPanel" hidden><div class="card"><div class="section-heading"><div><p class="eyebrow">TRAZABILIDAD</p><h2>Historial y pendientes</h2></div><button id="refreshHistory" class="quiet">Actualizar</button></div><div class="filters"><label>Mes<input id="historyMonth" type="month"></label><label>Buscar<input id="historySearch" type="search" placeholder="Remito, responsable o destino"></label><label>Estado<select id="historyFilter"><option value="all">Todos</option><option value="pending">Pendientes</option><option value="ready">Listos</option></select></label></div><div id="historyList"></div><p class="muted small">El historial central muestra hasta 500 operaciones del mes. Los borradores permanecen en este equipo.</p></div></section>
+    <section id="healthPanel" hidden><div class="card"><p class="eyebrow">CONTINUIDAD OPERATIVA</p><h2>Estado del servicio</h2><div id="healthContent"></div><button id="refreshHealth" class="quiet">Comprobar conexión</button><div id="demoControls" hidden><hr><h3>Ensayo de recuperación</h3><p>Estas acciones solo existen en el servidor local de prueba. No escriben en Google.</p><button id="simulateFailure" class="quiet">Cortar después de crear el TXT</button><button id="recoverDemo" class="quiet">Ejecutar recuperación</button></div></div></section>
+    <footer>RÍO Tools · Picking Salida V2 <span id="version"></span><span>El estado “Listo” exige confirmar archivo y cuadernillo.</span></footer>
+  </main>
+  <dialog id="reviewDialog"><div class="dialog-heading"><h2>Revisar salida</h2><button id="closeReview" class="quiet" aria-label="Cerrar revisión">✕</button></div><div id="reviewContent"></div><label class="check review-check"><input id="reviewAck" type="checkbox"> Revisé la ruta, los bultos y las lecturas sin equivalencia.</label><p class="muted small">Al finalizar, este picking queda cerrado. Podés comenzar otro mientras se confirma el envío.</p><button id="confirmFinish" class="primary full">Finalizar y enviar</button></dialog>
+  <dialog id="detailDialog"><div class="dialog-heading"><h2>Detalle de la operación</h2><button id="closeDetail" class="quiet" aria-label="Cerrar detalle">✕</button></div><div id="detailContent"></div></dialog>
+<dialog id="activationDialog"><div class="dialog-heading"><h2>Habilitar este equipo</h2><button id="closeActivation" class="quiet">Cerrar</button></div><p>Sistemas habilita cada puesto una sola vez. Después los operadores ingresan directamente, sin correo ni contraseña.</p><label>Código privado de un uso<input id="activationCode" type="password" autocomplete="off" spellcheck="false"></label><button id="activateStation" class="primary full">Habilitar este equipo</button></dialog>
+</body></html>
+

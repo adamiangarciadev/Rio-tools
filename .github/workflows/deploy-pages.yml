@@ -30,6 +30,7 @@ jobs:
           mkdir -p .pages
           cp index.html privacidad.html condiciones.html .pages/
           cp -R assets apps data .pages/
+          rm -rf .pages/apps/picking-salida-v2/{server,deployment,tools,tests}
           find .pages -type f \( -name '*.gs' -o -name '*.md' \) -delete
           touch .pages/.nojekyll
 
