@@ -2,6 +2,8 @@
 
 ## Imagenes de Dropbox
 
+La biblioteca incluye navegacion por ruta (breadcrumbs), filtrado local de carpetas, vistas de galeria/lista, cache de navegacion en memoria (40 consultas, renovar con Actualizar), y visor modal de imagenes y videos con flechas y descarga del original. La URL conserva carpeta, busqueda y tipo; Atrás/Adelante del navegador restaura esa ubicacion. El visor navega entre los archivos cargados, permite Escape para cerrar y detiene el video al cerrar. Las credenciales permanecen exclusivamente en el servidor.
+
 La pestaña de Dropbox navega la carpeta compartida configurada y sus subcarpetas. Muestra JPG, JPEG, PNG, WEBP, GIF y BMP, y videos MP4, MOV, M4V, WEBM, AVI, MPEG y MPG. No realiza operaciones de escritura. El buscador de Dropbox consulta por nombre todos los archivos de la carpeta actual antes de paginar; no busca dentro de subcarpetas. Permite filtrar imagenes, videos o ambos. La reproduccion depende del formato y codec admitido por el navegador; se ofrece abrir en Dropbox y descargar como alternativa.
 
 Agregar `dropbox.gs` al mismo proyecto de Apps Script que `apps-script.gs`. Configurar en Propiedades del script `DROPBOX_APP_KEY`, `DROPBOX_APP_SECRET`, `DROPBOX_REFRESH_TOKEN` y `DROPBOX_SHARED_LINK`. Luego actualizar la implementacion existente (nueva version, manteniendo su URL). Nunca colocar credenciales en `api-config.js`.

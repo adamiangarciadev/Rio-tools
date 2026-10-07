@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Banco de Medios</title>
-  <link rel="stylesheet" href="styles.css?v=20261007" />
+  <link rel="stylesheet" href="styles.css?v=20261007studio" />
   <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
   <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
   <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
@@ -12,14 +12,16 @@
 <script src="../../assets/rio-access.js?v=935accae1e"></script>
 <script src="../../assets/rio-context.js?v=cd7fc2e406"></script>
 <link rel="stylesheet" href="../../assets/rio-context.css?v=952f92312d">
+  <link rel="stylesheet" href="studio.css?v=20261007studio" />
 </head>
 <body class="rio-app" data-rio-app="banco-medios">
   <main class="wrap">
     <header class="topbar module-topbar">
       <a class="btn-ghost" href="../../index.html">← Volver</a>
       <div class="module-topbar__title">
-        <h1>Contenido para Redes/Pantallas/Estados</h1>
-        <p>Videos e imágenes para ver, descargar y publicar en estados, pantallas o redes.</p>
+        <span class="media-eyebrow">BIBLIOTECA DE CONTENIDO</span>
+        <h1 id="mediaHeading">Banco de medios</h1>
+        <p>Encontrá el contenido de tu marca. Miralo, descargalo y compartilo.</p>
       </div>
       <div class="module-topbar__actions topbar-actions" data-video-section>
         <div id="totalCount" class="total">0 videos</div>
@@ -27,27 +29,43 @@
       </div>
     </header>
 
-    <nav class="media-tabs" aria-label="Tipo de contenido">
-      <button class="btn btn-link" type="button" data-media-tab="videos" aria-pressed="true">Videos de Drive</button>
-      <button class="btn btn-link" type="button" data-media-tab="images" aria-pressed="false">Imágenes y videos de Dropbox</button>
+    <nav class="media-tabs source-tabs" aria-label="Fuente del contenido">
+      <button class="source-tab" type="button" data-media-tab="videos" aria-pressed="true"><span class="source-icon" aria-hidden="true">▷</span><span><strong>Videos para publicar</strong><small>Google Drive · redes y estados</small></span></button>
+      <button class="source-tab" type="button" data-media-tab="images" aria-pressed="false"><span class="source-icon" aria-hidden="true">▧</span><span><strong>Catálogos y campañas</strong><small>Dropbox · imágenes y videos</small></span></button>
     </nav>
     <section id="imagesPanel" hidden>
-      <form id="dropboxSearchForm" class="media-tabs" role="search" aria-label="Buscar en Dropbox">
-        <label for="dropboxSearch">Buscar por nombre en esta carpeta</label>
-        <input id="dropboxSearch" type="search" placeholder="Ej.: 8195 o campaña" />
-        <select id="dropboxType" aria-label="Tipo de archivo de Dropbox"><option value="all">Imágenes y videos</option><option value="image">Solo imágenes</option><option value="video">Solo videos</option></select>
-        <button class="btn btn-link" type="submit">Buscar</button>
-      </form>
-      <div class="media-tabs"><button id="backImages" class="btn btn-link" type="button" hidden>← Carpeta anterior</button><button id="refreshImages" class="btn btn-link" type="button">Actualizar imágenes</button></div>
-      <p id="imagesStatus" role="status"></p>
-      <div id="imageFolders" class="media-tabs"></div>
-      <section id="imagesGrid" class="grid" aria-label="Archivos de Dropbox"></section>
-      <div class="load-more-wrap"><button id="moreImages" class="btn btn-link" type="button" hidden>Cargar más archivos</button></div>
+      <div class="media-workspace">
+        <aside class="folder-sidebar" aria-label="Navegar carpetas">
+          <div class="sidebar-heading"><span>EXPLORAR</span><span class="cloud-pill">Dropbox</span></div>
+          <button id="rootImages" class="folder-home" type="button">▧ Todas las marcas <span aria-hidden="true">↗</span></button>
+          <label class="sr-only" for="folderSearch">Filtrar carpetas por nombre</label><input id="folderSearch" class="folder-search" type="search" placeholder="Filtrar carpetas…" />
+          <div class="folder-list-heading"><span id="folderListTitle">Marcas</span><span id="folderCount"></span></div>
+          <div id="imageFolders" class="folder-list"></div>
+          <p id="folderEmpty" class="folder-empty" hidden>No hay carpetas con ese nombre.</p>
+          <div class="sidebar-note"><span aria-hidden="true">↓</span> Todo listo para ver y descargar.</div>
+        </aside>
+        <div class="media-content">
+          <nav id="mediaBreadcrumbs" class="media-breadcrumbs" aria-label="Ruta de la carpeta"></nav>
+          <div class="library-heading"><div><span class="media-eyebrow" id="libraryEyebrow">CATÁLOGOS Y CAMPAÑAS</span><h2 id="libraryTitle">Todas las marcas</h2><p id="imagesStatus" role="status" aria-live="polite"></p></div><button id="refreshImages" class="icon-button" type="button" aria-label="Actualizar carpeta" title="Actualizar carpeta">↻</button></div>
+          <form id="dropboxSearchForm" class="library-toolbar" role="search" aria-label="Buscar en Dropbox">
+            <div class="library-search"><span aria-hidden="true">⌕</span><label class="sr-only" for="dropboxSearch">Buscar por nombre en esta carpeta</label><input id="dropboxSearch" type="search" placeholder="Buscar un archivo por nombre…" /><button id="clearDropboxSearch" type="button" class="search-clear" aria-label="Limpiar búsqueda" hidden>×</button></div>
+            <select id="dropboxType" aria-label="Tipo de archivo de Dropbox"><option value="all">Todos los archivos</option><option value="image">Solo imágenes</option><option value="video">Solo videos</option></select>
+            <button class="btn" type="submit">Buscar</button>
+            <div class="view-switch" aria-label="Vista de archivos"><button id="gridView" type="button" aria-label="Vista de galería" aria-pressed="true">▦</button><button id="listView" type="button" aria-label="Vista de lista" aria-pressed="false">☷</button></div>
+          </form>
+          <p class="search-scope">La búsqueda por nombre se realiza en la carpeta abierta.</p>
+          <section id="folderTiles" class="folder-tiles" aria-label="Subcarpetas"></section>
+          <div id="mediaResultsHeading" class="results-heading" hidden><h3>Archivos</h3><span id="visibleFileCount"></span></div>
+          <section id="imagesGrid" class="grid media-gallery" aria-label="Archivos de Dropbox" aria-busy="false"></section>
+          <div class="load-more-wrap"><button id="moreImages" class="btn btn-link" type="button" hidden>Cargar más archivos</button></div>
+          <button id="backImages" class="folder-back" type="button" hidden>← Volver a la carpeta anterior</button>
+        </div>
+      </div>
     </section>
     <section class="filters" data-video-section>
-      <input id="searchInput" type="text" placeholder="Buscar por nombre, local o marca" />
-      <select id="localFilter"></select>
-      <select id="marcaFilter"></select>
+      <input id="searchInput" type="search" aria-label="Buscar videos de Drive por nombre, local o marca" placeholder="Buscar por nombre, local o marca" />
+      <select id="localFilter" aria-label="Filtrar videos por local"></select>
+      <select id="marcaFilter" aria-label="Filtrar videos por marca"></select>
     </section>
 
     <section id="videoGrid" class="grid" data-video-section></section>
@@ -55,6 +73,12 @@
       <button id="loadMoreVideos" class="btn btn-link" type="button">Cargar mas videos</button>
     </div>
   </main>
+
+  <dialog id="mediaViewer" class="media-viewer" aria-labelledby="viewerTitle">
+    <div class="viewer-header"><div><span class="media-eyebrow">VISTA PREVIA</span><h2 id="viewerTitle"></h2></div><button id="closeViewer" class="icon-button" type="button" aria-label="Cerrar vista previa">×</button></div>
+    <div class="viewer-stage"><button id="previousMedia" class="viewer-arrow" type="button" aria-label="Archivo anterior">‹</button><div id="viewerContent"></div><button id="nextMedia" class="viewer-arrow" type="button" aria-label="Archivo siguiente">›</button></div>
+    <div class="viewer-footer"><span id="viewerPosition"></span><div><a id="viewerExternal" class="btn btn-link" target="_blank" rel="noopener noreferrer">Abrir en Dropbox ↗</a><a id="viewerDownload" class="btn" target="_blank" rel="noopener noreferrer">↓ Descargar original</a></div></div>
+  </dialog>
 
   <div id="downloadModal" class="modal" hidden>
     <div class="modal-content download-dialog">
@@ -79,8 +103,8 @@
   </div>
 
   <script src="api-config.js?v=20261007dropbox"></script>
-  <script src="app.js?v=797398a3b7"></script>
-  <script src="images.js?v=20261007searchvideo"></script>
+  <script src="app.js?v=20261007studio"></script>
+  <script src="images.js?v=20261007studio"></script>
   <footer>
     RIO Tools Suite | Plataforma operativa interna 
   </footer>
