@@ -315,7 +315,7 @@ function appendNextBatch() {
             target="_self"
             rel="noopener noreferrer"
           >
-            Descargar al celular
+            ↓ Descargar
           </a>
           <a
             class="btn btn-link"
@@ -323,7 +323,7 @@ function appendNextBatch() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Abrir en Drive
+            Abrir en Drive ↗
           </a>
         </div>
       </div>
@@ -338,7 +338,8 @@ function appendNextBatch() {
 function setLoadMoreState(isActive) {
   if (!el.loadMoreWrap) return;
 
-  el.loadMoreWrap.hidden = !isActive;
+  const dropboxActive = document.getElementById("imagesPanel")?.hidden === false;
+  el.loadMoreWrap.hidden = !isActive || dropboxActive;
 
   if (el.loadMore) {
     const remaining = Math.max(state.filtered.length - state.renderedCount, 0);
