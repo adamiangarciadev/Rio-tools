@@ -32,10 +32,17 @@ function dropboxImages(params) {
     }
     const folders = [];
     const images = [];
+    const query = String(params.q || '').trim().toLowerCase();
+    const type = String(params.type || 'all');
     entries.forEach(function(entry) {
       const relativePath = path + '/' + entry.name;
       if (entry['.tag'] === 'folder') folders.push({name:entry.name, path:relativePath});
-      else if (/\.(jpe?g|png|webp|gif|bmp)$/i.test(entry.name)) images.push({id:entry.id, nombre:entry.name, path:relativePath, sizeMB:entry.size / 1048576});
+      else {
+        const kind = /\.(jpe?g|png|webp|gif|bmp)$/i.test(entry.name) ? 'image' : /\.(mp4|mov|m4v|webm|avi|mpeg|mpg)$/i.test(entry.name) ? 'video' : '';
+        if (kind && (!query || entry.name.toLowerCase().indexOf(query) >= 0) && (type === 'all' || type === kind)) {
+          images.push({id:entry.id, nombre:entry.name, path:relativePath, kind:kind, sizeMB:entry.size / 1048576});
+        }
+      }
     });
     // Fetch preview links in small batches to keep each request bounded.
     const offset = Math.max(0, Math.floor(Number(params.offset) || 0));
