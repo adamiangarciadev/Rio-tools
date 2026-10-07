@@ -29,14 +29,20 @@
 
     <nav class="media-tabs" aria-label="Tipo de contenido">
       <button class="btn btn-link" type="button" data-media-tab="videos" aria-pressed="true">Videos de Drive</button>
-      <button class="btn btn-link" type="button" data-media-tab="images" aria-pressed="false">Imágenes de Dropbox</button>
+      <button class="btn btn-link" type="button" data-media-tab="images" aria-pressed="false">Imágenes y videos de Dropbox</button>
     </nav>
     <section id="imagesPanel" hidden>
+      <form id="dropboxSearchForm" class="media-tabs" role="search" aria-label="Buscar en Dropbox">
+        <label for="dropboxSearch">Buscar por nombre en esta carpeta</label>
+        <input id="dropboxSearch" type="search" placeholder="Ej.: 8195 o campaña" />
+        <select id="dropboxType" aria-label="Tipo de archivo de Dropbox"><option value="all">Imágenes y videos</option><option value="image">Solo imágenes</option><option value="video">Solo videos</option></select>
+        <button class="btn btn-link" type="submit">Buscar</button>
+      </form>
       <div class="media-tabs"><button id="backImages" class="btn btn-link" type="button" hidden>← Carpeta anterior</button><button id="refreshImages" class="btn btn-link" type="button">Actualizar imágenes</button></div>
       <p id="imagesStatus" role="status"></p>
       <div id="imageFolders" class="media-tabs"></div>
-      <section id="imagesGrid" class="grid" aria-label="Imágenes de Dropbox"></section>
-      <div class="load-more-wrap"><button id="moreImages" class="btn btn-link" type="button" hidden>Cargar más imágenes</button></div>
+      <section id="imagesGrid" class="grid" aria-label="Archivos de Dropbox"></section>
+      <div class="load-more-wrap"><button id="moreImages" class="btn btn-link" type="button" hidden>Cargar más archivos</button></div>
     </section>
     <section class="filters" data-video-section>
       <input id="searchInput" type="text" placeholder="Buscar por nombre, local o marca" />
@@ -74,7 +80,7 @@
 
   <script src="api-config.js?v=20261007dropbox"></script>
   <script src="app.js?v=797398a3b7"></script>
-  <script src="images.js?v=20261007"></script>
+  <script src="images.js?v=20261007searchvideo"></script>
   <footer>
     RIO Tools Suite | Plataforma operativa interna 
   </footer>
