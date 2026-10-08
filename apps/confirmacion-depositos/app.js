@@ -3,6 +3,7 @@
 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUbN1TyBTJ1-JWOZD1z3qPO6LZn9YBHJcj3pob1AwUux4fsT06tWtlMWoNwmZoCljKhA/exec";
   const LS_LOCAL = "rio_deposito_local";
+  const STATUS_URL = "https://script.google.com/macros/s/AKfycbzIVuqMocJAPc6PSisBwme0nsCl2G540zws2xvyEXraPAVPEd9520WzQrE-xHiO6XKQmA/exec";
 
   const $ = (sel) => document.querySelector(sel);
 
@@ -143,7 +144,16 @@
         throw new Error(data.error || "No se pudieron cargar los depósitos.");
       }
 
-      renderDeposits(data.data || []);
+      const statusRes = await fetch(`${STATUS_URL}?accion=listar_depositos&local=${encodeURIComponent(selectedLocal)}`);
+      const statusData = await statusRes.json();
+      if (!statusData.ok || !Array.isArray(statusData.data)) {
+        throw new Error(statusData.error || "No se pudieron verificar los estados actuales.");
+      }
+      // El servicio de carga convierte ELIMINADO en PENDIENTE; el listado administrativo es la fuente vigente.
+      const activeById = new Map(statusData.data.map(item => [item.id, item]));
+      renderDeposits((data.data || [])
+        .filter(item => activeById.has(item.id))
+        .map(item => ({ ...item, estado: activeById.get(item.id).estado })));
     } catch (err) {
       el.depositList.innerHTML = `<div class="muted">Error al cargar depósitos.</div>`;
       console.error(err);
