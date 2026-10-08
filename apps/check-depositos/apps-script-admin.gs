@@ -1,15 +1,8 @@
 /*********************************************************
  * CHECK DEPOSITOS - RIO
- * Apps Script independiente para Administracion
- *
- * No reemplaza ni modifica la API de carga de depositos.
- * Lee la misma planilla y expone acciones administrativas:
- * - GET  ?accion=listar_depositos
- * - POST { accion:"confirmar_deposito", id, rowNumber }
- * - POST { accion:"actualizar_deposito", id, rowNumber, monto, cuenta }
- * - POST { accion:"eliminar_deposito", id, rowNumber, expected }
+ * API administrativa: listar, confirmar, editar y eliminar.
+ * Valida el esquema existente; nunca migra ni inserta columnas.
  *********************************************************/
-
 const SPREADSHEET_ID = "1wG31SpvkNftOmwpT0k6b3MwlkHxjKcC00gQuetTSMNg";
 const SHEET_NAME = "DEPOSITOS";
 const TIMEZONE = "America/Argentina/Buenos_Aires";
@@ -17,394 +10,136 @@ const TIMEZONE = "America/Argentina/Buenos_Aires";
 function doGet(e) {
   try {
     const accion = cleanStr(e && e.parameter && e.parameter.accion);
-
-    if (accion === "ping") {
-      return jsonOut({
-        ok: true,
-        app: "check-depositos",
-        ts: new Date().toISOString()
-      });
-    }
-
-    if (accion === "listar_depositos") {
-      return getDepositos_(e);
-    }
-
-    return jsonOut({
-      ok: true,
-      app: "check-depositos",
-      msg: "API check depositos activa"
-    });
-
-  } catch (err) {
-    Logger.log("ERROR doGet check-depositos: " + (err.stack || err.message || err));
-    return jsonOut({
-      ok: false,
-      error: err.message || String(err)
-    });
-  }
+    if (accion === "listar_depositos") return getDepositos_(e);
+    return jsonOut({ ok: true, app: "check-depositos", version: "schema-preserved-v3", ts: new Date().toISOString() });
+  } catch (err) { return jsonOut({ ok: false, error: err.message || String(err) }); }
 }
 
 function doPost(e) {
   try {
     const data = JSON.parse((e && e.postData && e.postData.contents) || "{}");
-    const accion = cleanStr(data.accion);
+    if (data.accion === "confirmar_deposito") return confirmarDeposito_(data);
+    if (data.accion === "actualizar_deposito") return actualizarDeposito_(data);
+    if (data.accion === "eliminar_deposito") return eliminarDeposito_(data);
+    return jsonOut({ ok: false, error: "Accion no reconocida" });
+  } catch (err) { return jsonOut({ ok: false, error: err.message || String(err) }); }
+}
 
-    if (accion === "confirmar_deposito") {
-      return confirmarDeposito_(data);
-    }
-
-    if (accion === "actualizar_deposito") {
-      return actualizarDeposito_(data);
-    }
-
-    if (accion === "eliminar_deposito") {
-      return eliminarDeposito_(data);
-    }
-
-    return jsonOut({
-      ok: false,
-      error: "Accion no reconocida"
-    });
-
-  } catch (err) {
-    Logger.log("ERROR doPost check-depositos: " + (err.stack || err.message || err));
-    return jsonOut({
-      ok: false,
-      error: err.message || String(err)
-    });
+function esquema_(sh) {
+  const legacy = ["ID", "FECHA", "LOCAL", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
+  const withDni = ["ID", "FECHA", "LOCAL", "DNI CLIENTE", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
+  const headers = sh.getRange(1, 1, 1, 9).getDisplayValues()[0].map(cleanStr);
+  const expected = headers[3] === "DNI CLIENTE" ? withDni : legacy;
+  if (!expected.every(function(name, i) { return headers[i] === name; })) {
+    throw new Error("Las columnas de DEPOSITOS no coinciden con el esquema esperado. No se modifico la planilla.");
   }
+  const out = { width: expected.length };
+  expected.forEach(function(name, i) { out[name] = i; });
+  return out;
 }
 
 function getDepositos_(e) {
   const sh = getSheet_();
-  asegurarCabeceras_(sh);
-
-  const lastRow = sh.getLastRow();
-  if (lastRow < 2) {
-    return jsonOut({
-      ok: true,
-      data: [],
-      total: 0
-    });
-  }
-
-  const totalRows = lastRow - 1;
-  const values = sh.getRange(2, 1, totalRows, 9).getValues();
-  const displayValues = sh.getRange(2, 1, totalRows, 9).getDisplayValues();
-
-  let richLinks = [];
-  try {
-    richLinks = sh.getRange(2, 7, totalRows, 1).getRichTextValues();
-  } catch (_) {
-    richLinks = Array.from({ length: totalRows }, function() { return [null]; });
-  }
-
-  const estadoFiltro = cleanStr(e && e.parameter && e.parameter.estado).toUpperCase();
-  const localFiltro = cleanStr(e && e.parameter && e.parameter.local).toUpperCase();
-  const cuentaFiltro = cleanStr(e && e.parameter && e.parameter.cuenta);
+  const schema = esquema_(sh);
+  const count = sh.getLastRow() - 1;
+  if (count < 1) return jsonOut({ ok: true, data: [], total: 0 });
+  const values = sh.getRange(2, 1, count, schema.width).getValues();
+  const displayed = sh.getRange(2, 1, count, schema.width).getDisplayValues();
+  const links = sh.getRange(2, schema.LINK + 1, count, 1).getRichTextValues();
+  const filters = e && e.parameter || {};
   const out = [];
-
-  for (let i = 0; i < values.length; i++) {
-    try {
-      const row = values[i];
-      const rowDisplay = displayValues[i];
-      const id = cleanStr(rowDisplay[0]);
-
-      if (!id) continue;
-      if (cleanStr(rowDisplay[8]).toUpperCase() === "ELIMINADO") continue;
-
-      const fecha = parseFechaFlexible_(row[1], rowDisplay[1]);
-      const fechaTexto = fecha && !isNaN(fecha.getTime())
-        ? Utilities.formatDate(fecha, TIMEZONE, "dd-MM-yyyy HH:mm:ss")
-        : cleanStr(rowDisplay[1]);
-
-      const local = cleanStr(rowDisplay[2]).toUpperCase();
-      const dniCliente = cleanStr(rowDisplay[3]);
-      const monto = String(rowDisplay[4] || "");
-      const cuenta = cleanStr(rowDisplay[5]);
-      const observacion = cleanStr(rowDisplay[7]);
-      const estado = normalizarEstado(rowDisplay[8]);
-
-      if (estadoFiltro && estado !== estadoFiltro) continue;
-      if (localFiltro && local !== localFiltro) continue;
-      if (cuentaFiltro && cuenta !== cuentaFiltro) continue;
-
-      let linkUrl = "";
-      try {
-        const rich = richLinks[i] && richLinks[i][0] ? richLinks[i][0] : null;
-        linkUrl = rich && typeof rich.getLinkUrl === "function" ? (rich.getLinkUrl() || "") : "";
-      } catch (_) {
-        linkUrl = "";
-      }
-
-      out.push({
-        rowNumber: i + 2,
-        id: id,
-        fecha: fechaTexto,
-        local: local,
-        dniCliente: dniCliente,
-        dni: dniCliente,
-        monto: monto,
-        cuenta: cuenta,
-        link: linkUrl,
-        observacion: observacion,
-        estado: estado
-      });
-
-    } catch (rowErr) {
-      Logger.log("Error leyendo deposito fila " + (i + 2) + ": " + (rowErr.message || rowErr));
-    }
-  }
-
+  displayed.forEach(function(row, i) {
+    const id = cleanStr(row[schema.ID]);
+    const rawEstado = cleanStr(row[schema.ESTADO]).toUpperCase();
+    if (!id || rawEstado === "ELIMINADO") return;
+    const fecha = parseFechaFlexible_(values[i][schema.FECHA], row[schema.FECHA]);
+    const rich = links[i] && links[i][0];
+    const item = {
+      rowNumber: i + 2, id: id,
+      fecha: fecha ? Utilities.formatDate(fecha, TIMEZONE, "dd-MM-yyyy HH:mm:ss") : cleanStr(row[schema.FECHA]),
+      local: cleanStr(row[schema.LOCAL]).toUpperCase(),
+      dniCliente: schema["DNI CLIENTE"] === undefined ? "" : cleanStr(row[schema["DNI CLIENTE"]]),
+      monto: cleanStr(row[schema.MONTO]), cuenta: cleanStr(row[schema.CUENTA]),
+      link: rich && rich.getLinkUrl() || (/^https?:\/\//i.test(cleanStr(row[schema.LINK])) ? cleanStr(row[schema.LINK]) : ""),
+      observacion: cleanStr(row[schema.OBSERVACION]), estado: normalizarEstado(rawEstado)
+    };
+    if (!item.monto || !item.cuenta) throw new Error("Hay cargas sin monto o cuenta. Se detuvo el listado para no mostrar datos incorrectos.");
+    if (filters.estado && item.estado !== cleanStr(filters.estado).toUpperCase()) return;
+    if (filters.local && item.local !== cleanStr(filters.local).toUpperCase()) return;
+    if (filters.cuenta && item.cuenta !== cleanStr(filters.cuenta)) return;
+    out.push(item);
+  });
   out.sort(function(a, b) {
-    const da = parseFechaFlexible_(null, a.fecha);
-    const db = parseFechaFlexible_(null, b.fecha);
-    const ta = da && !isNaN(da.getTime()) ? da.getTime() : 0;
-    const tb = db && !isNaN(db.getTime()) ? db.getTime() : 0;
-    return tb - ta;
+    return (parseFechaFlexible_(null, b.fecha) || new Date(0)).getTime() - (parseFechaFlexible_(null, a.fecha) || new Date(0)).getTime();
   });
-
-  return jsonOut({
-    ok: true,
-    data: out,
-    total: out.length
-  });
+  return jsonOut({ ok: true, data: out, total: out.length });
 }
 
-function confirmarDeposito_(data) {
+function modificarDeposito_(data, action) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
-
   try {
     const sh = getSheet_();
-    asegurarCabeceras_(sh);
-
+    const schema = esquema_(sh);
     const id = cleanStr(data.id);
-    let rowNumber = Number(data.rowNumber || 0);
-
-    if (!rowNumber && id) {
-      rowNumber = buscarFilaPorId_(sh, id);
+    let rowNumber = Number(data.rowNumber);
+    if (!rowNumber && id && action !== "eliminar_deposito") {
+      const ids = sh.getRange(2, 1, Math.max(1, sh.getLastRow() - 1), 1).getDisplayValues();
+      const matches = [];
+      ids.forEach(function(row, i) { if (cleanStr(row[0]) === id) matches.push(i + 2); });
+      if (matches.length === 1) rowNumber = matches[0];
     }
-
-    if (!rowNumber || rowNumber < 2 || rowNumber > sh.getLastRow()) {
-      return jsonOut({
-        ok: false,
-        error: "No se encontro el deposito para confirmar"
-      });
+    if (!id || !Number.isInteger(rowNumber) || rowNumber < 2 || rowNumber > sh.getLastRow()) {
+      return jsonOut({ ok: false, error: "No se encontro la carga. Actualiza el listado." });
     }
-
-    const idEnFila = cleanStr(sh.getRange(rowNumber, 1).getDisplayValue());
-    if (id && idEnFila && idEnFila !== id) {
-      return jsonOut({
-        ok: false,
-        error: "La fila encontrada no coincide con el ID enviado"
-      });
-    }
-
-    if (cleanStr(sh.getRange(rowNumber, 9).getDisplayValue()).toUpperCase() === "ELIMINADO") {
+    const row = sh.getRange(rowNumber, 1, 1, schema.width).getDisplayValues()[0];
+    if (cleanStr(row[schema.ID]) !== id) return jsonOut({ ok: false, error: "La fila no coincide con el ID. Actualiza el listado." });
+    const estado = cleanStr(row[schema.ESTADO]).toUpperCase();
+    if (estado === "ELIMINADO") {
+      if (action === "eliminar_deposito") return jsonOut({ ok: true, id: id, rowNumber: rowNumber, estado: "ELIMINADO" });
       return jsonOut({ ok: false, error: "Esta carga fue eliminada. Actualiza el listado." });
     }
-    sh.getRange(rowNumber, 9).setValue("CONFIRMADO");
-
-    return jsonOut({
-      ok: true,
-      id: id || idEnFila,
-      rowNumber: rowNumber,
-      estado: "CONFIRMADO"
-    });
-
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-function actualizarDeposito_(data) {
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-
-  try {
-    const sh = getSheet_();
-    asegurarCabeceras_(sh);
-
-    const id = cleanStr(data.id);
+    if (action === "eliminar_deposito") {
+      const expected = data.expected || {};
+      const dni = schema["DNI CLIENTE"] === undefined ? "" : cleanStr(row[schema["DNI CLIENTE"]]);
+      if (cleanStr(row[schema.LOCAL]).toUpperCase() !== cleanStr(expected.local).toUpperCase() ||
+          dni !== cleanStr(expected.dniCliente) ||
+          cleanStr(row[schema.MONTO]) !== cleanStr(expected.monto) ||
+          cleanStr(row[schema.CUENTA]) !== cleanStr(expected.cuenta) ||
+          normalizarEstado(estado) !== cleanStr(expected.estado)) {
+        return jsonOut({ ok: false, error: "La carga cambio. Actualiza antes de eliminar." });
+      }
+      sh.getRange(rowNumber, schema.ESTADO + 1).setValue("ELIMINADO");
+      return jsonOut({ ok: true, id: id, rowNumber: rowNumber, estado: "ELIMINADO" });
+    }
+    if (action === "confirmar_deposito") {
+      sh.getRange(rowNumber, schema.ESTADO + 1).setValue("CONFIRMADO");
+      return jsonOut({ ok: true, id: id, rowNumber: rowNumber, estado: "CONFIRMADO" });
+    }
     const monto = cleanStr(data.monto);
     const cuenta = cleanStr(data.cuenta);
-    let rowNumber = Number(data.rowNumber || 0);
-
-    if (!monto) {
-      return jsonOut({ ok: false, error: "Falta monto" });
-    }
-
-    if (!cuenta) {
-      return jsonOut({ ok: false, error: "Falta cuenta" });
-    }
-
-    if (!rowNumber && id) {
-      rowNumber = buscarFilaPorId_(sh, id);
-    }
-
-    if (!rowNumber || rowNumber < 2 || rowNumber > sh.getLastRow()) {
-      return jsonOut({
-        ok: false,
-        error: "No se encontro el deposito para actualizar"
-      });
-    }
-
-    const idEnFila = cleanStr(sh.getRange(rowNumber, 1).getDisplayValue());
-    if (id && idEnFila && idEnFila !== id) {
-      return jsonOut({
-        ok: false,
-        error: "La fila encontrada no coincide con el ID enviado"
-      });
-    }
-
-    if (cleanStr(sh.getRange(rowNumber, 9).getDisplayValue()).toUpperCase() === "ELIMINADO") {
-      return jsonOut({ ok: false, error: "Esta carga fue eliminada. Actualiza el listado." });
-    }
-    sh.getRange(rowNumber, 5).setValue(monto);
-    sh.getRange(rowNumber, 6).setValue(cuenta);
-
-    return jsonOut({
-      ok: true,
-      id: id || idEnFila,
-      rowNumber: rowNumber,
-      monto: monto,
-      cuenta: cuenta
-    });
-
-  } finally {
-    lock.releaseLock();
-  }
+    if (!monto || !cuenta) return jsonOut({ ok: false, error: "Falta monto o cuenta" });
+    sh.getRange(rowNumber, schema.MONTO + 1).setValue(monto);
+    sh.getRange(rowNumber, schema.CUENTA + 1).setValue(cuenta);
+    return jsonOut({ ok: true, id: id, rowNumber: rowNumber, monto: monto, cuenta: cuenta });
+  } finally { lock.releaseLock(); }
 }
-
-function eliminarDeposito_(data) {
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    const sh = getSheet_();
-    asegurarCabeceras_(sh);
-    const rowNumber = Number(data.rowNumber);
-    const id = cleanStr(data.id);
-    if (!id || !Number.isInteger(rowNumber) || rowNumber < 2 || rowNumber > sh.getLastRow()) {
-      return jsonOut({ ok: false, error: "No se encontro la carga para eliminar. Actualiza el listado." });
-    }
-    const row = sh.getRange(rowNumber, 1, 1, 9).getDisplayValues()[0];
-    const expected = data.expected || {};
-    if (cleanStr(row[0]) !== id ||
-        cleanStr(row[2]).toUpperCase() !== cleanStr(expected.local).toUpperCase() ||
-        cleanStr(row[3]) !== cleanStr(expected.dniCliente) ||
-        cleanStr(row[4]) !== cleanStr(expected.monto) ||
-        cleanStr(row[5]) !== cleanStr(expected.cuenta) ||
-        normalizarEstado(row[8]) !== cleanStr(expected.estado)) {
-      return jsonOut({ ok: false, error: "La carga cambio desde que abriste el listado. Actualiza antes de eliminar." });
-    }
-    if (cleanStr(row[8]).toUpperCase() !== "ELIMINADO") {
-      sh.getRange(rowNumber, 9).setValue("ELIMINADO");
-    }
-    return jsonOut({ ok: true, id: id, rowNumber: rowNumber, estado: "ELIMINADO" });
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-function buscarFilaPorId_(sh, id) {
-  const lastRow = sh.getLastRow();
-  if (lastRow < 2) return 0;
-
-  const ids = sh.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
-  for (let i = 0; i < ids.length; i++) {
-    if (cleanStr(ids[i][0]) === id) {
-      if (cleanStr(sh.getRange(i + 2, 9).getDisplayValue()).toUpperCase() === "ELIMINADO") continue;
-      return i + 2;
-    }
-  }
-
-  return 0;
-}
+function confirmarDeposito_(data) { return modificarDeposito_(data, "confirmar_deposito"); }
+function actualizarDeposito_(data) { return modificarDeposito_(data, "actualizar_deposito"); }
+function eliminarDeposito_(data) { return modificarDeposito_(data, "eliminar_deposito"); }
 
 function getSheet_() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sh = ss.getSheetByName(SHEET_NAME);
-  if (!sh) {
-    throw new Error("No existe la hoja " + SHEET_NAME);
-  }
+  const sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
+  if (!sh) throw new Error("No existe la hoja " + SHEET_NAME);
   return sh;
 }
-
-function asegurarCabeceras_(sh) {
-  const headers = ["ID", "FECHA", "LOCAL", "DNI CLIENTE", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
-  const legacyHeaders = ["ID", "FECHA", "LOCAL", "MONTO", "CUENTA", "LINK", "OBSERVACION", "ESTADO"];
-  const legacyCurrent = sh.getRange(1, 1, 1, legacyHeaders.length).getValues()[0];
-  const isLegacy = legacyHeaders.every(function(h, i) {
-    return String(legacyCurrent[i] || "").trim() === h;
-  });
-
-  if (isLegacy) {
-    sh.insertColumnAfter(3);
-  }
-
-  const current = sh.getRange(1, 1, 1, headers.length).getValues()[0];
-
-  const needsHeaders = headers.some(function(h, i) {
-    return String(current[i] || "").trim() !== h;
-  });
-
-  if (needsHeaders) {
-    sh.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sh.setFrozenRows(1);
-  }
+function parseFechaFlexible_(raw, text) {
+  if (raw instanceof Date && !isNaN(raw.getTime())) return raw;
+  const value = cleanStr(text || raw);
+  const match = value.match(/^(\d{2})-(\d{2})-(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+  const date = match ? new Date(Number(match[3]), Number(match[2])-1, Number(match[1]), Number(match[4] || 0), Number(match[5] || 0), Number(match[6] || 0)) : new Date(value);
+  return isNaN(date.getTime()) ? null : date;
 }
-
-function parseFechaFlexible_(rawValue, displayValue) {
-  if (rawValue instanceof Date && !isNaN(rawValue.getTime())) {
-    return rawValue;
-  }
-
-  const txt = cleanStr(displayValue || rawValue);
-  if (!txt) return null;
-
-  let m = txt.match(/^(\d{2})-(\d{2})-(\d{4})[ T](\d{2}):(\d{2}):(\d{2})$/);
-  if (m) {
-    return new Date(
-      Number(m[3]),
-      Number(m[2]) - 1,
-      Number(m[1]),
-      Number(m[4]),
-      Number(m[5]),
-      Number(m[6])
-    );
-  }
-
-  m = txt.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/);
-  if (m) {
-    return new Date(
-      Number(m[1]),
-      Number(m[2]) - 1,
-      Number(m[3]),
-      Number(m[4]),
-      Number(m[5]),
-      Number(m[6])
-    );
-  }
-
-  const intento = new Date(txt);
-  if (!isNaN(intento.getTime())) return intento;
-
-  return null;
-}
-
-function normalizarEstado(value) {
-  const estado = cleanStr(value).toUpperCase();
-  return estado === "CONFIRMADO" ? "CONFIRMADO" : "PENDIENTE";
-}
-
-function cleanStr(v) {
-  return String(v == null ? "" : v).trim();
-}
-
-function jsonOut(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+function normalizarEstado(value) { return cleanStr(value).toUpperCase() === "CONFIRMADO" ? "CONFIRMADO" : "PENDIENTE"; }
+function cleanStr(value) { return String(value == null ? "" : value).trim(); }
+function jsonOut(value) { return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON); }
