@@ -38,6 +38,8 @@
     previewTitle: $("#previewTitle"),
     previewEmpty: $("#previewEmpty"),
     previewFrame: $("#previewFrame"),
+    previewModal: $("#previewModal"),
+    closePreviewBtn: $("#closePreviewBtn"),
     editModal: $("#editModal"),
     editForm: $("#editForm"),
     editDepositId: $("#editDepositId"),
@@ -83,6 +85,19 @@
     el.depositList.addEventListener("click", onDepositAction);
     el.editForm.addEventListener("submit", saveDepositEdit);
     el.editModal.addEventListener("click", onEditModalClick);
+    el.closePreviewBtn.addEventListener("click", () => el.previewModal.close());
+    el.previewModal.addEventListener("click", (event) => {
+      const bounds = el.previewModal.getBoundingClientRect();
+      if (event.target === el.previewModal &&
+          (event.clientX < bounds.left || event.clientX > bounds.right ||
+           event.clientY < bounds.top || event.clientY > bounds.bottom)) {
+        el.previewModal.close();
+      }
+    });
+    el.previewModal.addEventListener("close", () => {
+      el.previewFrame.removeAttribute("src");
+      document.body.classList.remove("preview-open");
+    });
 
     loadDeposits();
     setInterval(loadDeposits, 60000);
@@ -286,6 +301,8 @@
   }
 
   function showPreview(deposit) {
+    if (!el.previewModal.open) el.previewModal.showModal();
+    document.body.classList.add("preview-open");
     if (!deposit.link) {
       el.previewTitle.textContent = "Este depósito no tiene comprobante.";
       el.previewFrame.hidden = true;

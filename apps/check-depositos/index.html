@@ -14,7 +14,7 @@
     gtag("config", "G-CDPZFHV1BV");
   </script>
 
-  <link rel="stylesheet" href="styles.css?v=059b9375bd" />
+  <link rel="stylesheet" href="styles.css?v=20261008-preview" />
   <link rel="stylesheet" href="../../assets/rio-theme.css?v=75a74925ef" />
   <link rel="stylesheet" href="../../assets/app-shell.css?v=99a9c322c0" />
   <link rel="icon" href="../../assets/rio-mark.svg" type="image/svg+xml" />
@@ -105,18 +105,20 @@
         </div>
       </section>
 
-      <aside class="panel preview-panel">
-        <div class="panel-head">
-          <div>
-            <h2>Comprobante</h2>
-            <p id="previewTitle">Seleccioná un depósito para verlo.</p>
-          </div>
-        </div>
-        <div id="previewEmpty" class="empty-state">Sin comprobante seleccionado.</div>
-        <iframe id="previewFrame" class="preview-frame" title="Vista previa del comprobante" hidden></iframe>
-      </aside>
     </section>
   </main>
+
+  <dialog id="previewModal" class="preview-modal" aria-labelledby="previewHeading" aria-describedby="previewTitle">
+    <div class="modal__head">
+      <div>
+        <h2 id="previewHeading">Comprobante</h2>
+        <p id="previewTitle"></p>
+      </div>
+      <button id="closePreviewBtn" class="btn preview-close" type="button" aria-label="Cerrar comprobante" title="Cerrar comprobante">&#215;</button>
+    </div>
+    <div id="previewEmpty" class="empty-state" hidden>Sin comprobante seleccionado.</div>
+    <iframe id="previewFrame" class="preview-frame" title="Vista previa del comprobante" hidden></iframe>
+  </dialog>
 
   <template id="depositTemplate">
     <article class="deposit-card">
@@ -170,7 +172,7 @@
     </form>
   </div>
   <script src="api-config.js?v=45874c1d09"></script>
-  <script src="app.js?v=0396bbcbd8"></script>
+  <script src="app.js?v=20261008-preview"></script>
   <script src="../../assets/rio-report-problem.js?v=fdea61e060"></script>
   <script src="../../assets/app-catalog.js?v=e3275bc34d"></script>
   <script src="../../assets/app-shell.js?v=420f7666a0"></script>

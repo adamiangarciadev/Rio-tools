@@ -108,7 +108,7 @@ input {
 
 .content-grid {
   display: grid;
-  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr) minmax(330px, .9fr);
+  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr);
   gap: 14px;
   align-items: start;
 }
@@ -119,14 +119,53 @@ input {
   padding: 14px;
 }
 
-.preview-panel {
-  position: sticky;
-  top: 12px;
+.preview-open {
+  overflow: hidden;
+}
+
+.rio-app .preview-modal {
+  box-sizing: border-box;
+  width: min(680px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 16px;
+  border: 1px solid var(--check-line);
+  border-radius: 8px;
+  background: #fff;
+  color: #222;
+}
+
+.preview-modal::backdrop {
+  background: rgba(0, 0, 0, .62);
+}
+
+.preview-modal .modal__head {
+  margin-bottom: 12px;
+}
+
+.preview-modal .modal__head > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.preview-close {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 24px;
+}
+
+.preview-frame[hidden],
+.preview-modal .empty-state[hidden] {
+  display: none;
 }
 
 .preview-frame {
   width: 100%;
-  height: min(72vh, 780px);
+  display: block;
+  box-sizing: border-box;
+  height: min(65dvh, 600px);
   border: 1px solid var(--check-line);
   border-radius: 8px;
   background:rgba(8, 13, 20, .58);
@@ -393,4 +432,4 @@ dd {
 }
 
 /* Workspace redesign: check-depositos */
-.rio-app .toolbar{gap:20px;padding:20px}.rio-app .content-grid{gap:24px;grid-template-columns:minmax(210px,.7fr) minmax(0,1.5fr)}.rio-app .content-grid>*{min-width:0}.rio-app .content-grid> :last-child{grid-column:1/-1}.rio-app .tabs{background:#eee7f8}.rio-app .deposit-card{padding:20px}.rio-app .account-row{padding:14px}@media(max-width:850px){.rio-app .content-grid{grid-template-columns:minmax(0,1fr)}}
+.rio-app .toolbar{gap:20px;padding:20px}.rio-app .content-grid{gap:24px;grid-template-columns:minmax(210px,.7fr) minmax(0,1.5fr)}.rio-app .content-grid>*{min-width:0}.rio-app .tabs{background:#eee7f8}.rio-app .deposit-card{padding:20px}.rio-app .account-row{padding:14px}@media(max-width:850px){.rio-app .content-grid{grid-template-columns:minmax(0,1fr)}}
