@@ -7,6 +7,7 @@
  * - GET  ?accion=listar_depositos
  * - POST { accion:"confirmar_deposito", id, rowNumber }
  * - POST { accion:"actualizar_deposito", id, rowNumber, monto, cuenta }
+ * - POST { accion:"eliminar_deposito", id, rowNumber, expected }
  *********************************************************/
 
 const SPREADSHEET_ID = "1wG31SpvkNftOmwpT0k6b3MwlkHxjKcC00gQuetTSMNg";
@@ -55,6 +56,10 @@ function doPost(e) {
 
     if (accion === "actualizar_deposito") {
       return actualizarDeposito_(data);
+    }
+
+    if (accion === "eliminar_deposito") {
+      return eliminarDeposito_(data);
     }
 
     return jsonOut({
@@ -107,6 +112,7 @@ function getDepositos_(e) {
       const id = cleanStr(rowDisplay[0]);
 
       if (!id) continue;
+      if (cleanStr(rowDisplay[8]).toUpperCase() === "ELIMINADO") continue;
 
       const fecha = parseFechaFlexible_(row[1], rowDisplay[1]);
       const fechaTexto = fecha && !isNaN(fecha.getTime())
@@ -196,6 +202,9 @@ function confirmarDeposito_(data) {
       });
     }
 
+    if (cleanStr(sh.getRange(rowNumber, 9).getDisplayValue()).toUpperCase() === "ELIMINADO") {
+      return jsonOut({ ok: false, error: "Esta carga fue eliminada. Actualiza el listado." });
+    }
     sh.getRange(rowNumber, 9).setValue("CONFIRMADO");
 
     return jsonOut({
@@ -250,6 +259,9 @@ function actualizarDeposito_(data) {
       });
     }
 
+    if (cleanStr(sh.getRange(rowNumber, 9).getDisplayValue()).toUpperCase() === "ELIMINADO") {
+      return jsonOut({ ok: false, error: "Esta carga fue eliminada. Actualiza el listado." });
+    }
     sh.getRange(rowNumber, 5).setValue(monto);
     sh.getRange(rowNumber, 6).setValue(cuenta);
 
@@ -266,6 +278,36 @@ function actualizarDeposito_(data) {
   }
 }
 
+function eliminarDeposito_(data) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sh = getSheet_();
+    asegurarCabeceras_(sh);
+    const rowNumber = Number(data.rowNumber);
+    const id = cleanStr(data.id);
+    if (!id || !Number.isInteger(rowNumber) || rowNumber < 2 || rowNumber > sh.getLastRow()) {
+      return jsonOut({ ok: false, error: "No se encontro la carga para eliminar. Actualiza el listado." });
+    }
+    const row = sh.getRange(rowNumber, 1, 1, 9).getDisplayValues()[0];
+    const expected = data.expected || {};
+    if (cleanStr(row[0]) !== id ||
+        cleanStr(row[2]).toUpperCase() !== cleanStr(expected.local).toUpperCase() ||
+        cleanStr(row[3]) !== cleanStr(expected.dniCliente) ||
+        cleanStr(row[4]) !== cleanStr(expected.monto) ||
+        cleanStr(row[5]) !== cleanStr(expected.cuenta) ||
+        normalizarEstado(row[8]) !== cleanStr(expected.estado)) {
+      return jsonOut({ ok: false, error: "La carga cambio desde que abriste el listado. Actualiza antes de eliminar." });
+    }
+    if (cleanStr(row[8]).toUpperCase() !== "ELIMINADO") {
+      sh.getRange(rowNumber, 9).setValue("ELIMINADO");
+    }
+    return jsonOut({ ok: true, id: id, rowNumber: rowNumber, estado: "ELIMINADO" });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function buscarFilaPorId_(sh, id) {
   const lastRow = sh.getLastRow();
   if (lastRow < 2) return 0;
@@ -273,6 +315,7 @@ function buscarFilaPorId_(sh, id) {
   const ids = sh.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
   for (let i = 0; i < ids.length; i++) {
     if (cleanStr(ids[i][0]) === id) {
+      if (cleanStr(sh.getRange(i + 2, 9).getDisplayValue()).toUpperCase() === "ELIMINADO") continue;
       return i + 2;
     }
   }

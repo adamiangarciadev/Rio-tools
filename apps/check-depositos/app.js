@@ -58,7 +58,9 @@
     deposits: [],
     source: "central",
     loading: false,
-    editingId: ""
+    editingId: "",
+    editingRowNumber: "",
+    deleting: false
   };
 
   init();
@@ -104,7 +106,7 @@
   }
 
   async function loadDeposits() {
-    if (state.loading) return;
+    if (state.loading || state.deleting) return;
 
     try {
       state.loading = true;
@@ -163,7 +165,7 @@
       }
 
       state.deposits = state.deposits.map((item) => {
-        if (item.id !== deposit.id) return item;
+        if (item.id !== deposit.id || item.rowNumber !== deposit.rowNumber) return item;
         return { ...item, estado: "CONFIRMADO" };
       });
       render();
@@ -235,6 +237,7 @@
       const isConfirmed = status === "CONFIRMADO";
 
       card.dataset.id = deposit.id || "";
+      card.dataset.rowNumber = String(deposit.rowNumber || "");
       card.querySelector('[data-field="local"]').textContent = deposit.local || "-";
       card.querySelector('[data-field="id"]').textContent = deposit.id || "Sin ID";
       card.querySelector('[data-field="estado"]').textContent = status;
@@ -258,6 +261,7 @@
       const confirmBtn = card.querySelector('[data-action="confirm"]');
       confirmBtn.hidden = isConfirmed;
       confirmBtn.dataset.id = deposit.id || "";
+      card.querySelector('[data-action="delete"]').disabled = !deposit.rowNumber || !deposit.id;
 
       fragment.appendChild(card);
     });
@@ -292,12 +296,52 @@
   function onDepositAction(event) {
     const button = event.target.closest("[data-action]");
     if (!button) return;
-    const deposit = state.deposits.find((item) => item.id === button.dataset.id);
+    if (state.deleting) return;
+    const card = button.closest(".deposit-card");
+    const deposit = state.deposits.find((item) => item.id === card.dataset.id &&
+      String(item.rowNumber || "") === card.dataset.rowNumber);
     if (!deposit) return;
 
     if (button.dataset.action === "confirm") confirmDeposit(deposit);
     if (button.dataset.action === "preview") showPreview(deposit);
     if (button.dataset.action === "edit") openEditModal(deposit);
+    if (button.dataset.action === "delete") deleteDeposit(deposit);
+  }
+
+  async function deleteDeposit(deposit) {
+    if (state.loading || state.deleting) return;
+    const approved = window.confirm(`¿Eliminar esta carga?\n\n${deposit.local} · ${deposit.id}\n${deposit.fecha}\n${deposit.cuenta}\nMonto: ${formatAmount(deposit.monto)}\nEstado: ${deposit.estado}\n\nVerifica que sea la carga duplicada o incorrecta. Se quitara de los totales y quedara archivada en la planilla.`);
+    if (!approved) return;
+    try {
+      state.deleting = true;
+      el.depositList.querySelectorAll("button").forEach(button => { button.disabled = true; });
+      const data = await fetchJson(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          accion: "eliminar_deposito",
+          id: deposit.id,
+          rowNumber: deposit.rowNumber,
+          expected: {
+            local: deposit.local, dniCliente: deposit.dniCliente,
+            monto: deposit.monto, cuenta: deposit.cuenta, estado: deposit.estado
+          }
+        })
+      });
+      if (data.estado !== "ELIMINADO" || data.id !== deposit.id || Number(data.rowNumber) !== Number(deposit.rowNumber)) {
+        throw new Error("La API no confirmo la eliminacion. Verifica que Apps Script tenga activa la accion eliminar_deposito.");
+      }
+      state.deposits = state.deposits.filter(item => item !== deposit);
+      if (el.previewModal.open) el.previewModal.close();
+      render();
+      el.statusText.textContent = `Carga ${deposit.id} eliminada del listado.`;
+    } catch (error) {
+      render();
+      window.alert(/accion no reconocida/i.test(error.message || "")
+        ? "Falta actualizar Apps Script para activar la eliminacion de cargas. No se elimino el deposito."
+        : error.message || "No se pudo eliminar la carga.");
+    } finally {
+      state.deleting = false;
+    }
   }
 
   function showPreview(deposit) {
@@ -320,6 +364,7 @@
 
   function openEditModal(deposit) {
     state.editingId = deposit.id || "";
+    state.editingRowNumber = deposit.rowNumber;
     el.editDepositId.textContent = `${deposit.local || "-"} · ${deposit.id || "Sin ID"}`;
     el.editAmountInput.value = deposit.monto || "";
     el.editAccountSelect.value = deposit.cuenta || "";
@@ -330,6 +375,7 @@
 
   function closeEditModal() {
     state.editingId = "";
+    state.editingRowNumber = "";
     el.editModal.hidden = true;
     el.editStatus.textContent = "";
   }
@@ -343,7 +389,8 @@
   async function saveDepositEdit(event) {
     event.preventDefault();
 
-    const deposit = state.deposits.find((item) => item.id === state.editingId);
+    if (state.deleting) return;
+    const deposit = state.deposits.find((item) => item.id === state.editingId && item.rowNumber === state.editingRowNumber);
     if (!deposit) {
       el.editStatus.textContent = "No se encontró el depósito.";
       return;
@@ -373,7 +420,7 @@
       });
 
       state.deposits = state.deposits.map((item) => {
-        if (item.id !== deposit.id) return item;
+        if (item.id !== deposit.id || item.rowNumber !== deposit.rowNumber) return item;
         return {
           ...item,
           monto: data.monto || monto,
@@ -433,6 +480,7 @@
     const seen = new Set();
 
     return items
+      .filter(item => String(item.estado || item.Estado || "").trim().toUpperCase() !== "ELIMINADO")
       .map((item) => ({
         id: String(item.id || item.ID || item.codigo || "").trim(),
         fecha: String(item.fecha || item.Fecha || "").trim(),
@@ -447,7 +495,7 @@
       }))
       .filter((item) => item.id || item.fecha || item.local || item.monto)
       .filter((item) => {
-        const key = item.id || `${item.local}|${item.fecha}|${item.monto}|${item.cuenta}`;
+        const key = item.id && item.rowNumber ? `${item.id}|${item.rowNumber}` : item.id || `${item.local}|${item.fecha}|${item.monto}|${item.cuenta}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;

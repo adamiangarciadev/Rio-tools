@@ -317,6 +317,12 @@ dd {
   background:rgba(245, 158, 11, .1) !important;
 }
 
+.rio-app .delete-btn {
+  color: var(--rio-danger) !important;
+  border-color: var(--rio-danger) !important;
+  background: white !important;
+}
+
 .badge.confirmed {
   color:var(--check-ok) !important;
   border-color: rgba(52, 211, 153, .34) !important;
