@@ -151,6 +151,7 @@
   }
 
   function renderDeposits(items) {
+    items = items.filter(item => normalizeEstado(item.estado) !== "ELIMINADO");
     if (!items.length) {
       el.depositList.innerHTML = `<div class="muted">No hay depósitos cargados en las últimas 72 hs.</div>`;
       return;
@@ -189,6 +190,7 @@
 
   function normalizeEstado(v) {
     const s = String(v || "").trim().toUpperCase();
+    if (s === "ELIMINADO") return "ELIMINADO";
     if (s === "CONFIRMADO") return "CONFIRMADO";
     return "PENDIENTE";
   }
