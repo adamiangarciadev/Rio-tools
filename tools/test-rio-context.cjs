@@ -78,7 +78,7 @@ test('administration tools require access and become available after authenticat
  test('profile menus contain exactly the requested applications, even after supervisor unlock',()=>{
   const catalogCode=fs.readFileSync('assets/app-catalog.js','utf8');
   const sandbox={window:{}};vm.runInNewContext(catalogCode,sandbox);
-  const expected={ADMINISTRACION:['control-cajas-locales','supervisores','asistencia-dashboard','check-depositos'],WEB:['movimientos-caja','archivos-administrativos','precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']};
+  const expected={ADMINISTRACION:['vales','archivos-administrativos','control-cajas-locales','supervisores','asistencia-dashboard','check-depositos'],WEB:['movimientos-caja','archivos-administrativos','precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']};
   for(const [profile,slugs] of Object.entries(expected)){
     const api=boot(profile,'',true).api;
     assert.deepEqual(Array.from(sandbox.window.RioCatalog.filter(api.canUse),item=>item.slug).sort(),slugs.sort());

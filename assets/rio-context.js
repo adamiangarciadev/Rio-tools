@@ -20,13 +20,14 @@
     }
   }
   const profileApps = {
-    ADMINISTRACION: ['archivos-administrativos','control-cajas-locales','supervisores','asistencia-dashboard','check-depositos'],
+    ADMINISTRACION: ['vales','archivos-administrativos','control-cajas-locales','supervisores','asistencia-dashboard','check-depositos'],
     WEB: ['movimientos-caja','archivos-administrativos','precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']
   };
   const localProfiles = new Set(['AV2','NAZCA','QUILMES','CORRIENTES','DEPOSITO','LAMARCA','SARMIENTO','PUEYRREDON']);
   const webOnlyApps = new Set(['pedidos-web','clientes-contactar','pedidos-dashboard','categorizador']);
   const localOrdersProfiles = new Set(['AV2','CORRIENTES','QUILMES']);
   const inProfile = slug => {
+    if (slug === 'vales') return branch === 'ADMINISTRACION' && !!window.RioAccess?.isUnlocked();
     if (slug === 'control-cajas-locales') return branch === 'ADMINISTRACION' && !!window.RioAccess?.isUnlocked();
     if (slug === 'precios-web') return branch === 'WEB';
     if (['revision-stock','stock-proveedores'].includes(slug)) return branch === 'DEPOSITO' && !!window.RioAccess?.isUnlocked();
