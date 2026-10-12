@@ -1,0 +1,8 @@
+node_modules/
+.dev.vars
+.wrangler/
+.clasp.json
+test-results/
+local-data/
+gateway/deployment/
+deployment/worker-build/

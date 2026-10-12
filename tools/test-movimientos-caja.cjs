@@ -1,0 +1,13 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {calculate,cents}=require('../apps/movimientos-caja/calculations.js');
+const base={f9:1000,mp:100,cards:200,go:50,counted:300,expenses:[{amount:50}],vouchers:[{kind:'cash',amount:20},{kind:'goods',amount:50}],withdrawals:[{amount:30}],deposits:[{kind:'external',amount:200}],shipping:[{cash:10,digital:20}]};
+test('cobros externos se excluyen del cash y se conservan en la venta final',()=>{const t=calculate(base);assert.equal(t.cashSales,400);assert.equal(t.expected,300);assert.equal(t.cash,400);assert.equal(t.final,970);assert.equal(t.surplus,0);assert.equal(t.shortage,0);});
+test('todo depósito es externo aunque un borrador antiguo indique cash o no tenga tipo',()=>{for(const kind of ['cash','external',undefined]){const t=calculate({...base,deposits:[{kind,amount:200}]});assert.equal(t.cashSales,400);assert.equal(t.expected,300);assert.equal(t.depositsExternal,200);assert.equal(t.final,970);}});
+test('sobrante y faltante no cambian la venta final',()=>{assert.equal(calculate({...base,counted:310}).surplus,10);assert.equal(calculate({...base,counted:290}).shortage,10);assert.equal(calculate({...base,counted:290}).final,970);});
+test('F9 modifica cash y arqueo sin depender de cashSales manual',()=>{const t=calculate({...base,f9:1100,cashSales:999});assert.equal(t.cashSales,500);assert.equal(t.shortage,100);assert.equal(t.final,1070);});
+test('no incluye saldo inicial ni otros ingresos',()=>assert.deepEqual(calculate({...base,opening:1000,cashIn:200}),calculate(base)));
+test('resta todos los envíos una sola vez',()=>{assert.equal(calculate({...base,shipping:[{cash:10,digital:20},{cash:30,digital:40}]}).final,900);assert.equal(calculate({...base,shipping:[]}).final,1000);});
+test('permite pagos sobre F9 y F9 cero',()=>{const t=calculate({...base,f9:0});assert.equal(t.saleTotal,0);assert.equal(t.cashSales,-600);assert.equal(t.final,-30);});
+test('planillas sin F9 conservan venta en cash explícita',()=>{const t=calculate({...base,f9:undefined,cashSales:400});assert.equal(t.cashSales,400);assert.equal(t.expected,300);assert.equal(t.saleTotal,800);assert.equal(t.final,770);});
+test('centavos son exactos y montos inválidos se rechazan',()=>{assert.equal(calculate({...base,deposits:[{amount:.1},{amount:.2}]}).depositsExternal,.3);for(const n of [-1,'abc',Infinity,1000000000])assert.throws(()=>cents(n));});

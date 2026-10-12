@@ -1,17 +1,15 @@
 window.RioCatalog = [
+  {"slug":"vales","name":"Vales de personal","description":"Solicitudes mensuales, aprobación de efectivo y mercadería y exportación en imagen.","area":"Administración","areaId":"5","restricted":true},
+  {"slug":"control-cajas-locales","name":"Control de cajas locales","description":"Cierres diarios por sucursal y mes, efectivo al cierre y planillas completas.","area":"Administración","areaId":"5","restricted":true},
+  {"slug":"movimientos-caja","name":"Movimientos de caja","description":"Planilla diaria, gastos, vales, retiros, depósitos y arqueo automático con impresión.","area":"Operaciones","areaId":"0","restricted":false},
   {"slug":"stock-proveedores","name":"Stock para proveedores","description":"Stock total Río por proveedor o conjunto, con una hoja por proveedor en Excel.","area":"Depósito","areaId":"2","restricted":true},
+  {"slug":"precios-web","name":"Precios WEB","description":"Lista mayorista y minorista, filtros y exportación a Excel.","area":"E-commerce","areaId":"1","restricted":false},
+  {"slug":"confirmar-remitos","name":"Confirmar remitos","description":"Cierre de varios remitos con filtros por fecha y sucursal.","area":"Sistemas","areaId":"4","restricted":true},
+  {"slug":"mercaderia-transito-v2","name":"Mercadería en Tránsito","description":"Lectura automática de PDF y seguimiento por sucursal.","area":"Operaciones","areaId":"0","restricted":false},
   {
     "slug": "entrada-mercaderia",
     "name": "Entrada de Mercadería",
     "description": "Ingreso por escaneo, equivalencias y control contra CSV.",
-    "area": "Operaciones",
-    "areaId": "0",
-    "restricted": false
-  },
-  {
-    "slug": "mercaderia-transito",
-    "name": "Mercadería en Tránsito",
-    "description": "Seguimiento de remitos, archivos asociados y picking de transito.",
     "area": "Operaciones",
     "areaId": "0",
     "restricted": false
@@ -140,8 +138,8 @@ window.RioCatalog = [
     "slug": "margenes",
     "name": "Márgenes",
     "description": "Dashboard interactivo de ventas, costos, ganancias, sucursales y proveedores.",
-    "area": "Supervisores",
-    "areaId": "5",
+    "area": "Sistemas",
+    "areaId": "4",
     "restricted": true
   },
   {
@@ -172,16 +170,16 @@ window.RioCatalog = [
     "slug": "sistemas",
     "name": "Gestión de Incidentes",
     "description": "Recepción, asignación y seguimiento de incidentes reportados por los locales.",
-    "area": "Supervisores",
-    "areaId": "5",
+    "area": "Sistemas",
+    "areaId": "4",
     "restricted": true
   },
   {
     "slug": "remitos-deposito",
     "name": "Remitos Depósito",
     "description": "Carga manual, numeración por cliente e historial de remitos.",
-    "area": "Supervisores",
-    "areaId": "5",
+    "area": "Sistemas",
+    "areaId": "4",
     "restricted": true
   },
   {

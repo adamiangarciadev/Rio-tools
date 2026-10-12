@@ -26,6 +26,11 @@
     } catch {}
   }
 
+  function administrationCredentials() {
+    if (!isUnlocked()) return null;
+    return { adminPassword: ACCESS_PASS };
+  }
+
   function requireSupervisionAccess() {
     if(isUnlocked()) return;
     try {
@@ -41,6 +46,7 @@
     isUnlocked,
     unlock,
     lock,
+    administrationCredentials,
     requireSupervisionAccess
   };
 

@@ -1,0 +1,6 @@
+const CACHE='rio-picking-v2-shell-2.0.0';
+const FILES=['./','./index.html','./manifest.webmanifest','./icons/192.png','./icons/512.png','../../assets/identity/rio-logo-coral.svg','./styles.css','./app.js','./storage.js','./shared/domain.js','./config.js','./vendor/dexie.min.js','./vendor/papaparse.min.js','../../assets/identity/gotham-book.woff2','../../assets/identity/gotham-bold.woff2','../../data/equivalencia.csv','../../data/equivalencia2.csv'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
+// No skipWaiting: a new version activates after existing tabs finish using the previous one.
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('rio-picking-v2-shell-')&&k!==CACHE).map(k=>caches.delete(k))))));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==self.location.origin)return;const pathname=new URL(e.request.url).pathname,file=FILES.find(f=>new URL(f,self.location.href).pathname===pathname);if(!file)return;e.respondWith(caches.open(CACHE).then(async c=>{const cached=await c.match(new URL(file,self.location.href).href);if(file.includes('/data/'))try{const r=await fetch(e.request);if(r.ok)return r;}catch{}return cached||fetch(e.request);}));});

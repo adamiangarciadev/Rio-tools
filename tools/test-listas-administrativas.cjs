@@ -1,6 +1,18 @@
 const assert=require('node:assert/strict');
 global.PreciosCore=require('../apps/precios-web/core.js');
 const core=require('../apps/archivos-administrativos/precios.js');
+assert.ok(core.brands.includes('XY'));
+let cacheValue=null;
+const storage={getItem:()=>cacheValue,setItem:(_,value)=>{cacheValue=value;}};
+const cachedReport={ok:true,rows:[{articulo:'001',lista1:100,lista3:200}]};
+assert.equal(core.readCache(storage,'api'),null);
+assert.equal(core.saveCache(storage,'api',cachedReport),true);
+assert.deepEqual(core.readCache(storage,'api'),cachedReport);
+assert.equal(core.readCache(storage,'other-api'),null);
+assert.equal(core.saveCache(storage,'api',{ok:false}),false);
+assert.deepEqual(core.readCache(storage,'api'),cachedReport);
+cacheValue='invalid JSON';assert.equal(core.readCache(storage,'api'),null);
+assert.equal(core.saveCache({setItem(){throw Error('quota');}},'api',cachedReport),false);
 const {jsPDF}=require('../assets/vendor/jspdf/jspdf.umd.min.js');
 const base={proveedor:'ANDRESSA',clasificacion:'LINEA LINEA',tipoPrenda:'Conjuntos',lista1:100,lista3:200};
 const report={ok:true,updatedAt:'2026-10-06T12:00:00Z',rows:[

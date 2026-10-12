@@ -28,6 +28,12 @@ Los cambios realizados desde Sistemas se guardan en el objeto `goals` de `ventas
 
 La función `initializeApp` crea en Mi unidad la carpeta `RIO - Objetivos de ventas`, el archivo privado `ventas-dashboard.json` y un activador diario cercano a las 21:20.
 
+## Carga manual de ventas desde Sistemas
+
+En el panel de Sistemas, usar **Carga manual de ventas**, elegir una fecha del período almacenado (hasta hoy) e ingresar el monto total de cada local. Los campos vacíos no modifican datos; cero registra un día sin ventas. Guardar reemplaza el monto de esa fecha, sin duplicarlo, y actualiza el acumulado. Los registros manuales quedan protegidos frente a importaciones posteriores del mail. Los objetivos históricos ya registrados permanecen congelados.
+
+Para habilitar esta función en producción, actualizar `Code.gs` con `apps-script.gs` y editar la implementación web existente para usar una nueva versión, conservando la URL `/exec`. Publicar también los archivos del panel de Sistemas. No ejecutar `initializeApp`: esa función reinicia los datos.
+
 ## Criterios usados
 
 - Se toma el campo `Monto neto Total` por `Origen - Grupo`.

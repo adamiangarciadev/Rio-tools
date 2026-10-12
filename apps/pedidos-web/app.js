@@ -40,13 +40,6 @@
     'ENTREGADO',
   ]);
 
-  const ESTADOS_SIN_ACCIONES = new Set([
-    'RETIRADO',
-    'ENVIADO',
-    'CANCELADO',
-    'ENTREGADO',
-  ]);
-
   const LS_WHATSAPP_PEDIDOS = 'rio_pedidos_whatsapp_v1';
   const CLAVE_EDICION_ENVIO_RETIRO_LOCAL = 'RIO2026';
   const PADRON_URLS = [
@@ -665,20 +658,8 @@
     const estado = String(p?.estado || '')
       .toUpperCase()
       .trim();
-    if (ESTADOS_SIN_ACCIONES.has(estado)) return [];
-
-    const indiceArmado = ESTADOS_DISPONIBLES.indexOf('ARMADO');
-    const estadosCerrados = new Set(ESTADOS_DISPONIBLES.slice(indiceArmado));
-    // Compatibilidad con pedidos que quedaron guardados con el nombre anterior.
-    estadosCerrados.add('PICKEADO/ARMADO');
-    const esPedidoCerrado = estadosCerrados.has(estado);
-
-    return ESTADOS_DISPONIBLES.filter((opcion, indice) => {
-      if (opcion === estado) return false;
-      if (esPedidoCerrado) return indice >= indiceArmado;
-      // PARA ARMAR es el estado inicial y no se vuelve a ofrecer luego de salir de él.
-      return opcion !== 'PARA ARMAR';
-    });
+    // Permitir corregir errores de carga, incluso en pedidos finalizados.
+    return ESTADOS_DISPONIBLES.filter((opcion) => opcion !== estado);
   }
 
   // =========================

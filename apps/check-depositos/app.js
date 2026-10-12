@@ -2,7 +2,6 @@
   "use strict";
 
   const SCRIPT_URL = window.CHECK_DEPOSITOS_API_URL || "";
-  const EDIT_SCRIPT_URL = window.CHECK_DEPOSITOS_EDIT_API_URL || SCRIPT_URL;
   const LOCALS = ["AV2", "NAZCA", "LAMARCA", "CORRIENTES", "CASTELLI", "QUILMES", "SARMIENTO", "PUEYRREDON", "WEB"];
   const ACCOUNTS = [
     "Santander - Lucia Catera",
@@ -38,6 +37,8 @@
     previewTitle: $("#previewTitle"),
     previewEmpty: $("#previewEmpty"),
     previewFrame: $("#previewFrame"),
+    previewModal: $("#previewModal"),
+    closePreviewBtn: $("#closePreviewBtn"),
     editModal: $("#editModal"),
     editForm: $("#editForm"),
     editDepositId: $("#editDepositId"),
@@ -56,7 +57,9 @@
     deposits: [],
     source: "central",
     loading: false,
-    editingId: ""
+    editingId: "",
+    editingRowNumber: "",
+    deleting: false
   };
 
   init();
@@ -83,13 +86,26 @@
     el.depositList.addEventListener("click", onDepositAction);
     el.editForm.addEventListener("submit", saveDepositEdit);
     el.editModal.addEventListener("click", onEditModalClick);
+    el.closePreviewBtn.addEventListener("click", () => el.previewModal.close());
+    el.previewModal.addEventListener("click", (event) => {
+      const bounds = el.previewModal.getBoundingClientRect();
+      if (event.target === el.previewModal &&
+          (event.clientX < bounds.left || event.clientX > bounds.right ||
+           event.clientY < bounds.top || event.clientY > bounds.bottom)) {
+        el.previewModal.close();
+      }
+    });
+    el.previewModal.addEventListener("close", () => {
+      el.previewFrame.removeAttribute("src");
+      document.body.classList.remove("preview-open");
+    });
 
     loadDeposits();
     setInterval(loadDeposits, 60000);
   }
 
   async function loadDeposits() {
-    if (state.loading) return;
+    if (state.loading || state.deleting) return;
 
     try {
       state.loading = true;
@@ -148,7 +164,7 @@
       }
 
       state.deposits = state.deposits.map((item) => {
-        if (item.id !== deposit.id) return item;
+        if (item.id !== deposit.id || item.rowNumber !== deposit.rowNumber) return item;
         return { ...item, estado: "CONFIRMADO" };
       });
       render();
@@ -220,6 +236,7 @@
       const isConfirmed = status === "CONFIRMADO";
 
       card.dataset.id = deposit.id || "";
+      card.dataset.rowNumber = String(deposit.rowNumber || "");
       card.querySelector('[data-field="local"]').textContent = deposit.local || "-";
       card.querySelector('[data-field="id"]').textContent = deposit.id || "Sin ID";
       card.querySelector('[data-field="estado"]').textContent = status;
@@ -243,6 +260,7 @@
       const confirmBtn = card.querySelector('[data-action="confirm"]');
       confirmBtn.hidden = isConfirmed;
       confirmBtn.dataset.id = deposit.id || "";
+      card.querySelector('[data-action="delete"]').disabled = !deposit.rowNumber || !deposit.id;
 
       fragment.appendChild(card);
     });
@@ -277,15 +295,57 @@
   function onDepositAction(event) {
     const button = event.target.closest("[data-action]");
     if (!button) return;
-    const deposit = state.deposits.find((item) => item.id === button.dataset.id);
+    if (state.deleting) return;
+    const card = button.closest(".deposit-card");
+    const deposit = state.deposits.find((item) => item.id === card.dataset.id &&
+      String(item.rowNumber || "") === card.dataset.rowNumber);
     if (!deposit) return;
 
     if (button.dataset.action === "confirm") confirmDeposit(deposit);
     if (button.dataset.action === "preview") showPreview(deposit);
     if (button.dataset.action === "edit") openEditModal(deposit);
+    if (button.dataset.action === "delete") deleteDeposit(deposit);
+  }
+
+  async function deleteDeposit(deposit) {
+    if (state.loading || state.deleting) return;
+    const approved = window.confirm(`¿Eliminar esta carga?\n\n${deposit.local} · ${deposit.id}\n${deposit.fecha}\n${deposit.cuenta}\nMonto: ${formatAmount(deposit.monto)}\nEstado: ${deposit.estado}\n\nVerifica que sea la carga duplicada o incorrecta. Se quitara de los totales y quedara archivada en la planilla.`);
+    if (!approved) return;
+    try {
+      state.deleting = true;
+      el.depositList.querySelectorAll("button").forEach(button => { button.disabled = true; });
+      const data = await fetchJson(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          accion: "eliminar_deposito",
+          id: deposit.id,
+          rowNumber: deposit.rowNumber,
+          expected: {
+            local: deposit.local, dniCliente: deposit.dniCliente,
+            monto: deposit.monto, cuenta: deposit.cuenta, estado: deposit.estado
+          }
+        })
+      });
+      if (data.estado !== "ELIMINADO" || data.id !== deposit.id || Number(data.rowNumber) !== Number(deposit.rowNumber)) {
+        throw new Error("La API no confirmo la eliminacion. Verifica que Apps Script tenga activa la accion eliminar_deposito.");
+      }
+      state.deposits = state.deposits.filter(item => item !== deposit);
+      if (el.previewModal.open) el.previewModal.close();
+      render();
+      el.statusText.textContent = `Carga ${deposit.id} eliminada del listado.`;
+    } catch (error) {
+      render();
+      window.alert(/accion no reconocida/i.test(error.message || "")
+        ? "Falta actualizar Apps Script para activar la eliminacion de cargas. No se elimino el deposito."
+        : error.message || "No se pudo eliminar la carga.");
+    } finally {
+      state.deleting = false;
+    }
   }
 
   function showPreview(deposit) {
+    if (!el.previewModal.open) el.previewModal.showModal();
+    document.body.classList.add("preview-open");
     if (!deposit.link) {
       el.previewTitle.textContent = "Este depósito no tiene comprobante.";
       el.previewFrame.hidden = true;
@@ -303,6 +363,7 @@
 
   function openEditModal(deposit) {
     state.editingId = deposit.id || "";
+    state.editingRowNumber = deposit.rowNumber;
     el.editDepositId.textContent = `${deposit.local || "-"} · ${deposit.id || "Sin ID"}`;
     el.editAmountInput.value = deposit.monto || "";
     el.editAccountSelect.value = deposit.cuenta || "";
@@ -313,6 +374,7 @@
 
   function closeEditModal() {
     state.editingId = "";
+    state.editingRowNumber = "";
     el.editModal.hidden = true;
     el.editStatus.textContent = "";
   }
@@ -326,7 +388,8 @@
   async function saveDepositEdit(event) {
     event.preventDefault();
 
-    const deposit = state.deposits.find((item) => item.id === state.editingId);
+    if (state.deleting) return;
+    const deposit = state.deposits.find((item) => item.id === state.editingId && item.rowNumber === state.editingRowNumber);
     if (!deposit) {
       el.editStatus.textContent = "No se encontró el depósito.";
       return;
@@ -344,7 +407,7 @@
       el.editSaveBtn.disabled = true;
       el.editStatus.textContent = "Guardando...";
 
-      const data = await fetchJson(EDIT_SCRIPT_URL, {
+      const data = await fetchJson(SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify({
           accion: "actualizar_deposito",
@@ -356,7 +419,7 @@
       });
 
       state.deposits = state.deposits.map((item) => {
-        if (item.id !== deposit.id) return item;
+        if (item.id !== deposit.id || item.rowNumber !== deposit.rowNumber) return item;
         return {
           ...item,
           monto: data.monto || monto,
@@ -383,162 +446,11 @@
       return;
     }
 
-    const reportWindow = window.open("", "_blank");
-    if (!reportWindow) {
-      window.alert("El navegador bloqueo la pestaña del reporte.");
-      return;
-    }
-    reportWindow.opener = null;
-
-    const groups = groupByAccount(pending);
-    const generatedAt = new Date().toLocaleString("es-AR");
-    const totalAmount = pending.reduce((sum, item) => sum + parseAmount(item.monto), 0);
-    const whatsappText = buildWhatsAppPendingText(groups, pending.length, totalAmount);
-
-    reportWindow.document.open();
-    reportWindow.document.write(`<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Depositos pendientes por cuenta</title>
-  <style>
-    :root{color-scheme:dark;--bg:#090d12;--panel:#111821;--line:rgba(148,163,184,.22);--text:#edf3fa;--muted:#94a3b8;--primary:#22c7b8;--warn:#f59e0b}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-    .wrap{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:28px 0 42px}
-    header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
-    h1{margin:0;font-size:28px;line-height:1.1}
-    p{margin:6px 0 0;color:var(--muted)}
-    button{min-height:40px;border:1px solid var(--line);border-radius:6px;background:rgba(34,199,184,.12);color:var(--text);font-weight:750;padding:8px 12px;cursor:pointer}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 14px}
-    .stat,.account{border:1px solid var(--line);border-radius:8px;background:var(--panel)}
-    .stat{padding:13px}
-    .stat span{display:block;color:var(--muted);font-size:12px;font-weight:750}
-    .stat strong{display:block;margin-top:5px;font-size:23px}
-    .account{margin-top:12px;overflow:hidden}
-    .account-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:rgba(8,13,20,.42)}
-    h2{margin:0;font-size:17px}
-    .account-total{white-space:nowrap;color:var(--primary);font-weight:850}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:13px}
-    th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
-    tr:last-child td{border-bottom:0}
-    .amount{white-space:nowrap;font-weight:850}
-    a{color:var(--primary);font-weight:800;text-decoration:none}
-    .missing{color:var(--warn);font-weight:750}
-    .message-box{width:100%;min-height:220px;margin:14px 0 4px;padding:12px;border:1px solid var(--line);border-radius:8px;background:rgba(8,13,20,.72);color:var(--text);font:13px/1.45 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;resize:vertical}
-    .hint{font-size:12px}
-    @media (max-width:760px){header{display:grid}.stats{grid-template-columns:1fr}table,thead,tbody,tr,th,td{display:block}thead{display:none}td{border-bottom:0;padding:8px 12px}tr{border-bottom:1px solid var(--line)}td::before{content:attr(data-label);display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;margin-bottom:2px}}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Depositos pendientes por cuenta</h1>
-        <p>Generado ${escapeHtml(generatedAt)}. Texto listo para WhatsApp con cuenta y montos.</p>
-      </div>
-      <div class="actions">
-        <button id="copyBtn" type="button">Copiar texto</button>
-        <button id="whatsappBtn" type="button">Abrir WhatsApp</button>
-      </div>
-    </header>
-    <section class="stats">
-      <div class="stat"><span>Pendientes</span><strong>${pending.length}</strong></div>
-      <div class="stat"><span>Cuentas</span><strong>${groups.length}</strong></div>
-      <div class="stat"><span>Total estimado</span><strong>${formatCurrency(totalAmount)}</strong></div>
-    </section>
-    <textarea id="whatsappText" class="message-box" readonly>${escapeHtml(whatsappText)}</textarea>
-    <p class="hint">El texto incluye solo cuenta y montos.</p>
-    ${groups.map(renderAccountReportGroup).join("")}
-  </div>
-  <script>
-    const whatsappText = ${JSON.stringify(whatsappText)};
-    document.getElementById("copyBtn").addEventListener("click", async () => {
-      const box = document.getElementById("whatsappText");
-      try {
-        await navigator.clipboard.writeText(whatsappText);
-        document.getElementById("copyBtn").textContent = "Copiado";
-      } catch (_) {
-        box.focus();
-        box.select();
-        document.execCommand("copy");
-        document.getElementById("copyBtn").textContent = "Copiado";
-      }
-    });
-    document.getElementById("whatsappBtn").addEventListener("click", () => {
-      window.open("https://wa.me/?text=" + encodeURIComponent(whatsappText), "_blank", "noopener,noreferrer");
-    });
-  </script>
-</body>
-</html>`);
-    reportWindow.document.close();
-  }
-
-  function groupByAccount(items) {
-    const map = new Map();
-    items.forEach((item) => {
-      const account = item.cuenta || "Sin cuenta";
-      if (!map.has(account)) map.set(account, []);
-      map.get(account).push(item);
-    });
-
-    return Array.from(map.entries())
-      .sort((a, b) => a[0].localeCompare(b[0], "es"))
-      .map(([account, deposits]) => ({
-        account,
-        deposits: deposits.sort(sortDeposits),
-        total: deposits.reduce((sum, item) => sum + parseAmount(item.monto), 0)
-      }));
-  }
-
-  function renderAccountReportGroup(group) {
-    return `<section class="account">
-      <div class="account-head">
-        <h2>${escapeHtml(group.account)}</h2>
-        <div class="account-total">${group.deposits.length} pendiente${group.deposits.length === 1 ? "" : "s"} - ${formatCurrency(group.total)}</div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Monto</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${group.deposits.map(renderReportRow).join("")}
-        </tbody>
-      </table>
-    </section>`;
-  }
-
-  function renderReportRow(item) {
-    return `<tr>
-      <td data-label="Monto" class="amount">${escapeHtml(formatAmount(item.monto))}</td>
-    </tr>`;
-  }
-
-  function buildWhatsAppPendingText(groups, totalCount, totalAmount) {
-    const lines = [
-      "*Depositos pendientes por cuenta*",
-      `Pendientes: ${totalCount}`,
-      `Total estimado: ${formatCurrency(totalAmount)}`,
-      ""
-    ];
-
-    groups.forEach((group) => {
-      lines.push(`*${group.account}*`);
-      lines.push(`Total: ${formatCurrency(group.total)}`);
-
-      group.deposits.forEach((item, index) => {
-        lines.push(`${index + 1}. ${formatAmount(item.monto)}`);
-      });
-
-      lines.push("");
-    });
-
-    return lines.join("\n").trim();
+    window.RioDepositReport.open(pending.map(item => ({
+      date: item.fecha.split(/[T ]/)[0],
+      account: item.cuenta || "Sin cuenta",
+      amount: parseAmount(item.monto)
+    })));
   }
 
   function fillSelect(select, options) {
@@ -567,6 +479,7 @@
     const seen = new Set();
 
     return items
+      .filter(item => String(item.estado || item.Estado || "").trim().toUpperCase() !== "ELIMINADO")
       .map((item) => ({
         id: String(item.id || item.ID || item.codigo || "").trim(),
         fecha: String(item.fecha || item.Fecha || "").trim(),
@@ -581,7 +494,7 @@
       }))
       .filter((item) => item.id || item.fecha || item.local || item.monto)
       .filter((item) => {
-        const key = item.id || `${item.local}|${item.fecha}|${item.monto}|${item.cuenta}`;
+        const key = item.id && item.rowNumber ? `${item.id}|${item.rowNumber}` : item.id || `${item.local}|${item.fecha}|${item.monto}|${item.cuenta}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;

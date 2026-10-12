@@ -40,10 +40,10 @@ if(fs.existsSync(newExample(1))&&fs.existsSync(newExample(3))){
   const administrative=require('../apps/archivos-administrativos/precios.js');
   for(const n of [1,3]){
     const result=administrative.prepare({ok:true,rows:updated},n,administrative.brands,{includeMedias:true});
-    assert.equal(result.unknownType,0);assert.equal(result.conflicts,0);assert.equal(result.count,1143);
+    assert.equal(result.unknownType,0);assert.equal(result.conflicts,0);assert.equal(result.count,1175);
     assert.equal(result.sections.filter(g=>g.section==='Verano').reduce((total,g)=>total+g.rows.length,0),108);
   }
-  console.log('Mails nuevos: Grupo conservado, 1143 filas por lista, 108 de Verano.');
+  console.log('Mails nuevos: Grupo conservado, 1175 filas por lista con XY, 108 de Verano.');
 }
 if(fs.existsSync(example(1))&&fs.existsSync(example(3))){
   function attachment(path){ const eml=fs.readFileSync(path,'utf8'), section=eml.split(/\r?\n(?=Content-Type:)/i).find(p=>/^Content-Type:\s*application\/octet-stream/i.test(p));return Buffer.from(section.split(/\r?\n\r?\n/).slice(1).join('\n\n').split(/\r?\n--/)[0].replace(/\s/g,''),'base64').toString('utf8'); }
