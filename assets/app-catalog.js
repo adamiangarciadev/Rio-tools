@@ -1,4 +1,5 @@
 window.RioCatalog = [
+  {"slug":"objetivos-ventas-supervision","name":"Control de objetivos locales","description":"Objetivo de hoy, detalle de lunes a sábado y acumulado mensual por local.","area":"Supervisores","areaId":"5","restricted":true},
   {"slug":"vales","name":"Vales de personal","description":"Solicitudes mensuales, aprobación de efectivo y mercadería y exportación en imagen.","area":"Administración","areaId":"5","restricted":true},
   {"slug":"control-cajas-locales","name":"Control de cajas locales","description":"Cierres diarios por sucursal y mes, efectivo al cierre y planillas completas.","area":"Administración","areaId":"5","restricted":true},
   {"slug":"movimientos-caja","name":"Movimientos de caja","description":"Planilla diaria, gastos, vales, retiros, depósitos y arqueo automático con impresión.","area":"Operaciones","areaId":"0","restricted":false},

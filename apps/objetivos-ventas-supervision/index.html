@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Control de objetivos locales · RÍO Tools</title>
+  <link rel="icon" href="../../assets/rio-mark.svg">
+  <link rel="stylesheet" href="../../assets/rio-theme.css">
+  <link rel="stylesheet" href="../../assets/app-shell.css">
+  <link rel="stylesheet" href="../../assets/rio-identity.css">
+  <link rel="stylesheet" href="../../assets/rio-context.css">
+  <link rel="stylesheet" href="styles.css?v=1">
+  <script src="../../assets/rio-access.js" data-require-supervision="true"></script>
+  <script src="../../assets/rio-context.js?v=objetivos-supervision-1"></script>
+  <script defer src="model.js?v=1"></script>
+  <script defer src="config.js?v=3"></script>
+  <script defer src="app.js?v=2"></script>
+</head>
+<body class="rio-app" data-rio-app="objetivos-ventas-supervision">
+  <main>
+    <header class="module-topbar">
+      <div class="module-topbar__title"><p class="eyebrow">SUPERVISORES · VENTAS</p><h1>Control de objetivos locales</h1></div>
+      <div class="module-actions"><a class="btn" href="../objetivos-ventas-sistemas/">Administrar objetivos</a><button id="refresh" class="btn btn-primary" type="button">Actualizar</button></div>
+    </header>
+    <div id="demoNotice" class="demo-notice" hidden>Boceto · datos de ejemplo. No son ventas reales.</div>
+    <section class="objectives-toolbar" aria-label="Período de consulta">
+      <div><strong id="period">Objetivos del mes</strong><p id="updatedAt">Esperando los datos de ventas.</p></div>
+      <label>Fecha de consulta<input id="date" type="date" disabled></label>
+    </section>
+    <p id="loadStatus" class="load-status" role="status"></p>
+    <div id="cards" class="local-cards" aria-live="polite"></div>
+    <p id="dataNote" class="data-note" hidden>Importes en pesos argentinos. El acumulado compara ventas y objetivos de los días informados; los días sin dato no cuentan como venta cero.</p>
+  </main>
+  <script src="../../assets/app-catalog.js?v=objetivos-supervision-1"></script>
+  <script src="../../assets/app-shell.js"></script>
+</body>
+</html>

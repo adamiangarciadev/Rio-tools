@@ -80,11 +80,20 @@ test('administration tools require access and become available after authenticat
   const sandbox={window:{}};vm.runInNewContext(catalogCode,sandbox);
   const expected={ADMINISTRACION:['vales','archivos-administrativos','control-cajas-locales','supervisores','asistencia-dashboard','check-depositos'],WEB:['movimientos-caja','archivos-administrativos','precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']};
   for(const [profile,slugs] of Object.entries(expected)){
+    slugs.push('objetivos-ventas-supervision');
     const api=boot(profile,'',true).api;
     assert.deepEqual(Array.from(sandbox.window.RioCatalog.filter(api.canUse),item=>item.slug).sort(),slugs.sort());
     assert.ok(boot(profile,'entrada-mercaderia',true).redirect);
   }
  });
+
+test('control de objetivos requiere Supervisores en todos los perfiles y también en acceso directo',()=>{
+  for(const branch of ['AV2','WEB','DEPOSITO','ADMINISTRACION'])for(const unlocked of [false,true]){
+    const {api,redirect}=boot(branch,'objetivos-ventas-supervision',unlocked);
+    assert.equal(api.canUse({slug:'objetivos-ventas-supervision',restricted:true}),unlocked);
+    assert.equal(redirect==='',unlocked);
+  }
+});
 
 test('stock equalization requires BOTH depot and supervisor session, including direct entry',()=>{
   for(const branch of ['','AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB','DEPOSITO','ADMINISTRACION']){
