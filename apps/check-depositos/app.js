@@ -14,6 +14,7 @@
     "Santander - Rio Group SRL",
     "Santander - Johanna Suets",
     "Santander - Infantino Fernando",
+    "Santander - Silvana Gullo",
     "Galicia - 1988 SRL",
     "Supervielle - Nexus Realty SA",
     "Mercado Pago - Miguel Angel Raccio",

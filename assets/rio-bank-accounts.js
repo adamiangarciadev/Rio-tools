@@ -29,7 +29,7 @@
         actions.append(view, download); item.append(name, actions); list.append(item);
       });
       const note = document.createElement('p'); note.className = 'rio-bank-note';
-      note.textContent = '10 cuentas con PDF disponible. Las cuentas sin documentación todavía no aparecen en esta lista.';
+      note.textContent = `${rows.length} cuentas con PDF disponible. Las cuentas sin documentación todavía no aparecen en esta lista.`;
       container.replaceChildren(list, note);
     } catch (_) {
       container.textContent = 'No pudimos cargar las cuentas. ';
