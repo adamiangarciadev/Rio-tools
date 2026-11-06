@@ -9,7 +9,7 @@
   "use strict";
 
   // ====== Config ======
-  const RESPONSABLES = ["DAVID","DIEGO","JOEL","MARTIN","MIGUEL","NAHUEL","RODRIGO","RAMON","ROBERTO","SERGIO","PATO","FRANCO","MATIAS"];
+  const RESPONSABLES = ["DAVID","DIEGO","JOEL","MARTIN","MIGUEL","NAHUEL","RODRIGO","RAMON","ROBERTO","SERGIO","PATO","FRANCO","MATIAS","ROBERT","DYLAN","DAVID S","DANIEL"];
   const SUCURSALES  = ["AV2","NAZCA","LAMARCA","CORRIENTES","CASTELLI","QUILMES","SARMIENTO","DEPOSITO","PUEYRREDON"];
   const CSV_FILES   = ["../../data/equivalencia.csv", "../../data/equivalencia2.csv"];
 
