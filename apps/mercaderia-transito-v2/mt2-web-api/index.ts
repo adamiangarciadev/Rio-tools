@@ -1,8 +1,8 @@
 // Intentionally login-free at the owner's request. CORS is NOT authentication.
-// Only list/action/status are public; imports remain on the private worker API.
+// Public operational queries include trace_list/history; imports remain private.
 const url=Deno.env.get('SUPABASE_URL')!;
 const key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const branches=['SARMIENTO','NAZCA','AVELLANEDA 2','CORRIENTES','CASTELLI','MORENO','QUILMES','LAMARCA','DEPOSITO','PUEYRREDON'];
+const branches=['SARMIENTO','NAZCA','AVELLANEDA 2','CORRIENTES','CASTELLI','MORENO','QUILMES','LAMARCA','DEPOSITO'];
 const headers={apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'};
 const publicOrigin='https://adamiangarciadev.github.io';
 const allowedOrigin=(origin:string|null)=>!origin||origin===publicOrigin||/^http:\/\/(?:localhost|127\.0\.0\.1):\d{2,5}$/.test(origin);
@@ -44,7 +44,35 @@ Deno.serve(async req=>{
    return reply(await rpc('crc_action',{p:{sucursal:p.sucursal,remito:p.remito,version:p.version,estado:p.estado}}));
   }
   if(p.op==='status')return reply({branches,database:'Supabase · v.2',sync:{automatic:true,running:false,pending:0}});
+
+  if(p.op==='trace_list'||p.op==='history'){
+   const offset=Number(p.offset||0);
+   if(!Number.isInteger(offset)||offset<0||offset>100000)throw Error('Página inválida');
+   const params=new URLSearchParams();
+   if(p.op==='history'){
+    if(typeof p.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p.id))throw Error('Remito inválido');
+    params.set('select','id,anterior,nuevo,codigo,observacion,fecha,evidencias');
+    params.set('remito_id','eq.'+p.id); params.set('order','fecha.asc,id.asc'); params.set('limit','100');
+   }else{
+    params.set('select','id,version,estado,visible_en,data');
+    params.set('order','data->>fecha.desc.nullslast,id.desc'); params.set('limit','50');
+    if(p.branch){if(!branches.includes(p.branch))throw Error('Sucursal inválida'); params.set('data->>hacia','eq.'+p.branch);}
+    if(p.closed===true)params.set('estado','eq.CONFIRMADO OK');
+    const search=String(p.search||'').trim().slice(0,100);
+    if(search)params.set('data->>remito','ilike.*'+search.replace(/[\\%_*]/g,'')+'*');
+    for(const field of ['from','to'])if(p[field]){
+     if(typeof p[field]!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(p[field]))throw Error('Fecha inválida');
+     params.append('data->>fecha',(field==='from'?'gte.':'lte.')+p[field]);
+    }
+   }
+   params.set('offset',String(offset));
+   const table=p.op==='history'?'mt2_pilot_movimientos':'mt2_pilot_remitos';
+   const response=await fetch(url+'/rest/v1/'+table+'?'+params,{headers});
+   const data=await response.json(); if(!response.ok)throw Error(data.message||'No se pudo consultar la trazabilidad');
+   return reply(p.op==='history'?data.map((event:any)=>({id:event.id,anterior:event.anterior,nuevo:event.nuevo,codigo:event.codigo,observacion:event.observacion,fecha:event.fecha,adjuntos:Array.isArray(event.evidencias)?event.evidencias.length:0})):data.map(project));
+  }
   if(p.op==='list'){
+   if(p.branch && !branches.includes(p.branch)) throw Error('Sucursal inválida');
    const data=await rpc('mt2_pilot_list',{p:{branch:branches.includes(p.branch)?p.branch:'',search:String(p.search||'').slice(0,100),offset:Math.max(0,Math.min(100000,Number(p.offset)||0)),closed:false,state:''}});
    return reply(data.map(project));
   }
@@ -73,4 +101,3 @@ Deno.serve(async req=>{
   return reply({error:e instanceof Error?e.message:'No se pudo completar la operación'},400);
  }
 });
-

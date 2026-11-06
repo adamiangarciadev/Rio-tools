@@ -25,7 +25,6 @@
     "QUILMES",
     "SARMIENTO",
     "DEPOSITO",
-    "PUEYRREDON",
     "WEB"
   ].sort((a, b) => a.localeCompare(b, "es"));
 
@@ -55,8 +54,7 @@
   const SCRIPT_URLS = {
     SARMIENTO: "https://script.google.com/macros/s/AKfycbzpGGyA_acQYDzZldHnameD5Xwo8hGW6-eaFjAlDZfljsuU5tqkeCb8Nizk_e2CitDU/exec",
     AV2: "https://script.google.com/macros/s/AKfycbwPNl9zyKtgun43MijeiFL3BtGTyM79_a4pocTYlYOr9Q5KllWra6s2HjbGIr11XFGy9w/exec",
-    PUEYRREDON: "https://script.google.com/macros/s/AKfycbxKRHA79kv30UEjOU_eeehr8evuVPhqDFfSaanJgeJPgUSEZao5eLqsTyO73CdLvgZE/exec"
-  };
+    };
 
   // =========================================================
   // ESTADO

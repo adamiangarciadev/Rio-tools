@@ -84,20 +84,6 @@ const APP = Object.freeze({
       ]
     },
     {
-      "id": "pueyrredon",
-      "name": "Pueyrredón",
-      "monthlyGoal": 80000000,
-      "weekdayWeights": [
-        0,
-        1.007,
-        0.922,
-        0.947,
-        0.95,
-        1.173,
-        1.545
-      ]
-    },
-    {
       "id": "quilmes",
       "name": "Quilmes",
       "monthlyGoal": 55000000,
@@ -169,7 +155,7 @@ function getSupervisionDashboard(passwordHash) {
   }
   const state = readState_();
   const knownIds = APP.stores.map(function (store) { return store.id; });
-  if (Object.keys(state.sales).some(function (id) { return knownIds.indexOf(id) === -1; })) {
+  if (Object.keys(state.sales).some(function (id) { return knownIds.indexOf(id) === -1 && id !== "pueyrredon"; })) {
     throw new Error("La base tiene locales nuevos. Actualizá la configuración del control de objetivos.");
   }
   return {

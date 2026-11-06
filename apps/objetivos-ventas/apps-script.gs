@@ -15,7 +15,6 @@ const APP = Object.freeze({
     { id: "castelli", csvName: "Castelli", name: "Castelli", email: "castelli@rio.com.ar", password: "castelli2026", monthlyGoal: 40000000, weekdayWeights: [0, 0.829, 1.004, 0.913, 1.077, 1.178, 1.388] },
     { id: "corrientes", csvName: "Corrientes", name: "Corrientes", email: "corrientes@rio.com.ar", password: "corrientes2026", monthlyGoal: 65000000, weekdayWeights: [0, 0.980, 0.889, 0.967, 0.945, 1.219, 1.590] },
     { id: "lamarca", csvName: "Lamarca", name: "Lamarca", email: "lamarca@rio.com.ar", password: "lamarca2026", monthlyGoal: 60000000, weekdayWeights: [0, 1.015, 0.805, 1.023, 0.958, 1.198, 2.313] },
-    { id: "pueyrredon", csvName: "PUEYRREDON", name: "Pueyrredón", email: "pueyrredon@rio.com.ar", password: "pueyrredon2026", monthlyGoal: 80000000, weekdayWeights: [0, 1.007, 0.922, 0.947, 0.950, 1.173, 1.545] },
     { id: "quilmes", csvName: "Quilmes", name: "Quilmes", email: "quilmes@rio.com.ar", password: "quilmes2026", monthlyGoal: 55000000, weekdayWeights: [0, 0.871, 0.885, 0.957, 1.106, 1.181, 1.772] },
     { id: "sarmiento", csvName: "Sarmiento", name: "Sarmiento", email: "sarmiento@rio.com.ar", password: "sarmiento2026", monthlyGoal: 72000000, weekdayWeights: [0, 0.865, 0.889, 0.961, 1.087, 1.199, 1.379] },
     { id: "web", csvName: "Web", name: "Web", email: "web@rio.com.ar", password: "web2026", monthlyGoal: 73000000, weekdayWeights: [0, 0.848, 0.980, 1.056, 1.075, 1.041, 1.236] }

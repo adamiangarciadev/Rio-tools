@@ -10,7 +10,6 @@
     { name: "CORRIENTES", url: "https://drive.google.com/file/d/1QD2f-MXv-jQV7h66wPixstFAQQUAsWc3/view?usp=drive_link" },
     { name: "SARMIENTO",  url: "https://drive.google.com/file/d/1IXMQvd-zQdqum8vwUCULcuHVzDRoVLCh/view?usp=drive_link" },
     { name: "CASTELLI",   url: "https://drive.google.com/file/d/1ogZ-uf169U5FItay1lrV3kSyRP74Opil/view?usp=drive_link" },
-    { name: "PUEYRREDON", url: "" },
     { name: "WEB", url: "" },
   ];
 
@@ -69,7 +68,7 @@
 
   function initTarjetasUI() {
     const branch = window.RioContext?.branch;
-    const files = {AV2:'avellaneda',NAZCA:'nazca',QUILMES:'quilmes',CORRIENTES:'corrientes',LAMARCA:'lamarca',SARMIENTO:'sarmiento',PUEYRREDON:'pueyrredon',CASTELLI:'castelli',WEB:'web'};
+    const files = {AV2:'avellaneda',NAZCA:'nazca',QUILMES:'quilmes',CORRIENTES:'corrientes',LAMARCA:'lamarca',SARMIENTO:'sarmiento',CASTELLI:'castelli',WEB:'web'};
     const file = files[branch];
     if (!file) return;
     $("tarjetasLocal").textContent = `${window.RioContext.label(branch)} · 10 tarjetas por hoja`;

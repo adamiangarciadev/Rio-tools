@@ -5,7 +5,7 @@
   const STORE_KEY = "rio_incidentes_v1";
   const BRANCH_KEY = "rio_sucursal";
   const BRANCH_ALIASES = [BRANCH_KEY, "asistencia_sucursal_v1", "rio_remitos_sucursal", "rio_sucursal_web", "rio_deposito_local", "mercaderia_transito_sucursal", "sucursal"];
-  const BRANCHES = ["AV2", "NAZCA", "LAMARCA", "CORRIENTES", "CASTELLI", "QUILMES", "SARMIENTO", "DEPÓSITO", "PUEYRREDÓN", "WEB", "ADMINISTRACIÓN"];
+  const BRANCHES = ["AV2", "NAZCA", "LAMARCA", "CORRIENTES", "CASTELLI", "QUILMES", "SARMIENTO", "DEPÓSITO", "WEB", "ADMINISTRACIÓN"];
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const MAX_FILES = 6;
   const EMPLOYEE_URLS = ["../../data/legajos-empleados.csv", "../../data/ASISTENCIA_RIO%20-%20PADRON.csv"];
@@ -48,7 +48,7 @@
 
   function normalizeBranch(value) {
     const clean = String(value || "").trim().toUpperCase();
-    const aliases = { AVELLANEDA: "AV2", "AVELLANEDA 2": "AV2", DEPOSITO: "DEPÓSITO", PUEYRREDON: "PUEYRREDÓN", ADMINISTRACION: "ADMINISTRACIÓN" };
+    const aliases = { AVELLANEDA: "AV2", "AVELLANEDA 2": "AV2", DEPOSITO: "DEPÓSITO",  ADMINISTRACION: "ADMINISTRACIÓN" };
     return aliases[clean] || clean;
   }
 

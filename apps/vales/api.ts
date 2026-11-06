@@ -1,5 +1,5 @@
 import "./attendance.js";
-const branches=['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB','DEPOSITO','ADMINISTRACION'];
+const branches=['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','WEB','DEPOSITO','ADMINISTRACION'];
 const origins=new Set(['https://adamiangarciadev.github.io','http://127.0.0.1:4173','http://localhost:4173','http://127.0.0.1:8765','http://localhost:8765']);
 const db=Deno.env.get('SUPABASE_URL')!,secret=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());

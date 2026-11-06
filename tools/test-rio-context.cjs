@@ -4,7 +4,7 @@ const vm=require('node:vm');
 const fs=require('node:fs');
 const code=fs.readFileSync('assets/rio-context.js','utf8');
 test('named local profiles hide ecommerce apps and reject their direct URLs',()=>{
-  const branches=['AV2','NAZCA','QUILMES','CORRIENTES','DEPOSITO','LAMARCA','SARMIENTO','PUEYRREDON'];
+  const branches=['AV2','NAZCA','QUILMES','CORRIENTES','DEPOSITO','LAMARCA','SARMIENTO'];
   const hidden=['pedidos-web','clientes-contactar','pedidos-dashboard','categorizador'];
   for(const branch of branches)for(const slug of hidden)for(const unlocked of [false,true]){
     const {api,redirect}=boot(branch,slug,unlocked);
@@ -13,7 +13,7 @@ test('named local profiles hide ecommerce apps and reject their direct URLs',()=
   }
 });
 test('local web orders remain available only for the three named exceptions within the local group',()=>{
-  for(const branch of ['AV2','NAZCA','QUILMES','CORRIENTES','DEPOSITO','LAMARCA','SARMIENTO','PUEYRREDON']){
+  for(const branch of ['AV2','NAZCA','QUILMES','CORRIENTES','DEPOSITO','LAMARCA','SARMIENTO']){
     const allowed=['AV2','CORRIENTES','QUILMES'].includes(branch);
     const {api,redirect}=boot(branch,'pedidos-web-locales');
     assert.equal(api.canUse({slug:'pedidos-web-locales'}),allowed,branch);
@@ -51,7 +51,7 @@ test('admin profile must renew access when the session expires',()=>{
 test('branch spellings resolve to the same operating branch',()=>{
   const {api}=boot('AV2');
   for(const name of ['AV2','Avellaneda 2','Avellaneda 3249'])assert.equal(api.canonical(name),'AV2');
-  assert.equal(api.canonical('Pueyrredón'),'PUEYRREDON');
+  assert.equal(api.branches.includes('PUEYRREDON'),false);
   assert.equal(api.canonical('Avellaneda 2900'),'NAZCA');
 });
 test('legacy branch preferences are seeded before app code executes',()=>{
@@ -96,7 +96,7 @@ test('control de objetivos requiere Supervisores en todos los perfiles y tambié
 });
 
 test('stock equalization requires BOTH depot and supervisor session, including direct entry',()=>{
-  for(const branch of ['','AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB','DEPOSITO','ADMINISTRACION']){
+  for(const branch of ['','AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','WEB','DEPOSITO','ADMINISTRACION']){
     for(const unlocked of [false,true]){
       const allowed=branch==='DEPOSITO'&&unlocked;
       const {api,redirect}=boot(branch,'revision-stock',unlocked);
@@ -107,7 +107,7 @@ test('stock equalization requires BOTH depot and supervisor session, including d
 });
 
  test('administrative downloads are available to every store including WEB',()=>{
- for(const branch of ['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB','DEPOSITO']){
+ for(const branch of ['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','WEB','DEPOSITO']){
  const {api,redirect}=boot(branch,'archivos-administrativos');
  assert.equal(api.canUse({slug:'archivos-administrativos',restricted:false}),true,branch);
  assert.equal(redirect,'',branch);

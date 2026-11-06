@@ -267,16 +267,16 @@
       el.refreshBtn.textContent = "Actualizando...";
 
       if (!API_URL || API_URL.includes("PEGAR_URL")) {
-        state.events = normalizeEvents(DEMO_EVENTS);
-        state.employees = normalizeEmployees(DEMO_PADRON);
-        state.branches = normalizeBranches(DEMO_BRANCHES);
+        state.events = normalizeEvents(DEMO_EVENTS).filter(row => !window.RioBranches.isRetired(row.sucursal));
+        state.employees = normalizeEmployees(DEMO_PADRON).filter(row => !window.RioBranches.isRetired(row.sucursal));
+        state.branches = normalizeBranches(DEMO_BRANCHES).filter(row => !window.RioBranches.isRetired(row.sucursal));
         state.holidays = [];
         state.demo = true;
       } else {
         const data = await fetchDashboardData();
-        state.events = normalizeEvents(data.events);
-        state.employees = normalizeEmployees(data.padron);
-        state.branches = normalizeBranches(data.sucursales);
+        state.events = normalizeEvents(data.events).filter(row => !window.RioBranches.isRetired(row.sucursal));
+        state.employees = normalizeEmployees(data.padron).filter(row => !window.RioBranches.isRetired(row.sucursal));
+        state.branches = normalizeBranches(data.sucursales).filter(row => !window.RioBranches.isRetired(row.sucursal));
         state.holidays = normalizeHolidays(data.feriados);
         state.demo = false;
       }

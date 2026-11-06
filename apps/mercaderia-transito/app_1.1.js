@@ -5,7 +5,7 @@
   const LS_SUCURSAL = "mercaderia_transito_sucursal";
 
   const GRUPO_1 = ["AVELLANEDA 2", "NAZCA", "LAMARCA"];
-  const GRUPO_2 = ["CORRIENTES", "CASTELLI", "PUEYRREDON"];
+  const GRUPO_2 = ["CORRIENTES", "CASTELLI"];
   const SIEMPRE_SARMIENTO = ["MORENO", "QUILMES"];
   const SARMIENTO = "SARMIENTO";
 
@@ -711,8 +711,6 @@
       "LAMARCA": "LAMARCA",
       "CORRIENTES": "CORRIENTES",
       "CASTELLI": "CASTELLI",
-      "PUEY": "PUEYRREDON",
-      "PUEYRREDON": "PUEYRREDON",
       "SARMIENTO": "SARMIENTO",
       "MORENO": "MORENO",
       "QUILMES": "QUILMES",

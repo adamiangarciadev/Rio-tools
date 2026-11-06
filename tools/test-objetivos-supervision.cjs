@@ -30,7 +30,7 @@ test('la API rechaza consultas no autenticadas antes de leer ventas y devuelve s
   assert.throws(()=>context.getSupervisionDashboard('wrong'),/no es válido/);assert.equal(reads,0);
   const hash=vm.runInContext('SUPERVISION_PASSWORD_HASH',context);
   const data=context.getSupervisionDashboard(hash);
-  assert.equal(data.role,'supervision');assert.equal(data.stores.length,9);assert.equal(reads,1);
+  assert.equal(data.role,'supervision');assert.equal(data.stores.length,8);assert.equal(reads,1);
   assert.ok(data.stores.every(store=>store.monthPlan.length===1));
   assert.ok(!JSON.stringify(data).includes('password'));assert.ok(!JSON.stringify(data).includes('email'));
 });

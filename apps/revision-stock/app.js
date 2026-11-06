@@ -2,8 +2,8 @@
 'use strict';
 if(!window.RioContext?.canUse({slug:'revision-stock',restricted:true}))return;
 const DATA_URL=window.STOCK_VENTAS_API_URL;
-const SITES=['Avellaneda 3249 + Web','Avellaneda 2900','Corrientes','Sarmiento','Quilmes','PUEYRREDON','Castelli','Lamarca'];
-const WEIGHTS={'Avellaneda 3249 + Web':3.25,'Avellaneda 2900':1.75,Corrientes:1,Sarmiento:1,Quilmes:1,PUEYRREDON:1,Castelli:.2,Lamarca:.2};
+const SITES=['Avellaneda 3249 + Web','Avellaneda 2900','Corrientes','Sarmiento','Quilmes','Castelli','Lamarca'];
+const WEIGHTS={'Avellaneda 3249 + Web':3.25,'Avellaneda 2900':1.75,Corrientes:1,Sarmiento:1,Quilmes:1,Castelli:.2,Lamarca:.2};
 const FIXED_LINE={Castelli:2,Lamarca:2};
 const state={data:null,rows:[],results:[],excluded:new Set(),open:new Set(),limit:20};
 const $=id=>document.getElementById(id),fmt=new Intl.NumberFormat('es-AR',{maximumFractionDigits:2});

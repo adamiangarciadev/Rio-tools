@@ -6,7 +6,7 @@ for weight in ['book','bold']:
  f=TTFont('assets/identity/gotham-'+weight+'.woff2');f.flavor=None;f.save(tmp/('gotham-'+weight+'.otf'))
 svg=fitz.open('assets/identity/rio-logo-coral.svg');vector=fitz.open('pdf',svg.convert_to_pdf());vector.save(tmp/'rio-logo-vector.pdf')
 slug=sys.argv[1]
-keys={'avellaneda':'AVELLANEDA','nazca':'NAZCA','quilmes':'QUILMES','corrientes':'CORRIENTES','lamarca':'LAMARCA','sarmiento':'SARMIENTO','pueyrredon':'PUEYRREDON','castelli':'CASTELLI','web':'AVELLANEDA (WEB)'}
+keys={'avellaneda':'AVELLANEDA','nazca':'NAZCA','quilmes':'QUILMES','corrientes':'CORRIENTES','lamarca':'LAMARCA','sarmiento':'SARMIENTO','castelli':'CASTELLI','web':'AVELLANEDA (WEB)'}
 
 records=list(csv.DictReader(Path('apps/envios/locales.csv').read_text(encoding='utf-8-sig').splitlines()))
 order=[keys[slug]]*10

@@ -1,7 +1,7 @@
 (function(root){
  'use strict';
- const branches=['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB'];
- const labels={AV2:'AVELLANEDA 2',NAZCA:'AVELLANEDA 2900',PUEYRREDON:'PUEYRREDÓN'};
+ const branches=['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','WEB'];
+ const labels={AV2:'AVELLANEDA 2',NAZCA:'AVELLANEDA 2900',};
  const label=branch=>labels[branch]||branch;
  const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  function monthRange(month,date=today()){

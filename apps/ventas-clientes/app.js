@@ -359,7 +359,7 @@
 
   function populateFilters() {
     const currentBranch = el.branchFilter.value;
-    const branches = state.dashboard.sucursales.map((item) => item.sucursal).filter(Boolean);
+    const branches = state.dashboard.sucursales.map((item) => item.sucursal).filter(value => value && !window.RioBranches.isRetired(value));
 
     el.branchFilter.innerHTML = `<option value="">Todas las sucursales</option>`;
     el.exportBranch.innerHTML = `<option value="">Elegir sucursal</option>`;

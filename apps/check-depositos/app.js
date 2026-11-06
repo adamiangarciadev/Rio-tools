@@ -2,7 +2,7 @@
   "use strict";
 
   const SCRIPT_URL = window.CHECK_DEPOSITOS_API_URL || "";
-  const LOCALS = ["AV2", "NAZCA", "LAMARCA", "CORRIENTES", "CASTELLI", "QUILMES", "SARMIENTO", "PUEYRREDON", "WEB"];
+  const LOCALS = ["AV2", "NAZCA", "LAMARCA", "CORRIENTES", "CASTELLI", "QUILMES", "SARMIENTO", "WEB"];
   const ACCOUNTS = [
     "Santander - Lucia Catera",
     "BBVA Frances - Lucia Catera",

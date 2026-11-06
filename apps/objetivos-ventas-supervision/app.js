@@ -56,6 +56,7 @@
         response = await api(passwordHash);
       }
       if (response.role !== "supervision" || !Array.isArray(response.stores) || !response.stores.every(store => Array.isArray(store.monthPlan))) throw new Error("La API de objetivos necesita actualizarse para habilitar el control de Supervisores.");
+      response.stores = response.stores.filter(store => !window.RioBranches.isRetired(store.id) && !window.RioBranches.isRetired(store.name));
       dashboard = response;
       $("demoNotice").hidden = !demoMode;
       $("date").min = response.month + "-01";

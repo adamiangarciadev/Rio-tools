@@ -2,8 +2,8 @@
   'use strict';
   const root = new URL('../', document.currentScript.src);
   const KEY = 'rio_workspace_branch_v1';
-  const branches = ['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB','DEPOSITO','ADMINISTRACION'];
-  const labels = {AV2:'Avellaneda 2',PUEYRREDON:'Pueyrredón',DEPOSITO:'Depósito',ADMINISTRACION:'Administración',CORRIENTES2:'Corrientes 2'};
+  const branches = ['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','WEB','DEPOSITO','ADMINISTRACION'];
+  const labels = {AV2:'Avellaneda 2',DEPOSITO:'Depósito',ADMINISTRACION:'Administración',CORRIENTES2:'Corrientes 2'};
   const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const canonical = value => ({AVELLANEDA:'AV2',AVELLANEDA2:'AV2',AVELLANEDA3249:'AV2',AVELLANEDA2900:'NAZCA',AV1:'NAZCA',AVENIDAAVELLANEDA:'AV2',AVENIDAAVELLANEDA2:'AV2',CORRIENTES1:'CORRIENTES',DEPOSITOCENTRAL:'DEPOSITO'}[normalize(value)] || normalize(value));
   const label = value => String(labels[value] || value || '').toLocaleUpperCase('es-AR');
@@ -23,7 +23,7 @@
     ADMINISTRACION: ['vales','archivos-administrativos','control-cajas-locales','supervisores','asistencia-dashboard','check-depositos','objetivos-ventas-supervision'],
     WEB: ['movimientos-caja','archivos-administrativos','precios-web','categorizador','pedidos-web','pedidos-dashboard','clientes-contactar','banco-medios','asistencia','confirmacion-depositos','etiquetas','incidentes','objetivos-ventas']
   };
-  const localProfiles = new Set(['AV2','NAZCA','QUILMES','CORRIENTES','DEPOSITO','LAMARCA','SARMIENTO','PUEYRREDON']);
+  const localProfiles = new Set(['AV2','NAZCA','QUILMES','CORRIENTES','DEPOSITO','LAMARCA','SARMIENTO']);
   const webOnlyApps = new Set(['pedidos-web','clientes-contactar','pedidos-dashboard','categorizador']);
   const localOrdersProfiles = new Set(['AV2','CORRIENTES','QUILMES']);
   const inProfile = slug => {
@@ -37,7 +37,7 @@
     if (webOnlyApps.has(slug)) return false;
     return slug !== 'pedidos-web-locales' || localOrdersProfiles.has(branch);
   };
-  const canUse = item => inProfile(item.slug)&&(item.slug!=='picking-salida'||branch==='DEPOSITO')&&(!item.restricted||!!window.RioAccess?.isUnlocked());
+  const canUse = item => !!branch&&inProfile(item.slug)&&(item.slug!=='picking-salida'||branch==='DEPOSITO')&&(!item.restricted||!!window.RioAccess?.isUnlocked());
   window.RioContext={branch,branches,label,canonical,isLocal,canUse,change:home,storageKey:key=>key+':'+(branch||'unassigned')};
   if(branch) {try{seed(branch);}catch{}}
   if(!currentSlug && branch && localProfiles.has(branch)) {

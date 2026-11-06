@@ -5,7 +5,7 @@
   const SCRIPT_URL =
     "https://script.google.com/macros/s/AKfycbwqAzCaD5HXVSWRoag2LbzBrDA1FJJD1VcOkw7-HkY9Do3NXKpKPuEjEZwcdT-6cla74Q/exec";
 
-  const HIDDEN_SUCURSALES = new Set(["MORENO"]);
+  const HIDDEN_SUCURSALES = new Set(["MORENO", "PUEYRREDON", "PUEYRREDÓN", "PUEY"]);
   const LS_SUCURSAL = "asistencia_sucursal_v1";
   const LS_DEVICE   = "asistencia_device_id_v1";
 

@@ -1,4 +1,4 @@
-﻿;(() => {
+;(() => {
   "use strict";
 
   const API_URL = "https://script.google.com/macros/s/AKfycbyK5RuQXTqm3VsYn5kMbP48OSxGNper_pJbdE8Che7jOsMOydG9k8c9j63ywbL53HWl/exec";
@@ -11,7 +11,7 @@
   const SUCURSAL_ORIGEN_STORAGE_KEY = "rio_shipnow_sucursal_origen";
 
   const LOCALES_FALLBACK = [
-    "CASTELLI", "CORRIENTES", "PUEYRREDON", "QUILMES", "SARMIENTO",
+    "CASTELLI", "CORRIENTES", "QUILMES", "SARMIENTO",
     "LAMARCA", "NAZCA", "AVELLANEDA", "AVELLANEDA (WEB)"
   ];
 
@@ -32,15 +32,6 @@
       provincia: "CABA",
       cp: "1046",
       telefono: "11 2859-3658",
-      pais: "AR"
-    },
-    PUEYRREDON: {
-      sucursal: "PUEYRREDON",
-      domicilio: "AV PUEYRREDON 49",
-      localidad: "CABA",
-      provincia: "CABA",
-      cp: "1032",
-      telefono: "11 5666-9191",
       pais: "AR"
     },
     QUILMES: {

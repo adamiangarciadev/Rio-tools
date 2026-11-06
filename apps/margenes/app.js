@@ -700,7 +700,7 @@
   }
 
   function buildAggregates(rows) {
-    const localRows = rows.filter((row) => row.reportType === "locales" && !row.isTotal);
+    const localRows = rows.filter((row) => row.reportType === "locales" && !row.isTotal && !window.RioBranches.isRetired(row.branch));
     const providerRows = rows.filter((row) => row.reportType === "proveedor" && !row.isTotal);
     const providerDetailRows = providerRows.filter((row) => !row.isSubtotal);
     const providerSubtotalRows = providerRows.filter((row) => row.isSubtotal);
@@ -929,7 +929,7 @@
       return;
     }
 
-    const localRows = state.rows.filter((row) => row.reportType === "locales" && !row.isTotal);
+    const localRows = state.rows.filter((row) => row.reportType === "locales" && !row.isTotal && !window.RioBranches.isRetired(row.branch));
     const providerRows = state.rows.filter((row) => row.reportType === "proveedor" && !row.isTotal);
 
     if (!localRows.length && !providerRows.length) {

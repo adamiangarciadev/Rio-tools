@@ -2,7 +2,7 @@ import "./rules.js";
 const rules=(globalThis as any).CajaRules;
 // Acceso directo sin contraseña, solicitado para la primera etapa.
 // La clave del servidor permanece en Supabase. La API limita operaciones y valida la sucursal.
-const branches=['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','PUEYRREDON','WEB','DEPOSITO','ADMINISTRACION'];
+const branches=['AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','WEB','DEPOSITO','ADMINISTRACION'];
 const origins=new Set(['https://adamiangarciadev.github.io','http://127.0.0.1:8765','http://localhost:8765']);
 const db=Deno.env.get('SUPABASE_URL')!, secret=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 Deno.serve(async req=>{

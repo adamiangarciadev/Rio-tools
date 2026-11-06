@@ -24,7 +24,7 @@ function getSupervisionDashboard(passwordHash) {
   }
   const state = readState_();
   const knownIds = APP.stores.map(function (store) { return store.id; });
-  if (Object.keys(state.sales).some(function (id) { return knownIds.indexOf(id) === -1; })) {
+  if (Object.keys(state.sales).some(function (id) { return knownIds.indexOf(id) === -1 && id !== "pueyrredon"; })) {
     throw new Error("La base tiene locales nuevos. Actualizá la configuración del control de objetivos.");
   }
   return {

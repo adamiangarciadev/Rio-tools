@@ -86,6 +86,7 @@
   if (token) api("adminDashboard", { token }).then(render).catch(() => { token = ""; sessionStorage.removeItem(SESSION_KEY); });
 
   function render(data) {
+    data.stores = data.stores.filter(store => !window.RioBranches.isRetired(store.id) && !window.RioBranches.isRetired(store.name));
     dashboard = data;
     const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
     $("salesDate").min = data.month + "-01";

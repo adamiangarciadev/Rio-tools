@@ -7,7 +7,7 @@
   const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
   const dateFormat = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
   let token = sessionStorage.getItem(SESSION_KEY) || "";
-  const emails = {AV2:'avellaneda3249@rio.com.ar',NAZCA:'avellaneda2900@rio.com.ar',CASTELLI:'castelli@rio.com.ar',CORRIENTES:'corrientes@rio.com.ar',LAMARCA:'lamarca@rio.com.ar',PUEYRREDON:'pueyrredon@rio.com.ar',QUILMES:'quilmes@rio.com.ar',SARMIENTO:'sarmiento@rio.com.ar',WEB:'web@rio.com.ar'};
+  const emails = {AV2:'avellaneda3249@rio.com.ar',NAZCA:'avellaneda2900@rio.com.ar',CASTELLI:'castelli@rio.com.ar',CORRIENTES:'corrientes@rio.com.ar',LAMARCA:'lamarca@rio.com.ar',QUILMES:'quilmes@rio.com.ar',SARMIENTO:'sarmiento@rio.com.ar',WEB:'web@rio.com.ar'};
   if (window.RioContext.isLocal() && emails[window.RioContext.branch]) {
     $("email").value = emails[window.RioContext.branch];
     $("email").readOnly = true;
@@ -49,6 +49,7 @@
   }
 
   function api(action, params = {}) {
+    if (action === "login" && /^pueyrredon@/i.test(params.email || "")) return Promise.reject(new Error("Sucursal retirada de la operación."));
     return new Promise((resolve, reject) => {
       const callbackName = "rioJsonp_" + Date.now() + "_" + Math.random().toString(36).slice(2);
       const script = document.createElement("script");
@@ -92,6 +93,7 @@
   }
 
   function render(data) {
+    if (window.RioBranches.isRetired(data.store.name) || window.RioBranches.isRetired(data.store.id)) throw new Error("Sucursal retirada de la operación.");
     if(window.RioContext.isLocal() && window.RioContext.canonical(data.store.name)!==window.RioContext.branch){
       throw new Error("La cuenta no corresponde a la sucursal elegida en el inicio.");
     }

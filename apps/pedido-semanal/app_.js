@@ -12,7 +12,7 @@ let pedido = [];
 const LS_KEY = "pedido_v1";
 
 const SUCURSALES = [
-  "NAZCA","AVELLANEDA 2","LAMARCA","SARMIENTO","CORRIENTES","CORRIENTES2","CASTELLI","QUILMES","MORENO","PUEYRREDON"
+  "NAZCA","AVELLANEDA 2","LAMARCA","SARMIENTO","CORRIENTES","CORRIENTES2","CASTELLI","QUILMES","MORENO"
 ];
 
 const $  = (sel, root=document) => root.querySelector(sel);

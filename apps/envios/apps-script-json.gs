@@ -403,7 +403,6 @@ function resolverCentroInicial_(sucursal) {
   const pasanPorSarmiento = [
     'CASTELLI',
     'CORRIENTES',
-    'PUEYRREDON',
     'QUILMES'
   ];
 

@@ -27,7 +27,7 @@
     "https://script.google.com/macros/s/AKfycbyD-x7geshhGxx2xXeX0k07QoFTRm7fm1BfmLl-H7afQ2c_9YdUBQiyvk23oeywepQ/exec";
 
   const SUCURSALES = [
-    "NAZCA","AVELLANEDA 2","LAMARCA","SARMIENTO","CORRIENTES","CORRIENTES2","CASTELLI","QUILMES","PUEYRREDON"
+    "NAZCA","AVELLANEDA 2","LAMARCA","SARMIENTO","CORRIENTES","CORRIENTES2","CASTELLI","QUILMES"
   ];
 
   const LS_KEY_PEDIDO = window.RioContext.storageKey("pedido_v1");
