@@ -230,5 +230,13 @@ window.RioCatalog = [
     "area": "Depósito",
     "areaId": "2",
     "restricted": true
+  },
+  {
+    "slug": "equiparacion-tn",
+    "name": "Equiparación TN",
+    "description": "Prepará reposiciones para Tiendanube desde los locales.",
+    "area": "Depósito",
+    "areaId": "2",
+    "restricted": true
   }
 ];

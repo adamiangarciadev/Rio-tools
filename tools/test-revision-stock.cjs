@@ -4,7 +4,9 @@ const fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('apps/revision-stock/app.js','utf8');
 function engine(priority=true){
  const ctx=vm.createContext({window:{},Intl,document:{getElementById:()=>({checked:priority})}});
+ vm.runInContext(fs.readFileSync('apps/revision-stock/rules.js','utf8'),ctx);
  vm.runInContext(source.slice(source.indexOf('const DATA_URL'),source.indexOf('let searchTimer')),ctx);
+ vm.runInContext("Object.assign(globalThis,{normalize,compute})",ctx);
  return ctx;
 }
 test('stock totals are conserved, transfers never exceed available units',()=>{

@@ -99,9 +99,11 @@ test('stock equalization requires BOTH depot and supervisor session, including d
   for(const branch of ['','AV2','NAZCA','LAMARCA','CORRIENTES','CASTELLI','QUILMES','SARMIENTO','WEB','DEPOSITO','ADMINISTRACION']){
     for(const unlocked of [false,true]){
       const allowed=branch==='DEPOSITO'&&unlocked;
-      const {api,redirect}=boot(branch,'revision-stock',unlocked);
-      assert.equal(api.canUse({slug:'revision-stock'}),allowed,`${branch}/${unlocked}`);
-      assert.equal(redirect==='',allowed);
+      for (const slug of ['revision-stock','equiparacion-tn']) {
+        const {api,redirect}=boot(branch,slug,unlocked);
+        assert.equal(api.canUse({slug}),allowed,`${slug}/${branch}/${unlocked}`);
+        assert.equal(redirect==='',allowed);
+      }
     }
   }
 });

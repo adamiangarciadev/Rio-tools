@@ -31,7 +31,7 @@
     if (slug === 'vales') return branch === 'ADMINISTRACION' && !!window.RioAccess?.isUnlocked();
     if (slug === 'control-cajas-locales') return branch === 'ADMINISTRACION' && !!window.RioAccess?.isUnlocked();
     if (slug === 'precios-web') return branch === 'WEB';
-    if (['revision-stock','stock-proveedores'].includes(slug)) return branch === 'DEPOSITO' && !!window.RioAccess?.isUnlocked();
+    if (['revision-stock','equiparacion-tn','stock-proveedores'].includes(slug)) return branch === 'DEPOSITO' && !!window.RioAccess?.isUnlocked();
     if (profileApps[branch] && !profileApps[branch].includes(slug)) return false;
     if (!localProfiles.has(branch)) return true;
     if (webOnlyApps.has(slug)) return false;
