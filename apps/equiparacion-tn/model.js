@@ -46,11 +46,12 @@ window.RioTN = (() => {
     if (/\b(DISC|DISCONTINU[OA]S?)\b/.test(classification)) status = 'Discontinuo';
     else if (/^(LINEA|PROMO)\b/.test(classification)) status = 'Sin marca de discontinuidad';
     return {brand:brand || 'Sin marca', status, classification:classification || 'Sin clasificación',
+      unit:canonical(variant?.unit) || 'Sin unidad de medida',
       stockBand:stock == null || !Number.isFinite(stock) ? 'Indefinido' : stock < 0 ? 'Negativo' : stock === 0 ? 'Cero' : 'De 1 a 4'};
   }
 
   function prepare(file, index, filters = {}) {
-    const options = {brand:new Set(),status:new Set(),classification:new Set(),stockBand:new Set()};
+    const options = {brand:new Set(),status:new Set(),classification:new Set(),unit:new Set(),stockBand:new Set()};
     const matches = values => {
       for (const key of Object.keys(options)) options[key].add(values[key]);
       return Object.entries(filters).every(([key,value]) => !value || values[key] === value);

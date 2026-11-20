@@ -32,7 +32,7 @@
     container.append(details);
   }
 
-  const filterKeys = ['brand','status','classification','stockBand'];
+  const filterKeys = ['brand','status','classification','unit','stockBand'];
   function resetFilters() {
     for (const key of filterKeys) $(key).value = '';
   }
