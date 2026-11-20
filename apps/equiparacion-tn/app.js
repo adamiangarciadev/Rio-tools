@@ -32,10 +32,28 @@
     container.append(details);
   }
 
-  function render() {
+  const filterKeys = ['brand','status','classification','stockBand'];
+  function resetFilters() {
+    for (const key of filterKeys) $(key).value = '';
+  }
+  $('clearFilters').onclick = () => { resetFilters(); render(); };
+  for (const key of filterKeys) $(key).onchange = () => render();
+
+  function render(refreshOptions = false) {
     $('plans').replaceChildren();
     $('issues').replaceChildren();
-    result = file && index ? RioTN.prepare(file,index) : null;
+    const filters = Object.fromEntries(filterKeys.map(key => [key,$(key).value]));
+    result = file && index ? RioTN.prepare(file,index,filters) : null;
+    $('filters').hidden = !result;
+    if (result && refreshOptions) {
+      for (const key of filterKeys) {
+        const select = $(key), values = Array.from(result.options[key]).sort((a,b) => a.localeCompare(b,'es',{numeric:true}));
+        select.replaceChildren(select.options[0],...values.map(value => new Option(value,value)));
+        if (values.includes(filters[key])) select.value = filters[key];
+      }
+      if (filterKeys.some(key => $(key).value !== filters[key])) return render();
+    }
+    $('clearFilters').disabled = !Object.values(filters).some(Boolean);
     $('exportBtn').disabled = !result?.moves.length;
     if (!result) {
       $('summary').textContent = file ? 'Esperando el reporte de Río.' : 'Elegí un CSV para preparar la reposición.';
@@ -61,6 +79,7 @@
   $('file').onchange = async event => {
     const selected = event.target.files[0], version = ++fileVersion;
     file = null;
+    resetFilters();
     render();
     $('fileStatus').textContent = selected ? 'Leyendo el CSV…' : '';
     if (!selected) return;
@@ -73,7 +92,7 @@
       file = RioTN.readFile(source);
       $('fileStatus').textContent = selected.name;
     } catch (e) { $('fileStatus').textContent = e.message; }
-    render();
+    render(true);
   };
 
   async function load() {
@@ -96,7 +115,7 @@
       $('reportDate').textContent = reportDate.split('-').reverse().join('/');
       $('dataStatus').textContent = report.records.length.toLocaleString('es-AR')+' variantes en Río';
     } catch { $('dataStatus').textContent = 'No se pudo cargar el reporte. Volvé a actualizarlo.'; }
-    finally { clearTimeout(timer); $('reloadBtn').disabled = false; render(); }
+    finally { clearTimeout(timer); $('reloadBtn').disabled = false; render(true); }
   }
 
   $('exportBtn').onclick = () => {

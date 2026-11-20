@@ -10,8 +10,16 @@
 <main class="container stock-workspace">
 <div class="report-strip"><div><span class="report-dot" aria-hidden="true"></span><span id="dataStatus" role="status">Consultando el reporte…</span></div><span>Fecha del reporte <strong id="reportDate">—</strong></span></div>
 <section class="results-panel"><label>Archivo CSV de Tiendanube<input id="file" type="file" accept=".csv,text/csv"></label><p class="selection-help">Se revisan los SKU con stock menor a 5. El reporte de Río determina cuánto corresponde enviar a Avellaneda 3249 + Web. Web y ambas sucursales Avellaneda quedan excluidas como origen.</p><p id="fileStatus" role="status"></p></section>
+<section id="filters" class="results-panel" aria-label="Filtros de preparación" hidden>
+<div class="results-heading"><h2>Filtros</h2><button id="clearFilters" class="text-button" type="button">Limpiar filtros</button></div>
+<div class="filter-grid">
+<label>Marca<select id="brand"><option value="">Todas las marcas</option></select></label>
+<label>Discontinuidad<select id="status"><option value="">Todos los estados</option></select></label>
+<label>Clasificación Río<select id="classification"><option value="">Todas las clasificaciones</option></select></label>
+<label>Stock TN<select id="stockBand"><option value="">Todos los niveles</option></select></label>
+</div></section>
 <section class="results-panel"><div class="results-heading"><h2>Preparación por local</h2></div><p id="summary" role="status"></p><div id="plans" class="moves-list"></div></section>
 <section class="results-panel"><div class="results-heading"><h2>Pendientes de revisión</h2></div><div id="issues" class="moves-list"></div></section>
 </main><div id="toast" class="stock-toast" role="status" aria-live="polite"></div>
-<script src="../revision-stock/api-config.js?v=9513a207c8"></script><script src="../revision-stock/rules.js?v=4bc32ccd34"></script><script src="../picking-salida-v2/vendor/papaparse.min.js"></script><script src="model.js?v=a6486f1cc5"></script><script src="app.js?v=ed497725cb"></script><script src="../../assets/rio-report-problem.js?v=838352b4a0"></script><script src="../../assets/app-catalog.js?v=45d36b0b7e"></script><script src="../../assets/app-shell.js?v=a8d9a0da22"></script>
+<script src="../revision-stock/api-config.js?v=9513a207c8"></script><script src="../revision-stock/rules.js?v=4bc32ccd34"></script><script src="../picking-salida-v2/vendor/papaparse.min.js"></script><script src="model.js?v=e707eff77d"></script><script src="app.js?v=eb5a7de521"></script><script src="../../assets/rio-report-problem.js?v=838352b4a0"></script><script src="../../assets/app-catalog.js?v=45d36b0b7e"></script><script src="../../assets/app-shell.js?v=a8d9a0da22"></script>
 </body></html>
