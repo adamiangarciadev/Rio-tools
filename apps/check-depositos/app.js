@@ -16,6 +16,7 @@
     "Santander - Infantino Fernando",
     "Santander - Silvana Gullo",
     "Galicia - 1988 SRL",
+    "Galicia - Rio Group SRL",
     "Supervielle - Nexus Realty SA",
     "Mercado Pago - Miguel Angel Raccio",
   ];
