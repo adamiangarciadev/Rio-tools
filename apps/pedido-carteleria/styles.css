@@ -253,7 +253,7 @@
 
 .design-caption small {
   min-height: 34px;
-  color:rgba(226, 241, 239, .72);
+  color:#111;
   display: -webkit-box;
   font-size: 12px;
   line-height: 1.4;
