@@ -251,6 +251,7 @@
   function saveBranch() {
     const value = normalizeBranch(els.branch.value);
     if (value) localStorage.setItem(BRANCH_KEY, value); else localStorage.removeItem(BRANCH_KEY);
+    renderTickets();
   }
 
   function updateCounters() {
@@ -377,12 +378,15 @@
 
   function renderTickets() {
     const query = normalizeText(els.search.value);
+    const branch = normalizeBranch(els.branch.value);
     const filtered = tickets.filter(ticket => {
       const haystack = normalizeText([ticket.id, ticket.title, ticket.description, ticket.reporterCode, ticket.reporterName, ticket.branch, ticket.area].join(" "));
-      return (!query || haystack.includes(query)) && (!els.status.value || ticket.status === els.status.value) && (!els.areaFilter.value || ticket.area === els.areaFilter.value);
+      return (query ? haystack.includes(query) : branch && normalizeBranch(ticket.branch) === branch) && (!els.status.value || ticket.status === els.status.value) && (!els.areaFilter.value || ticket.area === els.areaFilter.value);
     });
     els.list.innerHTML = "";
     els.empty.hidden = filtered.length > 0;
+    els.empty.querySelector("h3").textContent = !query && !branch ? "Seleccioná una sucursal" : "No hay incidentes para mostrar";
+    els.empty.querySelector("p").textContent = !query && !branch ? "Elegí tu sucursal para ver sus incidentes o buscá en todos los locales." : "Probá cambiando los filtros o creá un nuevo reporte.";
     filtered.forEach(ticket => {
       const card = document.createElement("article"); card.className = "ticket-card"; card.dataset.priority = ticket.priority;
       const reporterLabel = ticket.reporterName ? `${ticket.reporterName} (#${ticket.reporterCode})` : `Cód. ${ticket.reporterCode}`;
