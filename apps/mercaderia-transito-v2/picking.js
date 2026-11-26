@@ -17,7 +17,7 @@
   row.push(cell.trim());if(row.some(Boolean))rows.push(row);
   return rows.slice(1);
  }
- function makeIndex(texts){const map=new Map();for(const text of texts)for(const row of csv(text)){const key=normalize(row[0]);if(key&&!map.has(key))map.set(key,{articulo:row[1]||'',color:row[2]||'',talle:row[3]||''});}return map;}
+ function makeIndex(texts){const map=new Map();for(const text of texts)for(const row of csv(text)){const key=normalize(row[0]);if(key&&!map.has(key))map.set(key,{articulo:key.includes('!')?row[0].trim().split('!')[0]:(row[1]||''),color:row[2]||'',talle:row[3]||''});}return map;}
  function compare(items,scans,index){
   const tuple=row=>[row.articulo,row.color,row.talle].map(normalize);
   const key=row=>JSON.stringify(tuple(row));
