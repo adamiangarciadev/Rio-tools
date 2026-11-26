@@ -18,13 +18,15 @@
   return rows.slice(1);
  }
  function makeIndex(texts){
-  const map=new Map();
+  const map=new Map();map.variants=new Map();
   for(const text of texts)for(const row of csv(text)){
    const code=normalize(row[0]);if(!code)continue;
    if(row.length===6){
     const value={articulo:row[1],color:row[3]||row[2],talle:row[5]||row[4],codigo_color:row[2],codigo_talle:row[4]};
     if(![value.articulo,value.codigo_color,value.codigo_talle].every(v=>normalize(v)))continue;
-    for(const key of [code,[value.articulo,value.codigo_color,value.codigo_talle].map(normalize).join('!')]){
+    const variant=[value.articulo,value.codigo_color,value.codigo_talle].map(normalize).join('!');
+    if(!map.variants.has(variant))map.variants.set(variant,value);
+    for(const key of [code,[value.articulo,value.codigo_talle,value.codigo_color].map(normalize).join('!')]){
      if(map.has(key)){const old=map.get(key);if(!old||[old.articulo,old.codigo_color,old.codigo_talle].map(normalize).join('!')!==[value.articulo,value.codigo_color,value.codigo_talle].map(normalize).join('!'))map.set(key,null);}
      else map.set(key,value);
     }
@@ -38,7 +40,7 @@
   const entries=new Map(), unknown=new Map();
   for(const item of items||[]){
    const source=tuple(item);
-   const equivalent=index.get(source.join('!'));
+   const equivalent=index.variants?.size?index.variants.get(source.join('!')):index.get(source.join('!'));
    const canonical=equivalent&&tuple(equivalent).every(Boolean)?equivalent:item;
    const id=key(canonical), quantity=Number(item.cantidad);
    if(!tuple(item).every(Boolean)||!Number.isFinite(quantity)||quantity<0) return {status:'REVISAR',rows:[],unknown:[],error:'El detalle del remito no permite una comparación confiable.'};
