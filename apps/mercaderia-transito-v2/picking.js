@@ -29,13 +29,13 @@
    map.variants.set(identity(value),value);
    const desc=[value.articulo,value.color,value.talle].map(normalize).join('!');
    if(descriptions.has(desc)&&identity(descriptions.get(desc)||{})!==identity(value))descriptions.set(desc,null);else if(!descriptions.has(desc))descriptions.set(desc,value);
-   add(row[0],value);add([value.articulo,value.codigo_talle,value.codigo_color].join('!'),value);
+   add(row[0],value);add([value.articulo,value.codigo_color,value.codigo_talle].join('!'),value);
   }
   legacy.sort((a,b)=>Number(b[0].includes('!'))-Number(a[0].includes('!')));
   for(const row of legacy){
    const parts=normalize(row[0]).split('!');let value;
    if(parts.length===3){
-    value=map.variants.get(parts.join('!'))||map.variants.get([parts[0],parts[2],parts[1]].join('!'));
+    value=map.variants.get(parts.join('!'));
     if(!value)value={articulo:parts[0],codigo_color:parts[1],codigo_talle:parts[2],color:row[2]||parts[1],talle:row[3]||parts[2]};
    }else value=descriptions.get([row[1],row[2],row[3]].map(normalize).join('!'));
    if(!value&&!coded.length)value={articulo:row[1]||'',color:row[2]||'',talle:row[3]||''};
@@ -43,7 +43,7 @@
    const desc=[value.articulo,value.color,value.talle].map(normalize).join('!');
    if(!descriptions.has(desc))descriptions.set(desc,value);
    add(row[0],value);
-   if(parts.length===3){map.variants.set(identity(value),value);add([value.articulo,value.codigo_talle,value.codigo_color].join('!'),value);}
+   if(parts.length===3){map.variants.set(identity(value),value);add([value.articulo,value.codigo_color,value.codigo_talle].join('!'),value);}
   }
   return map;
  }
