@@ -42,6 +42,7 @@
     const row = records.find(row => key(row) === id);
     if (row) showHistory(row);
   });
+  $('rows').addEventListener('click',event=>{const id=event.target.closest?.('[data-pick]')?.dataset.pick;const row=records.find(r=>r.id===id);if(!row)return;const p=row.picking;const dialog=document.createElement('dialog');dialog.innerHTML=`<h2>Picking ${esc(row.remito)} · ${esc(p.result.status)}</h2><p>Responsable: ${esc(p.codigo)} · ${esc(historyDate(p.fecha))}</p><table><thead><tr><th>Artículo · Color · Talle</th><th>Esperado</th><th>Escaneado</th><th>Diferencia</th></tr></thead><tbody>${p.result.rows.map(r=>`<tr><td>${esc([r.articulo,r.color,r.talle].join(' · '))}</td><td>${esc(r.esperado)}</td><td>${esc(r.escaneado)}</td><td>${esc(r.diferencia)}</td></tr>`).join('')}</tbody></table><p>${esc(p.result.error||'')}${(p.result.unknown||[]).map(r=>esc(r.codigo)+' sin equivalencia: '+r.cantidad).join(' · ')}</p><button id="savedTxt">Descargar TXT</button><button id="closePick">Cerrar</button>`;document.body.append(dialog);dialog.querySelector('#closePick').onclick=()=>dialog.close();dialog.addEventListener('close',()=>dialog.remove());dialog.querySelector('#savedTxt').onclick=()=>window.MT2Picking.downloadSaved(row.id,row.remito);dialog.showModal();});
   const identity = row => String(row.id || '');
   function rebuild(fresh) {
     const combined = new Map();
@@ -73,7 +74,7 @@
   }
   function render() {
     const rows = visible();
-    $('rows').innerHTML = rows.map(row => `<tr><td><input type="checkbox" data-key="${esc(key(row))}" aria-label="Seleccionar remito ${esc(row.remito)}" ${selected.has(key(row))?'checked':''} ${busy || !canConfirm(row)?'disabled':''}></td><td>${esc(row.fecha)}</td><td>${esc(row.remito)}</td><td>${esc(row.desde)}</td><td>${esc(row.hacia)}</td><td>${esc(row.total_prendas)}</td><td>${esc(row.estado)}${row.ambiguous?' · Identificador inválido':''}${row.stale?' · Pendiente de actualizar':''}</td><td><button type="button" class="button secondary" data-history="${esc(key(row))}" ${row.ambiguous?'disabled':''}>Ver trazabilidad</button></td></tr>`).join('') || `<tr><td colspan="8">${busy?'Cargando remitos…':'No hay remitos con estos filtros.'}</td></tr>`;
+    $('rows').innerHTML = rows.map(row => `<tr><td><input type="checkbox" data-key="${esc(key(row))}" aria-label="Seleccionar remito ${esc(row.remito)}" ${selected.has(key(row))?'checked':''} ${busy || !canConfirm(row)?'disabled':''}></td><td>${esc(row.fecha)}</td><td>${esc(row.remito)}</td><td>${esc(row.desde)}</td><td>${esc(row.hacia)}</td><td>${esc(row.total_prendas)}</td><td>${esc(row.estado)}<br><strong>Picking: ${esc(row.picking?.result?.status||'Sin controlar')}</strong>${row.picking?`<button type="button" class="button secondary" data-pick="${esc(row.id)}">Ver picking / TXT</button>`:''}${row.ambiguous?' · Identificador inválido':''}${row.stale?' · Pendiente de actualizar':''}</td><td><button type="button" class="button secondary" data-history="${esc(key(row))}" ${row.ambiguous?'disabled':''}>Ver trazabilidad</button></td></tr>`).join('') || `<tr><td colspan="8">${busy?'Cargando remitos…':'No hay remitos con estos filtros.'}</td></tr>`;
     $('count').textContent = `${selected.size} seleccionados · ${rows.length} visibles`;
     $('review').disabled = busy || needsRefresh || !selected.size;
     $('selectAll').disabled = busy || archiveView();
@@ -119,7 +120,7 @@
         }
         const data = await request('trace_list', {branch:$('branch').value, search:$('search').value.trim(), from:$('from').value, to:$('to').value, closed:$('view').value === 'closed', offset:page * 50});
         if (!Array.isArray(data)) throw new Error('Respuesta sin listado');
-        records = data.map(record => ({...record.data,id:record.id,version:record.version,estado:record.estado}));
+        records = data.map(record => ({...record.data,id:record.id,version:record.version,estado:record.estado,picking:record.picking}));
         hasNext = data.length === 50;
         $('status').textContent = 'Consulta de históricos: incluye remitos fuera del período operativo. Para confirmar, usá la vista Pendientes de confirmar.';
         return;
@@ -134,7 +135,7 @@
           const branch = branches[cursor++];
           try {
             const response = await listBranch(branch);
-            snapshots.set(branch, response.map(record=>({...record.data,id:record.id,version:record.version,estado:record.estado})));
+            snapshots.set(branch, response.map(record=>({...record.data,id:record.id,version:record.version,estado:record.estado,picking:record.picking})));
             fresh.add(branch);
             rebuild(fresh);
           } catch { failures.push(branch); }
