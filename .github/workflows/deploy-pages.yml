@@ -38,6 +38,7 @@ jobs:
         run: |
           test -s .pages/data/equivalencia.csv
           test -s .pages/data/equivalencia2.csv
+          test -s .pages/data/equivalenciacod.csv
           test -s '.pages/data/ASISTENCIA_RIO - PADRON.csv'
 
       - name: Upload Pages artifact

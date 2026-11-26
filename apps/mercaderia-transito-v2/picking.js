@@ -17,9 +17,23 @@
   row.push(cell.trim());if(row.some(Boolean))rows.push(row);
   return rows.slice(1);
  }
- function makeIndex(texts){const map=new Map();for(const text of texts)for(const row of csv(text)){const key=normalize(row[0]);if(key&&!map.has(key))map.set(key,{articulo:key.includes('!')?row[0].trim().split('!')[0]:(row[1]||''),color:row[2]||'',talle:row[3]||''});}return map;}
+ function makeIndex(texts){
+  const map=new Map();
+  for(const text of texts)for(const row of csv(text)){
+   const code=normalize(row[0]);if(!code)continue;
+   if(row.length===6){
+    const value={articulo:row[1],color:row[3]||row[2],talle:row[5]||row[4],codigo_color:row[2],codigo_talle:row[4]};
+    if(![value.articulo,value.codigo_color,value.codigo_talle].every(v=>normalize(v)))continue;
+    for(const key of [code,[value.articulo,value.codigo_color,value.codigo_talle].map(normalize).join('!')]){
+     if(map.has(key)){const old=map.get(key);if(!old||[old.articulo,old.codigo_color,old.codigo_talle].map(normalize).join('!')!==[value.articulo,value.codigo_color,value.codigo_talle].map(normalize).join('!'))map.set(key,null);}
+     else map.set(key,value);
+    }
+   }else if(!map.has(code))map.set(code,{articulo:code.includes('!')?row[0].trim().split('!')[0]:(row[1]||''),color:row[2]||'',talle:row[3]||''});
+  }
+  return map;
+ }
  function compare(items,scans,index){
-  const tuple=row=>[row.articulo,row.color,row.talle].map(normalize);
+  const tuple=row=>[row.articulo,row.codigo_color??row.color,row.codigo_talle??row.talle].map(normalize);
   const key=row=>JSON.stringify(tuple(row));
   const entries=new Map(), unknown=new Map();
   for(const item of items||[]){
@@ -28,14 +42,14 @@
    const canonical=equivalent&&tuple(equivalent).every(Boolean)?equivalent:item;
    const id=key(canonical), quantity=Number(item.cantidad);
    if(!tuple(item).every(Boolean)||!Number.isFinite(quantity)||quantity<0) return {status:'REVISAR',rows:[],unknown:[],error:'El detalle del remito no permite una comparación confiable.'};
-   const entry=entries.get(id)||{articulo:canonical.articulo,color:canonical.color,talle:canonical.talle,esperado:0,escaneado:0};
+   const entry=entries.get(id)||{articulo:canonical.articulo,color:canonical.color,talle:canonical.talle,codigo_color:canonical.codigo_color,codigo_talle:canonical.codigo_talle,esperado:0,escaneado:0};
    entry.esperado+=quantity;entries.set(id,entry);
   }
   if(!entries.size)return {status:'REVISAR',rows:[],unknown:[],error:'El remito no tiene detalle para comparar.'};
   for(const code of scans){
    const match=index.get(normalize(code));
    if(!match||!tuple(match).every(Boolean)){unknown.set(code,(unknown.get(code)||0)+1);continue;}
-   const id=key(match),entry=entries.get(id)||{articulo:match.articulo,color:match.color,talle:match.talle,esperado:0,escaneado:0};
+   const id=key(match),entry=entries.get(id)||{articulo:match.articulo,color:match.color,talle:match.talle,codigo_color:match.codigo_color,codigo_talle:match.codigo_talle,esperado:0,escaneado:0};
    entry.escaneado++;entries.set(id,entry);
   }
   const rows=[...entries.values()].map(row=>({...row,diferencia:row.escaneado-row.esperado}));
@@ -65,7 +79,7 @@
   if(index)return;if(pendingIndex)return pendingIndex;
   pendingIndex=(async()=>{
    const base=root.MT2_API?'../../data/':'/data/';
-   const texts=await Promise.all(['equivalencia.csv','equivalencia2.csv'].map(async name=>{
+   const texts=await Promise.all(['equivalenciacod.csv'].map(async name=>{
     const r=await fetch(base+name,{cache:'no-cache',signal:AbortSignal.timeout(30000)});if(!r.ok)throw Error('No se pudieron cargar las equivalencias. Cerrá y volvé a abrir el picking.');
     const bytes=await r.arrayBuffer();let text=new TextDecoder('utf-8').decode(bytes);if(text.includes('\ufffd'))text=new TextDecoder('windows-1252').decode(bytes);return text;
    }));index=makeIndex(texts);if(!index.size){index=null;throw Error('Las equivalencias están vacías');}
