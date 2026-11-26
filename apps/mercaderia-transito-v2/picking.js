@@ -18,19 +18,32 @@
   return rows.slice(1);
  }
  function makeIndex(texts){
-  const map=new Map();map.variants=new Map();
-  for(const text of texts)for(const row of csv(text)){
-   const code=normalize(row[0]);if(!code)continue;
-   if(row.length===6){
-    const value={articulo:row[1],color:row[3]||row[2],talle:row[5]||row[4],codigo_color:row[2],codigo_talle:row[4]};
-    if(![value.articulo,value.codigo_color,value.codigo_talle].every(v=>normalize(v)))continue;
-    const variant=[value.articulo,value.codigo_color,value.codigo_talle].map(normalize).join('!');
-    if(!map.variants.has(variant))map.variants.set(variant,value);
-    for(const key of [code,[value.articulo,value.codigo_talle,value.codigo_color].map(normalize).join('!')]){
-     if(map.has(key)){const old=map.get(key);if(!old||[old.articulo,old.codigo_color,old.codigo_talle].map(normalize).join('!')!==[value.articulo,value.codigo_color,value.codigo_talle].map(normalize).join('!'))map.set(key,null);}
-     else map.set(key,value);
-    }
-   }else if(!map.has(code))map.set(code,{articulo:code.includes('!')?row[0].trim().split('!')[0]:(row[1]||''),color:row[2]||'',talle:row[3]||''});
+  const map=new Map();map.variants=new Map();map.conflicts=new Set();
+  const rows=texts.flatMap(csv),coded=rows.filter(r=>r.length===6),legacy=rows.filter(r=>r.length===4);
+  const identity=v=>[v.articulo,v.codigo_color??v.color,v.codigo_talle??v.talle].map(normalize).join('!');
+  const descriptions=new Map();
+  function add(key,value){key=normalize(key);if(!key)return;if(map.has(key)&&(!map.get(key)||identity(map.get(key))!==identity(value))){map.set(key,null);map.conflicts.add(key);}else if(!map.has(key))map.set(key,value);}
+  for(const row of coded){
+   const value={articulo:row[1],color:row[3]||row[2],talle:row[5]||row[4],codigo_color:row[2],codigo_talle:row[4]};
+   if(![value.articulo,value.codigo_color,value.codigo_talle].every(v=>normalize(v)))continue;
+   map.variants.set(identity(value),value);
+   const desc=[value.articulo,value.color,value.talle].map(normalize).join('!');
+   if(descriptions.has(desc)&&identity(descriptions.get(desc)||{})!==identity(value))descriptions.set(desc,null);else if(!descriptions.has(desc))descriptions.set(desc,value);
+   add(row[0],value);add([value.articulo,value.codigo_talle,value.codigo_color].join('!'),value);
+  }
+  legacy.sort((a,b)=>Number(b[0].includes('!'))-Number(a[0].includes('!')));
+  for(const row of legacy){
+   const parts=normalize(row[0]).split('!');let value;
+   if(parts.length===3){
+    value=map.variants.get(parts.join('!'))||map.variants.get([parts[0],parts[2],parts[1]].join('!'));
+    if(!value)value={articulo:parts[0],codigo_color:parts[1],codigo_talle:parts[2],color:row[2]||parts[1],talle:row[3]||parts[2]};
+   }else value=descriptions.get([row[1],row[2],row[3]].map(normalize).join('!'));
+   if(!value&&!coded.length)value={articulo:row[1]||'',color:row[2]||'',talle:row[3]||''};
+   if(!value)continue;
+   const desc=[value.articulo,value.color,value.talle].map(normalize).join('!');
+   if(!descriptions.has(desc))descriptions.set(desc,value);
+   add(row[0],value);
+   if(parts.length===3){map.variants.set(identity(value),value);add([value.articulo,value.codigo_talle,value.codigo_color].join('!'),value);}
   }
   return map;
  }
@@ -55,7 +68,7 @@
    entry.escaneado++;entries.set(id,entry);
   }
   const rows=[...entries.values()].map(row=>({...row,diferencia:row.escaneado-row.esperado}));
-  return {status:unknown.size||rows.some(row=>row.diferencia!==0)?'DIFERENCIAS':'OK',rows,unknown:[...unknown].map(([codigo,cantidad])=>({codigo,cantidad}))};
+  return {status:unknown.size||rows.some(row=>row.diferencia!==0)?'DIFERENCIAS':'OK',rows,unknown:[...unknown].map(([codigo,cantidad])=>({codigo,cantidad,motivo:index.conflicts?.has(normalize(codigo))?'Equivalencias en conflicto':'Sin equivalencia'}))};
  }
  function eligible(r,branch){return ['RECIBIDO EN SUCURSAL','DIFERENCIAS'].includes(r?.estado)&&!!branch&&normalize(r.data.hacia)===normalize(branch);}
  function filename(remito,branch,code){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'2-digit',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const date=['year','month','day'].map(k=>parts.find(p=>p.type===k).value).join('');return `${date} REM${remito} ${branch} PICKING RESP${code}`.replace(/[<>:"/\\|?*\x00-\x1f]/g,'_')+'.txt';}
@@ -71,7 +84,7 @@
   const counts=new Map();let unknown=0;
   for(const code of scans){const row=index?.get(normalize(code));if(!row)unknown++;const label=row?[row.articulo,row.color,row.talle].join(' · '):'SIN EQUIVALENCIA: '+code;counts.set(label,(counts.get(label)||0)+1);}
   $('pick-counter').innerHTML=Array.from(counts,([label,n])=>`<tr><td>${escape(label)}</td><td>${n}</td></tr>`).join('');
-  $('pick-list').innerHTML=scans.map((code,i)=>`<div class="pick-row"><span>${index?.has(normalize(code))?'✓':'⚠'} ${escape(code)}</span><button type="button" data-remove="${i}" aria-label="Eliminar lectura ${i+1}">Eliminar</button></div>`).reverse().join('');
+  $('pick-list').innerHTML=scans.map((code,i)=>`<div class="pick-row"><span>${index?.get(normalize(code))?'✓':'⚠'} ${escape(code)}</span><button type="button" data-remove="${i}" aria-label="Eliminar lectura ${i+1}">Eliminar</button></div>`).reverse().join('');
   const result=index?compare(record.data.items,scans,index):null;
   if(result){$('pick-counter').innerHTML=result.rows.map(r=>`<tr><td>${escape([r.articulo,r.color,r.talle].join(' · '))}</td><td>${r.escaneado} / ${r.esperado} · ${r.diferencia===0?'OK':r.diferencia>0?'Sobran '+r.diferencia:'Faltan '+(-r.diferencia)}</td></tr>`).join('');}
   $('pick-warning').textContent=(result?'Control: '+result.status+'. '+(result.error||'')+' ':'')+(unknown?`${unknown} lecturas sin equivalencia. Revisalas antes de descargar; se incluyen en el TXT.`:'');
@@ -81,7 +94,7 @@
   if(index)return;if(pendingIndex)return pendingIndex;
   pendingIndex=(async()=>{
    const base=root.MT2_API?'../../data/':'/data/';
-   const texts=await Promise.all(['equivalenciacod.csv'].map(async name=>{
+   const texts=await Promise.all(['equivalenciacod.csv','equivalencia2.csv','equivalencia.csv'].map(async name=>{
     const r=await fetch(base+name,{cache:'no-cache',signal:AbortSignal.timeout(30000)});if(!r.ok)throw Error('No se pudieron cargar las equivalencias. Cerrá y volvé a abrir el picking.');
     const bytes=await r.arrayBuffer();let text=new TextDecoder('utf-8').decode(bytes);if(text.includes('\ufffd'))text=new TextDecoder('windows-1252').decode(bytes);return text;
    }));index=makeIndex(texts);if(!index.size){index=null;throw Error('Las equivalencias están vacías');}
@@ -92,7 +105,7 @@
   if(!index){$('pick-note').textContent='Esperá a que se carguen las equivalencias.';return;}
   if(code.length>100||/[\r\n\x00-\x1f]/.test(code)){$('pick-note').textContent='Código inválido';return;}
   if(scans.length>=5000){$('pick-note').textContent='Límite de 5000 lecturas. No se eliminó ninguna lectura anterior.';return;}
-  scans.push(code);revision++;$('pick-scan').value='';$('pick-note').textContent=index.has(normalize(code))?'Lectura registrada: '+code:'Sin equivalencia: '+code;render();persist();$('pick-scan').focus();
+  scans.push(code);revision++;$('pick-scan').value='';$('pick-note').textContent=index.get(normalize(code))?'Lectura registrada: '+code:index.conflicts.has(normalize(code))?'Equivalencias en conflicto: '+code:'Sin equivalencia: '+code;render();persist();$('pick-scan').focus();
  }
  function mount(){
   dialog=document.createElement('dialog');dialog.id='picking-dialog';dialog.style.width='min(1000px,94vw)';dialog.setAttribute('aria-labelledby','pick-title');
