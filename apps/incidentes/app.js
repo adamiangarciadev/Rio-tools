@@ -32,7 +32,7 @@
     fillBranches();
     bindEvents();
     updateCounters();
-    setMode("general");
+    setMode(new URLSearchParams(window.location.search).get("modo") === "reetiquetado" ? "labels" : "general");
     await loadEmployees();
     loadEquivalences();
     await loadTickets();

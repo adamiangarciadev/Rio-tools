@@ -82,7 +82,7 @@ window.RioCatalog = [
   {
     "slug": "etiquetas",
     "name": "Generador de Etiquetas",
-    "description": "Generación de archivos para altas, bajas y etiquetas por producto.",
+    "description": "Pedido de etiquetas y bajas desde Mesa de Ayuda.",
     "area": "Depósito",
     "areaId": "2",
     "restricted": false
