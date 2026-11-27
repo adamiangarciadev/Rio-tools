@@ -8,14 +8,6 @@ window.RioCatalog = [
   {"slug":"confirmar-remitos","name":"Confirmar remitos","description":"Cierre de varios remitos con filtros por fecha y sucursal.","area":"Sistemas","areaId":"4","restricted":true},
   {"slug":"mercaderia-transito-v2","name":"Mercadería en Tránsito","description":"Lectura automática de PDF y seguimiento por sucursal.","area":"Operaciones","areaId":"0","restricted":false},
   {
-    "slug": "entrada-mercaderia",
-    "name": "Entrada de Mercadería",
-    "description": "Ingreso por escaneo, equivalencias y control contra CSV.",
-    "area": "Operaciones",
-    "areaId": "0",
-    "restricted": false
-  },
-  {
     "slug": "control-remitos-clientes",
     "name": "Control de Remitos",
     "description": "Control y confirmación de remitos emitidos a clientes.",
